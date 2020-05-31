@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    tools:context=".MainActivity"
+    android:paddingHorizontal="10dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/query_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:paddingVertical="5dp"
+        android:layout_marginTop="10dp">
+
+        <LinearLayout
+            android:id="@+id/input_line"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+
+            <EditText
+                android:id="@+id/edit_text_input"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="2"
+                android:backgroundTint="@color/colorPrimary"
+                android:ems="10"
+                android:hint="输入汉字或读音"
+                android:inputType="textPersonName"
+                android:maxLines="1"
+                android:paddingHorizontal="15dp"
+                android:textSize="16dp"
+                android:theme="@style/MyEditText"
+                app:layout_constraintStart_toEndOf="@+id/textView"
+                app:layout_constraintTop_toTopOf="@+id/textView"
+                android:imeOptions="actionSearch"/>
+
+            <Button
+                android:id="@+id/btn_query"
+                android:layout_width="75dp"
+                android:layout_height="40dp"
+                android:background="#00000000"
+                android:foreground="?selectableItemBackground"
+                android:text="查"
+                android:textColor="@color/colorPrimary"
+                android:textSize="16dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/textView"
+                />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/input_switch"
+            android:layout_width="match_parent"
+            android:layout_height="25dp"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/input_line"
+            android:layout_marginTop="15dp">
+
+            <Switch
+                android:id="@+id/switch1"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="通用字表"
+                app:layout_constraintStart_toStartOf="@+id/input_line"
+                app:layout_constraintTop_toBottomOf="@+id/input_line" />
+
+            <Switch
+                android:id="@+id/switch2"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginHorizontal="10dp"
+                android:text="反查釋義"
+                android:visibility="invisible"
+                app:layout_constraintStart_toEndOf="@+id/switch1"
+                app:layout_constraintTop_toTopOf="@+id/switch1"
+                />
+
+            <Spinner
+                android:id="@+id/locate_spinner"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"
+                app:layout_constraintEnd_toEndOf="@+id/input_line"
+                app:layout_constraintTop_toTopOf="@+id/switch1"
+                android:visibility="invisible"/>
+        </LinearLayout>
+
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    <ProgressBar
+        android:id="@+id/loading_progress"
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="7dp"
+        android:indeterminate="true"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:max="100"
+        android:progress="0"
+        android:layout_gravity="bottom"
+        android:indeterminateTint="@color/colorSecondary"
+        android:visibility="invisible" />
+
+    <fragment
+        android:id="@+id/result_fragment"
+        android:name="cc.ecisr.jyutdict.ResultFragment"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        />
+
+</LinearLayout>
