@@ -6,6 +6,7 @@ public class EnumConst {
 	public static final int QUERYING_SHEET = 2;
 	
 	public static final int INITIALIZE_LOCATIONS = 3286;
+	public static final int CHECKING_VERSION = 3453;
 	
 	public static final int GETTING_CONTENT_LOCATION = 0;
 	public static final int GETTING_CONTENT_WANSHYU = 1;

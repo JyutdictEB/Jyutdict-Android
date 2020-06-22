@@ -1,9 +1,8 @@
 package cc.ecisr.jyutdict;
 
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.Context;
 import android.text.Html;
+import android.text.Spanned;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,9 +13,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
-import java.util.Vector;
-
-import cc.ecisr.jyutdict.utils.ToastUtil;
 
 public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.LinearViewHolder> {
 	private Context mContext;
@@ -37,53 +33,40 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 	
 	@Override
 	public void onBindViewHolder(@NonNull ResultItemAdapter.LinearViewHolder holder, final int position) {
-		ArrayList<String> item = ResultInfo.list.get(position);
-		if (!"".equals(item.get(ResultInfo.HEADER)) || !"".equals(item.get(ResultInfo.INFO))) {
-			holder.lyChara.setVisibility(View.VISIBLE);
-			holder.tvCharaHeader.setText(Html.fromHtml(item.get(ResultInfo.HEADER)));
-			holder.tvCharaInfo.setText(Html.fromHtml(item.get(ResultInfo.INFO)));
-			holder.tvCharaExtra.setText(Html.fromHtml(item.get(ResultInfo.EXTRA)));
-		} else {
-			holder.lyChara.setVisibility(View.GONE);
-		}
+		ArrayList<Spanned> item = ResultInfo.list.get(position);
+		Spanned header = item.get(ResultInfo.CHARA);
+		Spanned info = item.get(ResultInfo.INFO);
+		Spanned extra = item.get(ResultInfo.EXTRA);
+		Spanned wanshyu = item.get(ResultInfo.RIGHT_TOP);
+		Spanned location = item.get(ResultInfo.RIGHT_BOTTOM);
 		
-		if (!"".equals(item.get(ResultInfo.WANSHYU))) {
-			holder.tvContentWanshyu.setVisibility(View.VISIBLE);
-			holder.tvContentWanshyu.setText(Html.fromHtml(item.get(ResultInfo.WANSHYU)));
-		} else {
-			holder.tvContentWanshyu.setVisibility(View.GONE);
-		}
-		
-		if (!"".equals(item.get(ResultInfo.LOCATION))) {
-			holder.tvContentLocation.setVisibility(View.VISIBLE);
-			holder.tvContentLocation.setText(Html.fromHtml(item.get(ResultInfo.LOCATION)));
-		} else {
-			holder.tvContentLocation.setVisibility(View.GONE);
-		}
+		holder.tvCharaHeader.setText(header);
+		holder.tvCharaInfo.setText(info);
+		holder.tvCharaExtra.setText(extra);
+		holder.tvRightTop.setText(wanshyu);
+		holder.tvRightBottom.setText(location);
+		int lyCharaVisibility = (header.length()!=0 || info.length()!=0) ? View.VISIBLE : View.GONE;
+		int tvContentInfoVisibility = (info.length()!=0) ? View.VISIBLE : View.GONE;
+		int tvContentExtraVisibility = (extra.length()!=0) ? View.VISIBLE : View.GONE;
+		int tvContentWanshyuVisibility = (wanshyu.length()!=0) ? View.VISIBLE : View.GONE;
+		int tvContentLocationVisibility = (location.length()!=0) ? View.VISIBLE : View.GONE;
+		holder.lyChara.setVisibility(lyCharaVisibility);
+		holder.tvCharaInfo.setVisibility(tvContentInfoVisibility);
+		holder.tvCharaExtra.setVisibility(tvContentExtraVisibility);
+		holder.tvRightTop.setVisibility(tvContentWanshyuVisibility);
+		holder.tvRightBottom.setVisibility(tvContentLocationVisibility);
 		
 		// 短按提示Toast
-		holder.itemView.setOnClickListener(v -> {
-			mListener.onClick(position);
-			if (holder.tvCharaHeader.getText().length() != 0) { // 理應放在上面Fragment的接口
-				ToastUtil.msg(mContext, "長按以複製該字");
-			}
-		});
+		holder.itemView.setOnClickListener(v -> mListener.onClick(holder));
 		// 長按複製
 		holder.itemView.setOnLongClickListener(v -> {
-			mListener.onLongClick(position);
-			if (holder.tvCharaHeader.getText().length() != 0) { // 理應放在上面Fragment的接口
-				ClipboardManager cm = (ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
-				ClipData mClipData = ClipData.newPlainText("Label", holder.tvCharaHeader.getText());
-				if (cm != null) {
-					cm.setPrimaryClip(mClipData);
-					ToastUtil.msg(mContext, "已複製："+holder.tvCharaHeader.getText());
-				}
-			}
+			mListener.onLongClick(holder);
 			return true;
 		});
 		
 		ViewGroup.LayoutParams layoutParams = holder.itemView.getLayoutParams();
 		layoutParams.height = LinearLayout.LayoutParams.WRAP_CONTENT;
+		
 	}
 	
 	@Override
@@ -97,44 +80,60 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 	}
 	
 	static class LinearViewHolder extends RecyclerView.ViewHolder {
-		private LinearLayout lyChara, lyContent;
-		private TextView tvCharaHeader, tvCharaInfo, tvCharaExtra, tvContentWanshyu, tvContentLocation;
+		LinearLayout lyChara;//, lyContent;
+		TextView tvCharaHeader, tvCharaInfo, tvCharaExtra, tvRightTop, tvRightBottom;
 		
 		LinearViewHolder(@NonNull View itemView) {
 			super(itemView);
 			lyChara = itemView.findViewById(R.id.item_chara);
-			lyContent = itemView.findViewById(R.id.item_content);
+			//lyContent = itemView.findViewById(R.id.item_content);
 			
 			tvCharaHeader = itemView.findViewById(R.id.chara_header);
 			tvCharaInfo = itemView.findViewById(R.id.chara_info);
 			tvCharaExtra = itemView.findViewById(R.id.chara_extra);
-			tvContentWanshyu = itemView.findViewById(R.id.content_wanshyu);
-			tvContentLocation = itemView.findViewById(R.id.content_location);
+			tvRightTop = itemView.findViewById(R.id.content_wanshyu);
+			tvRightBottom = itemView.findViewById(R.id.content_location);
+			
+//			lyChara.getLayoutParams().width = LinearLayout.LayoutParams.WRAP_CONTENT;
+		}
+		
+		String getChara() {
+			return tvCharaHeader.getText().toString();
 		}
 	}
 	
 	public interface OnItemClickListener {
-		void onClick(int pos);
-		void onLongClick(int pos);
+		void onClick(@NonNull ResultItemAdapter.LinearViewHolder holder);
+		void onLongClick(@NonNull ResultItemAdapter.LinearViewHolder holder);
 	}
 	
 	static class ResultInfo {
-		private static final int HEADER = 0, INFO = 1, EXTRA = 2, WANSHYU = 3, LOCATION = 4;
+		private static final int CHARA = 0, INFO = 1, EXTRA = 2, RIGHT_TOP = 3, RIGHT_BOTTOM = 4;
 		
-		static Vector<ArrayList<String>> list;
-		static ArrayList<String> item;
+		static ArrayList<ArrayList<Spanned>> list;
+		static ArrayList<Spanned> item;
 		
 		ResultInfo() {
-			list = new Vector<>(0);
+			list = new ArrayList<>(0);
 		}
 		
 		static void addItem(String charaHeader, String charaInfo, String charaExtra, String contentWanshyu, String contentLocation) {
 			item = new ArrayList<>(5);
-			item.add(charaHeader);
-			item.add(charaInfo);
-			item.add(charaExtra);
-			item.add(contentWanshyu);
-			item.add(contentLocation);
+			item.add(Html.fromHtml(charaHeader));
+			item.add(Html.fromHtml(charaInfo));
+			item.add(Html.fromHtml(charaExtra));
+			item.add(Html.fromHtml(contentWanshyu));
+			item.add(Html.fromHtml(contentLocation));
+			list.add(item);
+		}
+		
+		static void addItem(Spanned chara, Spanned leftMiddle, Spanned leftBottom, Spanned rightTop, Spanned rightBottom) {
+			item = new ArrayList<>(5);
+			item.add(chara);
+			item.add(leftMiddle);
+			item.add(leftBottom);
+			item.add(rightTop);
+			item.add(rightBottom);
 			list.add(item);
 		}
 		

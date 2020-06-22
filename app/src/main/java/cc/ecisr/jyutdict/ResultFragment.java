@@ -1,6 +1,12 @@
 package cc.ecisr.jyutdict;
 
+import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.Spanned;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,7 +16,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
-import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -18,15 +23,19 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import cc.ecisr.jyutdict.struct.Character;
 import cc.ecisr.jyutdict.utils.EnumConst;
-import cc.ecisr.jyutdict.utils.StringUtil;
+import cc.ecisr.jyutdict.utils.ToastUtil;
 
 public class ResultFragment extends Fragment {
 	private static final String TAG = "`ResultFragment";
 	
-	private RecyclerView mRvMain;
+	static private RecyclerView mRvMain;  //  不加static会显示两个View
 	private View selfView;
 	
 	@Nullable
@@ -38,28 +47,97 @@ public class ResultFragment extends Fragment {
 			return selfView;
 		}
 		
-		selfView = inflater.inflate(R.layout.fragment_result, container, false);
-		mRvMain = selfView.findViewById(R.id.result_list);
-		ResultItemAdapter marketItemAdapter = new ResultItemAdapter(getActivity(), new ResultItemAdapter.OnItemClickListener() {
-			@Override
-			public void onClick(int pos) {
-				//ToastUtil.msg(getActivity(), "Click: " + pos);
-			}
-			
-			@Override
-			public void onLongClick(int pos) {
-				//ToastUtil.msg(getActivity(), "Long: " + pos);
-			}
-		});
 		
-		mRvMain.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
-		mRvMain.setItemAnimator(new DefaultItemAnimator());
-		mRvMain.setAdapter(marketItemAdapter);
-		if (getActivity() != null) {
-			mRvMain.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL));
+		if (mRvMain == null) {
+			selfView = inflater.inflate(R.layout.fragment_result, container, false);
+			mRvMain = selfView.findViewById(R.id.result_list);
+			ResultItemAdapter marketItemAdapter = new ResultItemAdapter(getActivity(), new ResultItemAdapter.OnItemClickListener() {
+				@Override
+				public void onClick(@NonNull ResultItemAdapter.LinearViewHolder holder) {
+					ArrayList<String> selectionList = new ArrayList<>();
+					ArrayList<String> charaInWordsList = new ArrayList<>();
+					
+					final String chara = holder.getChara();
+					final boolean isCopiable = chara.length() != 0 && !"？".equals(chara);
+					if (isCopiable) {
+						selectionList.add("複製：" + chara);
+					}
+					final Pattern pt= Pattern.compile("((?<=（[～~])[^～~](?=）))|((?<=（)[^～~](?=[～~]）))");
+					Matcher mt=pt.matcher(holder.tvRightTop.getText().toString());
+					while(mt.find()){
+						charaInWordsList.add(mt.group(0));
+						selectionList.add("在通語字表檢索：" + mt.group(0));
+						selectionList.add("在泛粵字表檢索：" + mt.group(0));
+					}
+					if (selectionList.size()!=0) {
+						final String[] selections = selectionList.toArray(new String[0]);
+						new AlertDialog.Builder(getContext())
+								.setItems(selections, (dialogInterface, i) -> {
+									if (i == 0 && isCopiable) {
+										copy(chara);
+									} else {
+										int elseItemAddedCount = (isCopiable ? 1 : 0);
+										int mode = (i % 2 == elseItemAddedCount) ?
+												EnumConst.QUERYING_CHARA :
+												EnumConst.QUERYING_SHEET;
+										((MainActivity) getActivity()).search(
+												charaInWordsList.get((i - 1) >> elseItemAddedCount),
+												mode);
+									}
+								}).create().show();
+					}
+				}
+				
+				@Override
+				public void onLongClick(@NonNull ResultItemAdapter.LinearViewHolder holder) {
+					if (holder.getChara().length()!=0 && getActivity()!=null) {
+						copy(holder.getChara());
+					}
+				}
+			});
+			mRvMain.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
+			mRvMain.setItemAnimator(new DefaultItemAnimator());
+			mRvMain.setAdapter(marketItemAdapter);
+//			if (getActivity() != null) {
+//				mRvMain.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL));
+//			}
+//			Log.i(TAG, "onCreateView: 1");
+		} else if (savedInstanceState!=null) {
+//			mRvMain = (RecyclerView) savedInstanceState.get("rv_main");
+//			Log.i(TAG, "onCreateView: 2");
+		} else {
+//			Log.i(TAG, "onCreateView: 3");
 		}
-		Log.i(TAG, "onCreateView: ");
+		Log.i(TAG, "onCreateView: " + System.identityHashCode(this));
 		return selfView;
+	}
+	
+	private void copy(String chara) {
+		ClipboardManager cm = (ClipboardManager) getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
+		ClipData mClipData = ClipData.newPlainText("Label", chara);
+		if (cm != null) {
+			cm.setPrimaryClip(mClipData);
+			ToastUtil.msg(getContext(), "已複製："+chara);
+		}
+	}
+	
+	
+	@Override
+	public void onSaveInstanceState(@NonNull Bundle outState) {
+		Log.i(TAG, "onSaveInstanceState: ");
+		super.onSaveInstanceState(outState);
+	}
+	
+	@Override
+	public void onDestroyView() {
+		Log.i(TAG, "onDestroyView: " + System.identityHashCode(this));
+		super.onDestroyView();
+	}
+	
+	@Override
+	public void onDestroy() {
+		Log.i(TAG, "onDestroy: ");
+		super.onDestroy();
 	}
 	
 	@Override
@@ -69,17 +147,17 @@ public class ResultFragment extends Fragment {
 	}
 	
 	void parseJson(String jsonString, int queryObjectWhat) {
-		mRvMain.getAdapter().notifyDataSetChanged(); // 不能放在下面那句==null後
 		try {
 			if (mRvMain.getAdapter() == null) return;
+			mRvMain.getAdapter().notifyDataSetChanged();
 			ResultItemAdapter.ResultInfo.clearItem();
 			StringBuilder contentLocation = new StringBuilder();
 			StringBuilder contentWanshyu = new StringBuilder();
 			StringBuilder contentCharaInfo = new StringBuilder();
-			String chara = "";
+			String chara;
 			JSONArray jsonArray;
 			switch (queryObjectWhat) {
-				case EnumConst.QUERYING_CHARA:
+				case EnumConst.QUERYING_CHARA: // 將棄用，改用Character類
 					jsonArray = new JSONArray(jsonString);
 					for (int i = 0; i<jsonArray.length(); i++) {
 						JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -165,74 +243,30 @@ public class ResultFragment extends Fragment {
 						
 					}
 					break;
-				case EnumConst.QUERYING_PRON:
+				case EnumConst.QUERYING_PRON: // 將棄用，改用Character類
 					JSONObject jsonObject = new JSONObject(jsonString);
 					JSONArray jsonLocationsArray = jsonObject.getJSONArray("各地");
 					JSONArray jsonWanshyusArray = jsonObject.getJSONArray("韻書");
 					parseJsonPron(jsonLocationsArray, contentLocation, EnumConst.GETTING_CONTENT_LOCATION);
 					parseJsonPron(jsonWanshyusArray, contentWanshyu, EnumConst.GETTING_CONTENT_WANSHYU);
-					
 					addItem("", "", contentCharaInfo, contentWanshyu, contentLocation);
 					break;
 				case EnumConst.QUERYING_SHEET:
 					jsonArray = new JSONArray(jsonString);
-					JSONObject header = jsonArray.getJSONObject(0);
 					JSONObject entry;
-					Iterator<String> headerColsIterator = header.keys();
-					int length = header.length();
-					String[] headerColsString = new String[length];
-					String retrievedString;
-					String key;
-					while (headerColsIterator.hasNext()) {
-						key = headerColsIterator.next();
-						headerColsString[header.getInt(key)] = key;
-					}
-					
+					Character character;
+					if (getActivity()==null) break;
+					SharedPreferences sp = getActivity().getSharedPreferences("settings", Context.MODE_PRIVATE);
+					int areaColoring = (sp.getBoolean("area_coloring", true)) ? 4 : 0;
 					for (int i = 1; i<jsonArray.length(); i++) {
 						entry = jsonArray.getJSONObject(i);
-						for (int j=0; j<length; j++) {
-							retrievedString = entry.getString(headerColsString[j]);
-							switch (headerColsString[j]) {
-								case "繁":
-									chara = retrievedString;
-									break;
-								case "綜":
-									if (retrievedString.contains("?")) {
-										contentCharaInfo.append("<i>").append(retrievedString).append("</i>");
-									} else {
-										contentCharaInfo.append(retrievedString);
-									}
-									break;
-								case "釋義":
-									contentWanshyu.append(retrievedString);
-									break;
-								case "總點數":
-									break;
-								default:
-									if (!"".equals(retrievedString)) {
-										if ("_".equals(retrievedString)) contentLocation.append("<font color=\"#B9BAA3\">");
-										if (retrievedString.contains("?")) contentLocation.append("<i>");
-										contentLocation.append(headerColsString[j]).append(": ")
-												.append(retrievedString).append("\t  ");
-										if (retrievedString.contains("?")) contentLocation.append("</i>");
-										if ("_".equals(retrievedString)) contentLocation.append("</font>");
-										
-									}
-									break;
-							}
-						}
-						String unicode = "";
-						String processedChara = chara;
-						if (!"!".equals(chara) && !"！".equals(chara) && !"?".equals(chara) && !"？".equals(chara)) {
-							boolean questionable = chara.contains("?") || chara.contains("？");
-							boolean duplicate = chara.contains("見");
-							processedChara = chara.replaceAll("[?/!？！見 ]", "");
-							unicode = StringUtil.charaToUnicode(processedChara);
-							if ("".equals(processedChara)) processedChara = "　";
-							if (questionable) processedChara = "<font color=\"#B9BAA3\">" + processedChara + "</font>";
-							if (duplicate) processedChara = "<font color=\"#3d3b4f\">" + processedChara + "</font>";
-						}
-						addItem(processedChara, unicode, contentCharaInfo, contentWanshyu, contentLocation);
+						character = new Character(entry, EnumConst.QUERYING_SHEET | areaColoring);
+						addItem(character.printCharacter(),
+								character.printUnicode(),
+								character.printPronunciation(),
+								character.printMeanings(),
+								character.printLocations()
+						);
 					}
 					break;
 				default:
@@ -244,7 +278,6 @@ public class ResultFragment extends Fragment {
 			e.printStackTrace();
 		}
 	}
-	
 	
 	private void parseJsonPron(JSONArray jsonArray, StringBuilder stringBuilder, int type) { // TODO 改变量名
 		try {
@@ -314,7 +347,7 @@ public class ResultFragment extends Fragment {
 		}
 	}
 	
-	private void addItem(String chara, String extra, StringBuilder... sbs) {
+	private void addItem(String chara, String extra, StringBuilder... sbs) { // 將棄用，改用下面這個
 		if (sbs.length != 3) return;
 		if (sbs[0].length()!=0 || sbs[1].length()!=0 || sbs[2].length()!=0) {
 			ResultItemAdapter.ResultInfo.addItem(
@@ -328,5 +361,17 @@ public class ResultFragment extends Fragment {
 		sbs[0].delete(0,sbs[0].length());
 		sbs[1].delete(0,sbs[1].length());
 		sbs[2].delete(0,sbs[2].length());
+	}
+	
+	private void addItem(Spanned chara, Spanned leftMiddle, Spanned leftBottom, Spanned rightTop, Spanned rightBottom) {
+		if (rightTop.length()!=0 || rightBottom.length()!=0) {
+			ResultItemAdapter.ResultInfo.addItem(
+					chara,
+					leftMiddle,
+					leftBottom,
+					rightTop,
+					rightBottom
+			);
+		}
 	}
 }

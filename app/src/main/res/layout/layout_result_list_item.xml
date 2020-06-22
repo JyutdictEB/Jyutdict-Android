@@ -4,7 +4,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:layout_marginTop="7dp"
+    android:layout_marginBottom="3dp"
+    android:layout_marginHorizontal="10dp"
+    android:background="@color/colorWhite"
+    android:elevation="2dp">
 
     <LinearLayout
         android:id="@+id/list_item"
@@ -13,6 +18,8 @@
         android:orientation="horizontal"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        android:paddingHorizontal="5dp"
+        android:background="?android:attr/selectableItemBackground"
         android:paddingVertical="5dp">
 
         <LinearLayout
@@ -22,37 +29,40 @@
             android:orientation="vertical"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            android:paddingHorizontal="5dp"
+            android:paddingHorizontal="0dp"
             android:gravity="center"
             >
             <TextView
                 android:id="@+id/chara_header"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="60sp"
-                android:text="重"
-                android:paddingHorizontal="15dp"
-                android:textColor="@color/colorBlack"
                 android:gravity="center"
+                android:foregroundGravity="center"
+                android:layout_gravity="center"
+                android:paddingHorizontal="15dp"
+                android:textSize="54sp"
+                android:text="@string/result_list_chara"
+                android:textColor="@color/colorBlack"
                 />
             <TextView
                 android:id="@+id/chara_info"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="12sp"
-                android:text="澄通鍾三開平dryung\n澄通鍾三開上dryungx\n澄通鍾三開去dryungh"
                 android:gravity="center"
+                android:paddingHorizontal="5dp"
+                android:textSize="12sp"
+                android:text="@string/result_list_info"
                 android:textColor="@color/colorBlack"
                 />
             <TextView
                 android:id="@+id/chara_extra"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingVertical="2dp"
-                android:paddingHorizontal="20dp"
-                android:textSize="14sp"
-                android:text="U+91CD"
                 android:gravity="center"
+                android:paddingVertical="2dp"
+                android:paddingHorizontal="5dp"
+                android:textSize="14sp"
+                android:text="@string/result_list_extra"
                 android:textColor="@color/colorBlack"
                 />
         </LinearLayout>
@@ -63,16 +73,16 @@
             android:orientation="vertical"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            android:layout_weight="1">
+            android:layout_weight="1"
+            android:paddingHorizontal="5dp">
             <TextView
                 android:id="@+id/content_wanshyu"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingVertical="4dp"
                 android:textSize="14sp"
-                android:text="分韻 第六東董凍篤-虫 , 穿東陽平(chung4) , 復也曡也 | 第六東董凍篤-仲 , 照東陽去(zhung) , 厚也又慎重輕重\n英華 chung꜅(zhung6) | ꜁ch'ung(chung4)"
+                android:text="@string/result_list_upper"
                 android:textColor="@color/colorBlack"
-                android:paddingEnd="10dp"
                 />
             <TextView
                 android:id="@+id/content_location"
@@ -80,9 +90,8 @@
                 android:layout_height="wrap_content"
                 android:paddingVertical="4dp"
                 android:textSize="14sp"
-                android:text="U+8FFFFF"
+                android:text="@string/result_list_bottom"
                 android:textColor="@color/colorBlack"
-                android:paddingEnd="10dp"
                 />
 
         </LinearLayout>

@@ -23,7 +23,8 @@ public class StringUtil {
 					hexB = "00" + hexB;
 				}
 			}
-			unicodeBytes.append("U+").append(hexB.toUpperCase());
+			if (i!=0) unicodeBytes.append(" ");
+			unicodeBytes.append("u").append(hexB.toUpperCase());
 		}
 		return unicodeBytes.toString();
 	}

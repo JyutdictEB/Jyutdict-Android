@@ -19,61 +19,40 @@ public class HttpUtil {
 	public static final int EMPTY_URL_OR_HANDLER = 9100;
 	public static final int REQUEST_CONTENT_SUCCESSFULLY = 9200;
 	public static final int REQUEST_CONTENT_FAIL = 9201;
-	public static final int POSTING_CONTENT_NOTIFY = 9202;
-	public static final int POSTED_CONTENT_MAIN_PART = 9203;
-	public static final int REQUEST_CONTENT_CANCELED = 9204;
 	
 	
 	private String urlStr = "";
 	private Handler handler;
 	private GetThread getThread;
-	private PostThread postThread;
 	private Boolean mode; // False For GET, True For POST
-	private Boolean disconnect = false;
 	
-	int messageWhat;
-	
+	private int messageWhat;
 	
 	public HttpUtil(Boolean mode) {
 		this.mode = mode;
 	}
 	
-	public void setUrl(String urlStr) {
+	public HttpUtil setUrl(String urlStr) {
 		this.urlStr = urlStr;
-		
+		return this;
 	}
-	public void setHandler(Handler handler) {
+	public HttpUtil setHandler(Handler handler) {
 		this.handler = handler;
 		messageWhat = REQUEST_CONTENT_SUCCESSFULLY;
+		return this;
 	}
-	public void setHandler(Handler handler, int what) {
+	public HttpUtil setHandler(Handler handler, int what) {
 		this.handler = handler;
 		this.messageWhat = what;
+		return this;
 	}
 	
-	public void setDisconnect () {
-		disconnect = true;
-		if (mode && postThread!=null && postThread.conn != null) {
-			postThread.conn.disconnect();
-		}
-	}
 	
 	public void start() {
 		if (mode == GET) {
 			if (getThread==null || !getThread.isAlive()){
 				getThread = new GetThread();
 				getThread.start();
-				Log.d(TAG, "GetThreadStart");
-			}
-		} else {
-			if (postThread==null || !postThread.isAlive()){
-				postThread = new PostThread();
-			}
-			if (postThread.set) {
-				postThread.start();
-				Log.d(TAG, "PostThreadStart");
-			} else {
-				Log.e(TAG, "PostThread Unset Yet");
 			}
 		}
 	}
@@ -87,6 +66,7 @@ public class HttpUtil {
 			if (null!=urlStr && !"".equals(urlStr) && handler!=null) {
 				try {
 					URL url = new URL(urlStr);
+					Log.i(TAG, "request: " + urlStr);
 					conn = (HttpURLConnection) url.openConnection();
 					conn.setRequestMethod("GET"); //GETリクエストを設定
 					conn.setConnectTimeout(5000);
@@ -103,8 +83,7 @@ public class HttpUtil {
 						
 						m.what = messageWhat;
 						m.obj = resultData.toString();
-						Log.i(TAG, "run: " + urlStr);
-						Log.i(TAG, "run: " + resultData.toString());
+						Log.i(TAG, "receive: " + resultData.toString());
 					} else {
 						m.what = REQUEST_CONTENT_FAIL;
 						m.obj = String.valueOf(conn.getResponseCode());
@@ -112,12 +91,11 @@ public class HttpUtil {
 					handler.sendMessage(m);
 				} catch (IOException e) {
 					e.printStackTrace();
+					handler.sendMessage(handler.obtainMessage(REQUEST_CONTENT_FAIL, 0));
 				}
 			} else {
 				if (handler != null) {
-					m.what = EMPTY_URL_OR_HANDLER;
-					m.obj = "";
-					handler.sendMessage(m);
+					handler.sendMessage(handler.obtainMessage(EMPTY_URL_OR_HANDLER, ""));
 				} else {
 					Log.e(TAG, "空線程Handler！");
 				}
@@ -127,27 +105,5 @@ public class HttpUtil {
 	
 	
 	class PostThread extends Thread {
-		private static final int TIME_OUT = 10; //超時
-		private static final String CHARSET = "utf-8";
-		private static final String BOUNDARY = "FlPm4LpSXsE"; //UUID.randomUUID().toString();
-		private static final String PREFIX = "--";
-		//private final String LINE_END = System.getProperty("line.separator");
-		private static final String LINE_END = "\r\n";
-		private static final String CONTENT_TYPE = "multipart/form-data";
-		
-		String[] videoInfo;
-		String videoExtra;
-		String previewPath;
-		Boolean set = false;
-		HttpURLConnection conn;
-		
-		
-		public void run(){
-			Message m = new Message();
-			InputStream is;
-			StringBuilder resultData = new StringBuilder();
-			StringBuffer sb;
-			
-		}
 	}
 }

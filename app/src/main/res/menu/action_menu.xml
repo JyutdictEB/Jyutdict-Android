@@ -1,4 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+<!--    <item-->
+<!--        android:id="@+id/search_icon"-->
+<!--        android:icon="@drawable/actionbar_search_dark_icon"-->
+<!--        android:title="蒐索"-->
+<!--        app:showAsAction="always">-->
+<!--    </item>-->
 
+    <item
+        android:id="@+id/option_setting"
+        android:title="@string/menu_options"
+        android:icon="@drawable/ic_option"
+        app:showAsAction="always">
+    </item>
 </menu>

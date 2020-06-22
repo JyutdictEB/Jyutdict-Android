@@ -8,8 +8,9 @@
     <color name="colorGray">#3d3b4f</color>
     <color name="colorUnavailable">#B9BAA3</color>
     <color name="colorHover">#E9E7EF</color>
-    <color name="colorBackground">#F4F4EE</color>
+    <color name="colorBackground">#FAFAFA</color>
     <color name="colorWhite">#FFFFFF</color>
     <color name="colorBlack">#0F110C</color>
+    <color name="colorSolarized">#002C36</color>
 
 </resources>
