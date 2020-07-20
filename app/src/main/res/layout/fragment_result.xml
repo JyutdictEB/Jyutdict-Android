@@ -10,5 +10,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:foregroundGravity="center"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent"
+        android:scrollbarSize="3dp"
+        android:scrollbarThumbVertical="@color/colorPrimary"
+        android:scrollbars="vertical"/>
 </RelativeLayout>

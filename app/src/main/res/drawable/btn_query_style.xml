@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:top="-4dp"
+        android:right="-4dp"
+        android:left="-4dp"> <!-- 会使上左右三条边不可见，值与边框粗细有关，边框为xdp时，这里设置为-(x+1)dp -->
+        <shape>
+            <solid android:color="#0000" />   <!-- 主体背景颜色值，此处为透明 -->
+            <stroke
+                android:width="1.5dp"
+                android:color="@color/colorPrimary" />
+        </shape>
+    </item>
+
+</layer-list>

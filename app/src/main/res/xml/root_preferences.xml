@@ -17,13 +17,28 @@
 
 <!--    </PreferenceCategory>-->
 
+    <PreferenceCategory app:title="@string/search_header">
+        <SwitchPreference
+            app:key="advanced_search"
+            app:title="@string/search_title_advanced_options"
+            app:defaultValue="false"/>
+
+    </PreferenceCategory>
+
     <PreferenceCategory app:title="@string/display_header">
 
         <SwitchPreference
             app:key="area_coloring"
-            app:title="@string/display_area_coloring_title"
+            app:title="@string/display_title_area_coloring"
             app:defaultValue="true"/>
 
+        <EditTextPreference
+            app:key="area_coloring_darken_ratio"
+            app:dependency="area_coloring"
+            app:title="@string/display_title_area_coloring_ratio"
+            app:useSimpleSummaryProvider="true"
+            app:defaultValue="0.92"
+            />
 <!--        <SwitchPreferenceCompat-->
 <!--            app:dependency="sync"-->
 <!--            app:key="attachment"-->

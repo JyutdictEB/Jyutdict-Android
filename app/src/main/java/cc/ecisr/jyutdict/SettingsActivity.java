@@ -8,12 +8,15 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.text.InputType;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.EditTextPreference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SwitchPreference;
 
@@ -34,6 +37,8 @@ public class SettingsActivity extends AppCompatActivity {
 	static SharedPreferences.Editor editor;
 	int v0This, v1This, v2This; // 版本号
 	
+	SettingsFragment settingsFragment = new SettingsFragment();
+	
 	@SuppressLint("HandlerLeak")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +46,7 @@ public class SettingsActivity extends AppCompatActivity {
 		setContentView(R.layout.activity_settings);
 		getSupportFragmentManager()
 				.beginTransaction()
-				.replace(R.id.settings, new SettingsFragment())
+				.replace(R.id.settings, settingsFragment)
 				.commit();
 		ActionBar actionBar = getSupportActionBar();
 		if (actionBar != null) {
@@ -64,20 +69,20 @@ public class SettingsActivity extends AppCompatActivity {
 							JSONArray version = new JSONObject(
 								msg.obj.toString()
 							).getJSONArray("app_version");
-							int v0 = version.getInt(0);
+							int v0 = version.getInt(0); // 服務器記錄的最新版本號
 							int v1 = version.getInt(1);
 							int v2 = version.getInt(2);
-							if (v0>v0This || v1>v1This || v2>v2This) {
-								ToastUtil.msg(SettingsActivity.this, "有新版本");
+							if (v0>v0This || v1>v1This || v2>v2This) { // 如果有更新
+								ToastUtil.msg(SettingsActivity.this, getResources().getString(R.string.tips_version_detected));
 								String downloadUrl = String.format(Locale.CHINA,
 										"http://jyutdict.org/release/%d-%d-%d.apk", v0, v1, v2);
 								ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
 								ClipData mClipData = ClipData.newPlainText("泛粤典下载", downloadUrl);
 								if (cm != null) {
 									cm.setPrimaryClip(mClipData);
-								}
+								} // else {}
 							} else {
-								ToastUtil.msg(SettingsActivity.this, "已为最新");
+								ToastUtil.msg(SettingsActivity.this, getResources().getString(R.string.tips_version_checked));
 							}
 						} catch (Exception ignored) {}
 						break;
@@ -88,46 +93,56 @@ public class SettingsActivity extends AppCompatActivity {
 		};
 		
 		
-		
-		
 		btnCheckVersion = findViewById(R.id.btn_check_version);
 		btnCheckVersion.setText(getResources().getString(R.string.app_version, v0This, v1This, v2This));
-		btnCheckVersion.setOnLongClickListener(v -> {
-			HttpUtil query = new HttpUtil(HttpUtil.GET);
-			query.setUrl("http://jyutdict.org/api/"); // 獲取地名列表
-			query.setHandler(mHandler, EnumConst.CHECKING_VERSION);
-			query.start();
-			ToastUtil.msg(SettingsActivity.this, "正在检测更新版本");
-			btnCheckVersion.setEnabled(false);
+		btnCheckVersion.setOnLongClickListener(v -> { // 獲取地名列表
+			new HttpUtil(HttpUtil.GET)
+					.setUrl("http://jyutdict.org/api/")
+					.setHandler(mHandler, EnumConst.CHECKING_VERSION)
+					.start();
+			ToastUtil.msg(SettingsActivity.this, getResources().getString(R.string.tips_version_checking));
+			v.setEnabled(false);
 			return true;
 		});
 	}
 	
 	@Override
+	public void onBackPressed() {
+		setResult(settingsFragment.saveSettings());  //  記錄本頁的所有設置
+		super.onBackPressed();
+	}
+	
+	@Override
 	protected void onDestroy() {
-		editor.apply();
 		super.onDestroy();
 	}
 	
 	public static class SettingsFragment extends PreferenceFragmentCompat {
-		private static final String TAG = "`SettingsFragment";
+		SwitchPreference switchAdvancedSearch;
 		SwitchPreference switchAreaColoring;
+		EditTextPreference editAreaColoringDarkenRatio;
 		@Override
 		public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
 			setPreferencesFromResource(R.xml.root_preferences, rootKey);
+			switchAdvancedSearch = findPreference("advanced_search");
 			switchAreaColoring = findPreference("area_coloring");
-			if (switchAreaColoring!=null) {
-				switchAreaColoring.setOnPreferenceChangeListener((preference, newValue) -> {
-					Log.i(TAG, preference.toString() + "onPreferenceChange: " + newValue.toString());
-					if ("true".equals(newValue.toString())) {
-						SettingsActivity.editor.putBoolean("area_coloring", true);
-					} else {
-						SettingsActivity.editor.putBoolean("area_coloring", false);
-					}
-					return true;
+			editAreaColoringDarkenRatio = findPreference("area_coloring_darken_ratio");
+			
+			if (editAreaColoringDarkenRatio != null) {
+				editAreaColoringDarkenRatio.setOnBindEditTextListener(editText -> {
+					editText.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL);
 				});
 			}
 		}
 		
+		int saveSettings() {
+			int settings = 0;
+			editor.putBoolean("advanced_search", switchAdvancedSearch.isChecked());
+			editor.putBoolean("area_coloring", switchAreaColoring.isChecked());
+			editor.putFloat("area_coloring_darken_ratio", Float.parseFloat(editAreaColoringDarkenRatio.getText()));
+			editor.apply();
+			settings |= switchAdvancedSearch.isChecked() ? 1<<0 : 0;
+			return settings;
+		}
 	}
 }

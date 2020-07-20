@@ -7,8 +7,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     tools:context=".MainActivity">
-
-    <androidx.appcompat.widget.Toolbar
+<!--TODO 橫屏 // DO不了，要先解決Fragment重疊的問題-->
+        <androidx.appcompat.widget.Toolbar
         android:id="@+id/tool_bar"
         android:paddingTop="25dp"
         android:paddingHorizontal="20dp"
@@ -55,6 +55,7 @@
                 android:inputType="text"
                 android:maxLines="1"
                 android:paddingHorizontal="15dp"
+                android:paddingVertical="0dp"
                 android:textSize="16dp"
                 android:theme="@style/MyEditText"
                 app:layout_constraintStart_toEndOf="@+id/textView"
@@ -68,6 +69,7 @@
                 android:foreground="?selectableItemBackground"
                 android:text="@string/search_button"
                 android:textColor="@color/colorPrimary"
+                android:paddingVertical="0dp"
                 android:textSize="16dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/textView"
@@ -82,28 +84,30 @@
             android:layout_marginTop="10dp"
             android:paddingHorizontal="15dp"
             android:orientation="horizontal"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/input_advanced_switch"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/input_line">
 
             <Switch
-                android:id="@+id/switch1"
+                android:id="@+id/switch_select_sheet"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:text="@string/search_common_sheet"
+                android:theme="@style/ColorSwitchStyle"
                 app:layout_constraintStart_toStartOf="@+id/input_line"
                 app:layout_constraintTop_toBottomOf="@+id/input_line" />
 
             <Switch
-                android:id="@+id/switch2"
+                android:id="@+id/switch_reverse_search"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_marginHorizontal="10dp"
                 android:text="@string/search_reversal"
+                android:theme="@style/ColorSwitchStyle"
                 android:visibility="invisible"
-                app:layout_constraintStart_toEndOf="@+id/switch1"
-                app:layout_constraintTop_toTopOf="@+id/switch1" />
+                app:layout_constraintStart_toEndOf="@+id/switch_select_sheet"
+                app:layout_constraintTop_toTopOf="@+id/switch_select_sheet" />
 
             <Spinner
                 android:id="@+id/locate_spinner"
@@ -112,7 +116,29 @@
                 android:layout_weight="1"
                 android:visibility="invisible"
                 app:layout_constraintEnd_toEndOf="@+id/input_line"
-                app:layout_constraintTop_toTopOf="@+id/switch1" />
+                app:layout_constraintTop_toTopOf="@+id/switch_select_sheet" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/input_advanced_switch"
+            android:layout_width="match_parent"
+            android:layout_height="25dp"
+            android:layout_marginTop="10dp"
+            android:paddingHorizontal="15dp"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/input_switch">
+
+            <Switch
+                android:id="@+id/switch_use_regex"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="@string/search_enable_regex"
+                android:theme="@style/ColorSwitchStyle"
+                app:layout_constraintStart_toStartOf="@+id/input_line"
+                app:layout_constraintTop_toBottomOf="@+id/input_line" />
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

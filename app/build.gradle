@@ -8,8 +8,8 @@ android {
         applicationId "cc.ecisr.jyutdict"
         minSdkVersion 14
         targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
+        versionCode 5
+        versionName "0.2.5"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -38,5 +38,6 @@ dependencies {
     implementation 'com.google.android.material:material:1.1.0'
 
     implementation 'com.github.zackratos.ultimatebar:ultimatebar3:3.1.1' // 透明状态栏
+//    implementation 'com.alibaba:fastjson:1.1.71.android' // FastJSON
 //    implementation files('libs/mysql-connector-java-5.1.46.jar')
 }

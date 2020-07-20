@@ -16,8 +16,14 @@ public class HttpUtil {
 	
 	public static final Boolean POST = true;
 	public static final Boolean GET = false;
+	
+	// 未設置請求的 url
 	public static final int EMPTY_URL_OR_HANDLER = 9100;
+	
+	// 正確接收到回應
 	public static final int REQUEST_CONTENT_SUCCESSFULLY = 9200;
+	
+	// 請求失敗
 	public static final int REQUEST_CONTENT_FAIL = 9201;
 	
 	
@@ -68,11 +74,11 @@ public class HttpUtil {
 					URL url = new URL(urlStr);
 					Log.i(TAG, "request: " + urlStr);
 					conn = (HttpURLConnection) url.openConnection();
-					conn.setRequestMethod("GET"); //GETリクエストを設定
+					conn.setRequestMethod("GET"); // GETリクエストを設定
 					conn.setConnectTimeout(5000);
 					conn.setReadTimeout(5000);
 					
-					if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {//成功した
+					if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) { // 成功した
 						is = conn.getInputStream();
 						InputStreamReader isr = new InputStreamReader(is);
 						BufferedReader bufferReader = new BufferedReader(isr);

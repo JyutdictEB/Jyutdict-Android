@@ -1,11 +1,14 @@
 <resources>
     <string name="app_name">泛粵典</string>
-    <string name="app_version">當前版本：%1$d.%2$d.%3$d\n長按此處檢測新版本（將複製新版地址）</string>
+    <string name="app_version">當前版本：%1$d.%2$d.%3$d\n長按此處檢測新版本</string>
     <string name="app_version_0">0</string>
     <string name="app_version_1">2</string>
-    <string name="app_version_2">2</string>
+    <string name="app_version_2">6</string>
     <string name="app_about">泛粵大典附屬應用 by EcisRhetha\nwww.jyutdict.org</string>
+
+    <!-- MainActivity -->
     <string name="menu_options">選項</string>
+    <string name="menu_info">關於</string>
     <string name="result_list_chara">重</string>
     <string name="result_list_info">澄通鍾三開平dryung\n澄通鍾三開上dryungx\n澄通鍾三開去dryungh</string>
     <string name="result_list_extra">U+91CD</string>
@@ -16,22 +19,26 @@
     <string name="search_common_sheet">通用字表</string>
     <string name="search_jyut_sheet">泛粵字表</string>
     <string name="search_reversal">反查釋義</string>
+    <!-- EntryMenu -->
+    <string name="entry_menu_copy_chara">複製：%1$s</string>
+    <string name="entry_menu_search_common">在通用字表檢索：%1$s</string>
+    <string name="entry_menu_search_special">在泛粵字表檢索：%1$s</string>
+
+    <!-- Toast Message-->
     <string name="error_tips_network">網絡或服務器錯誤，錯誤碼：%1$s</string>
+    <string name="tips_version_checking">正在检测更新版本</string>
+    <string name="tips_version_checked">已为最新</string>
+    <string name="tips_version_detected">有新版本，請於「幫助」頁面底部進入下載地址</string>
     <string name="permission_requesting">本應用需要透過網絡提供查詢服務，故還請允許相關的權限</string>
 
-    <string name="title_activity_settings">Settings</string>
-    <!-- Preference Titles -->
-    <string name="messages_header">Messages</string>
+    <!-- SettingActivity -->
+    <string name="title_activity_settings">設置</string>
+    <string name="search_header">蒐索</string>
+    <string name="search_title_advanced_options">進階蒐索選項(beta)</string>
     <string name="display_header">顯示</string>
+    <string name="display_title_area_coloring">開啟地區著色</string>
+    <string name="display_title_area_coloring_ratio">著色明度係數(默認0.92)</string>
+    <string name="search_enable_regex">使用正則</string>
 
-    <!-- Messages Preferences -->
-    <string name="signature_title">Your signature</string>
-    <string name="reply_title">Default reply action</string>
-
-    <!-- Sync Preferences -->
-    <string name="display_area_coloring_title">開啟地區著色</string>
-    <string name="attachment_title">Download incoming attachments</string>
-    <string name="attachment_summary_on">Automatically download attachments for incoming emails</string>
-    <string name="attachment_summary_off">Only download attachments when manually requested</string>
 
 </resources>

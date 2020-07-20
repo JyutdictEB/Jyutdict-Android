@@ -35,8 +35,8 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 	public void onBindViewHolder(@NonNull ResultItemAdapter.LinearViewHolder holder, final int position) {
 		ArrayList<Spanned> item = ResultInfo.list.get(position);
 		Spanned header = item.get(ResultInfo.CHARA);
-		Spanned info = item.get(ResultInfo.INFO);
-		Spanned extra = item.get(ResultInfo.EXTRA);
+		Spanned info = item.get(ResultInfo.LEFT_MIDDLE);
+		Spanned extra = item.get(ResultInfo.LEFT_BOTTOM);
 		Spanned wanshyu = item.get(ResultInfo.RIGHT_TOP);
 		Spanned location = item.get(ResultInfo.RIGHT_BOTTOM);
 		
@@ -56,7 +56,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 		holder.tvRightTop.setVisibility(tvContentWanshyuVisibility);
 		holder.tvRightBottom.setVisibility(tvContentLocationVisibility);
 		
-		// 短按提示Toast
+		// 短按彈出操作菜單
 		holder.itemView.setOnClickListener(v -> mListener.onClick(holder));
 		// 長按複製
 		holder.itemView.setOnLongClickListener(v -> {
@@ -66,7 +66,6 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 		
 		ViewGroup.LayoutParams layoutParams = holder.itemView.getLayoutParams();
 		layoutParams.height = LinearLayout.LayoutParams.WRAP_CONTENT;
-		
 	}
 	
 	@Override
@@ -93,8 +92,6 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 			tvCharaExtra = itemView.findViewById(R.id.chara_extra);
 			tvRightTop = itemView.findViewById(R.id.content_wanshyu);
 			tvRightBottom = itemView.findViewById(R.id.content_location);
-			
-//			lyChara.getLayoutParams().width = LinearLayout.LayoutParams.WRAP_CONTENT;
 		}
 		
 		String getChara() {
@@ -108,17 +105,22 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 	}
 	
 	static class ResultInfo {
-		private static final int CHARA = 0, INFO = 1, EXTRA = 2, RIGHT_TOP = 3, RIGHT_BOTTOM = 4;
+		private static final int CHARA = 0, LEFT_MIDDLE = 1, LEFT_BOTTOM = 2, RIGHT_TOP = 3, RIGHT_BOTTOM = 4;
 		
 		static ArrayList<ArrayList<Spanned>> list;
-		static ArrayList<Spanned> item;
 		
 		ResultInfo() {
 			list = new ArrayList<>(0);
 		}
 		
+		/**
+		 * 向本類維護的字項列表中添加一項
+		 *
+		 * @deprecated 使用參數全爲 spanned 的同名方法
+		 * @see #addItem(Spanned, Spanned, Spanned, Spanned, Spanned)
+		 */
 		static void addItem(String charaHeader, String charaInfo, String charaExtra, String contentWanshyu, String contentLocation) {
-			item = new ArrayList<>(5);
+			ArrayList<Spanned> item = new ArrayList<>(5);
 			item.add(Html.fromHtml(charaHeader));
 			item.add(Html.fromHtml(charaInfo));
 			item.add(Html.fromHtml(charaExtra));
@@ -127,8 +129,11 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 			list.add(item);
 		}
 		
+		/**
+		 * 向本類維護的字項列表中添加一項
+		 */
 		static void addItem(Spanned chara, Spanned leftMiddle, Spanned leftBottom, Spanned rightTop, Spanned rightBottom) {
-			item = new ArrayList<>(5);
+			ArrayList<Spanned> item = new ArrayList<>(5);
 			item.add(chara);
 			item.add(leftMiddle);
 			item.add(leftBottom);

@@ -9,9 +9,16 @@
 <!--    </item>-->
 
     <item
-        android:id="@+id/option_setting"
-        android:title="@string/menu_options"
-        android:icon="@drawable/ic_option"
+        android:id="@+id/menu_info"
+        android:title="@string/menu_info"
+        android:icon="@drawable/ic_about"
         app:showAsAction="always">
+    </item>
+    <item
+        android:id="@+id/menu_setting"
+        android:title="@string/menu_options"
+        android:icon="@drawable/ic_setting"
+        app:showAsAction="always">
+
     </item>
 </menu>
