@@ -23,14 +23,19 @@ public class HeaderInfo {
 	public static final String COLUMN_NAME_CLASS_MAJOR = "大類";
 	public static final String COLUMN_NAME_CLASS_SECONDARY = "中類";
 	public static final String COLUMN_NAME_CLASS_MINOR = "小類";
+	public static final String COLUMN_NAME_EXAMPLE = "例";
 	
 	private static int infoLength = 0; // 表头总列数
 	private static Vector<String> cityList = new Vector<>();  // 地方點列表，cityList[0]=>"穗" etc
+	private static Vector<String> foreignList = new Vector<>();  // 域外音列表，foreignList[0]=>"官" etc
 	private static Vector<String> fullList = new Vector<>();  // 所有列匯總，fullList[0]=>"繁" etc
+	
 	private static Map<String, Boolean> isCity = new HashMap<>();
 	private static Map<String, Integer> colNumber = new HashMap<>();  // colNumber.get("穗")=>0 etc
 	private static Map<String, String> cityColor = new HashMap<>(); // cityColor.get("穗")=>"#FFFFFF" etc
 	private static Map<String, String[]> fullName = new HashMap<>(); // fullName.get("穗")=>["广州",""] etc
+	
+	private static Map<String, String> foreignColor = new HashMap<>(); // foreignColor.get("官")=>"#FFFFFF" etc
 	
 	private static int meaningsColNum = 0; // 釋義所在列序號
 	private static int[] classificationColNum = new int[3]; // 詞場所在列序號
@@ -38,6 +43,7 @@ public class HeaderInfo {
 	private static int noteColNum = 0; // 註所在列序號
 	private static int authorizedCharaColNum = 0; // 錔字所在列序號
 	private static int authorizedPronColNum = 0; // 綜合音所在列序號
+	private static int exampleColNum = 0; // 例詞所在列序號
 	
 	/**
 	 * 構造函數
@@ -45,7 +51,8 @@ public class HeaderInfo {
 	 *
 	 * @param headerInfo JSONArray 類，儲存的是整個表頭及與之相關的詳細信息
 	 *                   如：[{"id":0,"col":"繁","is_city":0,"fullname":"錔字"},
-	 *                   {"id":1,"col":"穗","is_city":1,"city":"廣州","sub":"","color":"#FD9521"}, ...]
+	 *                   {"id":1,"col":"穗","is_city":1,"city":"廣州","sub":"","color":"#FD9521"},
+	 *                   {"id":2,"col":"客","is_city":2,"fullname":"客家話","color":"#79BFE4"} ...]
 	 */
 	public HeaderInfo(JSONArray headerInfo) {
 		infoLength = headerInfo.length();
@@ -55,23 +62,27 @@ public class HeaderInfo {
 				int id = headerEntry.getInt("id");
 				int isCity = headerEntry.getInt("is_city");
 				String colName = headerEntry.getString("col");
-				
+				String color;
 				colNumber.put(colName, id);
 				fullList.add(colName);
 				switch (isCity) {
-					case 2:
+					case 2: // 域外音
+						foreignList.add(colName);
+						String foreignName = headerEntry.getString("fullname");
+						HeaderInfo.fullName.put(colName, new String[]{foreignName, ""});
+						color = headerEntry.getString("color");
+						foreignColor.put(colName, color);
 						break;
-						
-					case 1:
+					case 1: // 地方音
 						cityList.add(colName);
 						HeaderInfo.isCity.put(colName, true);
 						String city = headerEntry.getString("city");
 						String subCity = headerEntry.getString("sub");
 						fullName.put(colName, new String[]{city, subCity});
-						String color = headerEntry.getString("color");
+						color = headerEntry.getString("color");
 						cityColor.put(colName, color);
 						break;
-						
+					case 0: // 其它表頭信息
 					default:
 						HeaderInfo.isCity.put(colName, false);
 						String fullname = headerEntry.getString("fullname");
@@ -96,6 +107,8 @@ public class HeaderInfo {
 						commonlyUsedCharaColNum = id; break;
 					case COLUMN_NAME_NOTE:
 						noteColNum = id; break;
+					case COLUMN_NAME_EXAMPLE:
+						exampleColNum = id; break;
 					default:
 						break;
 				}
@@ -140,6 +153,9 @@ public class HeaderInfo {
 	static String getCityColor(String colName) {
 		return cityColor.get(colName);
 	}
+	static String getForeignColor(String colName) {
+		return foreignColor.get(colName);
+	}
 	static String[] getFullName(String colName) {
 		return fullName.get(colName);
 	}
@@ -166,6 +182,14 @@ public class HeaderInfo {
  	 */
 	static String[] getCityListInShort() {
 		return cityList.toArray(new String[]{});
+	}
+	
+	/**
+	 * @return 域外音城市縮寫列表
+	 * 如：[..., "官", "吳" , ...]
+	 */
+	static String[] getForeignListInShort() {
+		return foreignList.toArray(new String[]{});
 	}
 	
 	/**

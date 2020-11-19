@@ -8,9 +8,11 @@ Using APIs provided by [API List](https://www.jyutdict.org/api/)
 各資料來源見應用內的說明頁，或"./app/src/main/assets/info/info.html"  
   
 ### 已知較明顯的bugs:  
-在某些安卓4.4中從服務器接收到的json string是錯的；  
 在主頁面按下返回后再開啟，應用會閃退：這是因爲避免新建出了兩個fragment而不得已臨時用了點trick帶來的副作用。  
   
 ## 版本歷史 ##  
+### v0.2.7b/201119  
+同時顯示域外音作爲參考
+
 ### v0.2.6/200721  
 首個公開的版本  

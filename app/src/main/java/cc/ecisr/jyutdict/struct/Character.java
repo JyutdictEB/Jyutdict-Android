@@ -6,6 +6,7 @@ import android.text.Html;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
+import android.text.style.RelativeSizeSpan;
 import android.text.style.StrikethroughSpan;
 import android.text.style.StyleSpan;
 
@@ -89,6 +90,7 @@ public class Character {
 			}
 			sb.append(ENTER);
 		}
+		
 		if (oriString.length()!=0) sb.delete(sb.length()-ENTER.length(), sb.length());
 		
 		return Html.fromHtml(sb.toString());
@@ -112,10 +114,11 @@ public class Character {
 		// presentStringEndPosition = 6
 		int presentStringBeginPosition, presentStringEndPosition;
 		
-		// 獲取各城市簡稱，用來作爲鍵，從而在 key2val 獲取值
-		// 如：
-		// [ ..., "港", "穗", "澳", ... ]
+		// 獲取簡稱作爲鍵，從而在 key2val 獲取值
+		// 如   [ ..., "港", "穗", "澳", ... ]
+		// 和   [ ..., "官", "客", "吳", ... ]
 		String[] cityList = HeaderInfo.getCityListInShort();
+		String[] foreignList = HeaderInfo.getForeignListInShort();
 		
 		// 記錄鍵對應的值
 		String value;
@@ -126,7 +129,7 @@ public class Character {
 		StringBuilder sb = new StringBuilder();
 		for (String key: cityList) {
 			value = key2val.get(key);
-			if (value==null || "".equals(value) || !HeaderInfo.isNameACity(key)) continue;
+			if (value==null || "".equals(value) || !HeaderInfo.isNameACity(key)) continue; // isNameACity(key)有甚麼用？我也忘了
 			
 			String[] fullName = HeaderInfo.getFullName(key);
 			sb.delete(0, sb.length());
@@ -174,6 +177,44 @@ public class Character {
 						presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 			}
 		}
+		
+		if (settings.isDisplayEcdemic) {
+			boolean isForeignPronEnterExist = false;
+			
+			for (String key : foreignList) {
+				value = key2val.get(key);
+				if (value == null || "".equals(value)) continue;
+				if (!isForeignPronEnterExist) {
+					ssb.append("\n\n");
+					ssb.setSpan(new RelativeSizeSpan(0.5f), ssb.length()-1, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+					isForeignPronEnterExist = true;
+				}
+				
+				sb.delete(0, sb.length());
+				sb.append(key).append(": ");
+				presentStringBeginPosition = ssb.length();
+				ssb.append(sb);
+				
+				// 對地區名著色
+				if (settings.isAreaColoring) {
+					presentStringEndPosition = ssb.length();
+					int textColor = ColorUtil.darken(HeaderInfo.getForeignColor(key), settings.areaColoringDarkenRatio); // 將顏色調暗
+					ssb.setSpan(new ForegroundColorSpan(textColor),
+							presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+					presentStringBeginPosition = ssb.length();
+				}
+				
+				ssb.append(value.replace('\n', ',')).append(" \t");
+				presentStringEndPosition = ssb.length();
+				
+				// 若讀音存在「?」，使用斜體標註
+				if (value.contains("?")) {
+					ssb.setSpan(new StyleSpan(Typeface.ITALIC),
+							presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+				}
+			}
+		}
+		
 		
 		// note 爲「備註」一列的值
 		String note = key2val.get(HeaderInfo.COLUMN_NAME_NOTE);
@@ -269,7 +310,8 @@ public class Character {
 		// 打印俗字
 		String adaptedChara = key2val.get(HeaderInfo.COLUMN_NAME_CONVENTIONAL);
 		if (!"".equals(adaptedChara)) {
-			ssb.append("\n(").append(adaptedChara).append(")");
+			if (!"".equals(unicode)) ssb.append("\n");
+			ssb.append("(").append(adaptedChara).append(")");
 		}
 		return ssb;
 	}
@@ -281,7 +323,7 @@ public class Character {
 	 * @return Spanned 格式的富文本，可直接調用 setText() 顯示
 	 */
 	public Spanned printPronunciation() {
-		String pron = key2val.get(HeaderInfo.COLUMN_NAME_PRONUNCIATION).replace("!", "");
+		String pron = key2val.get(HeaderInfo.COLUMN_NAME_PRONUNCIATION).replaceAll("[!！]", "");
 		SpannableStringBuilder ssb = new SpannableStringBuilder(pron);
 		if (pron.contains("?")) {
 			ssb.setSpan(new StyleSpan(Typeface.ITALIC),

@@ -13,14 +13,23 @@ public class EntrySetting {
 	boolean isAreaColoring;
 	// 地區名將著色時，明度會先乘以下面這個係數
 	float areaColoringDarkenRatio;
+	// 是否顯示域外音
+	boolean isDisplayEcdemic;
 	
 	public EntrySetting(int type) {
 		this.type = type;
 	}
 	
+	
 	public EntrySetting setAreaColoringInfo(boolean isColoring, float coloringDarkenRatio) {
 		this.isAreaColoring = isColoring;
 		this.areaColoringDarkenRatio = coloringDarkenRatio;
+		this.isDisplayEcdemic = true;
+		return this;
+	}
+	public EntrySetting setAreaColoringInfo(boolean isColoring, float coloringDarkenRatio, boolean isDisplayEcdemic) {
+		setAreaColoringInfo(isColoring, coloringDarkenRatio);
+		this.isDisplayEcdemic = isDisplayEcdemic;
 		return this;
 	}
 }

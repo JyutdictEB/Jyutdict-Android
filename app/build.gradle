@@ -8,8 +8,8 @@ android {
         applicationId "cc.ecisr.jyutdict"
         minSdkVersion 14
         targetSdkVersion 29
-        versionCode 5
-        versionName "0.2.5"
+        versionCode 24
+        versionName "0.2.7b"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
