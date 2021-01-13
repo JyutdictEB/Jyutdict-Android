@@ -120,18 +120,20 @@ public class SettingsActivity extends AppCompatActivity {
 	public static class SettingsFragment extends PreferenceFragmentCompat {
 		SwitchPreference switchAdvancedSearch;
 		SwitchPreference switchAreaColoring;
+		SwitchPreference switchPhraseMeaningDomain;
 		EditTextPreference editAreaColoringDarkenRatio;
 		@Override
 		public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
 			setPreferencesFromResource(R.xml.root_preferences, rootKey);
 			switchAdvancedSearch = findPreference("advanced_search");
 			switchAreaColoring = findPreference("area_coloring");
+			switchPhraseMeaningDomain = findPreference("phrase_meaning_domain");
 			editAreaColoringDarkenRatio = findPreference("area_coloring_darken_ratio");
 			
 			if (editAreaColoringDarkenRatio != null) {
-				editAreaColoringDarkenRatio.setOnBindEditTextListener(editText -> {
-					editText.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL);
-				});
+				editAreaColoringDarkenRatio.setOnBindEditTextListener(editText ->
+						editText.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL)
+				);
 			}
 		}
 		
@@ -139,6 +141,7 @@ public class SettingsActivity extends AppCompatActivity {
 			int settings = 0;
 			editor.putBoolean("advanced_search", switchAdvancedSearch.isChecked());
 			editor.putBoolean("area_coloring", switchAreaColoring.isChecked());
+			editor.putBoolean("phrase_meaning_domain", switchPhraseMeaningDomain.isChecked());
 			editor.putFloat("area_coloring_darken_ratio", Float.parseFloat(editAreaColoringDarkenRatio.getText()));
 			editor.apply();
 			settings |= switchAdvancedSearch.isChecked() ? 1<<0 : 0;

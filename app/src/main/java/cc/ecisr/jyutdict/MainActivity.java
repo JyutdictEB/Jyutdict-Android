@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
 		locationsAdapter = new ArrayAdapter<>(this, R.layout.spinner_drop_down_item);
 		spinnerQueryLocation.setAdapter(locationsAdapter);
 		locationsAdapter.add("字/音");
-		locationsAdapter.add("俗字");
+		//locationsAdapter.add("俗字");
 	}
 	
 	@SuppressLint("HandlerLeak")
@@ -265,17 +265,13 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 		Intent intent;
-		switch (item.getItemId()) {
-			case R.id.menu_setting:
-				intent = new Intent(MainActivity.this, SettingsActivity.class);
-				startActivityForResult(intent, REQUESTING_SETTING);
-				break;
-			case R.id.menu_info:
-				intent = new Intent(MainActivity.this, InfoActivity.class);
-				startActivity(intent);
-				break;
-			default:
-				break;
+		int itemId = item.getItemId();
+		if (itemId == R.id.menu_setting) {
+			intent = new Intent(MainActivity.this, SettingsActivity.class);
+			startActivityForResult(intent, REQUESTING_SETTING);
+		} else if (itemId == R.id.menu_info) {
+			intent = new Intent(MainActivity.this, InfoActivity.class);
+			startActivity(intent);
 		}
 		return super.onOptionsItemSelected(item);
 	}
@@ -286,7 +282,6 @@ public class MainActivity extends AppCompatActivity {
 	 */
 	@Override
 	protected void onDestroy() {
-		// 儲存當前設置
 		SharedPreferences.Editor editor = sp.edit();
 		editor.putBoolean("switch_1_is_checked", switchQueryOpts1.isChecked());
 		editor.putBoolean("switch_2_is_checked", switchQueryOpts2.isChecked());
@@ -364,16 +359,12 @@ public class MainActivity extends AppCompatActivity {
 				url.append("&b");
 			}
 			int selectedColumn = spinnerQueryLocation.getSelectedItemPosition();
-			switch (selectedColumn) {
-				case 0:
-					break;
-				case 1:
-					url.append("&col=").append(HeaderInfo.COLUMN_NAME_CONVENTIONAL);
-					break;
-				default:
-					String col = HeaderInfo.getCityNameByNumber(selectedColumn-2);
-					url.append("&col=").append(col);
+			
+			if (selectedColumn != 0) {
+				String col = HeaderInfo.getCityNameByNumber(selectedColumn - 1);
+				url.append("&col=").append(col);
 			}
+			
 			if (switchQueryOpts3.isChecked()) {
 				url.append("&regex");
 			}

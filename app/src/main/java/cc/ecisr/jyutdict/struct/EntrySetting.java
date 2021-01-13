@@ -9,17 +9,20 @@ public class EntrySetting {
 	// 用於區分輸出不同樣式的字項
 	int type;
 	
-	// 是否開啟地區名著色
-	boolean isAreaColoring;
+	// 是否啟用地區名著色
+	boolean isAreaColoring = true;
 	// 地區名將著色時，明度會先乘以下面這個係數
-	float areaColoringDarkenRatio;
+	float areaColoringDarkenRatio = 0.92f;
+	
+	// 是否顯示詞場
+	boolean isMeaningDomainPresence = false;
+	
 	// 是否顯示域外音
-	boolean isDisplayEcdemic;
+	boolean isDisplayEcdemic = true;
 	
 	public EntrySetting(int type) {
 		this.type = type;
 	}
-	
 	
 	public EntrySetting setAreaColoringInfo(boolean isColoring, float coloringDarkenRatio) {
 		this.isAreaColoring = isColoring;
@@ -30,6 +33,11 @@ public class EntrySetting {
 	public EntrySetting setAreaColoringInfo(boolean isColoring, float coloringDarkenRatio, boolean isDisplayEcdemic) {
 		setAreaColoringInfo(isColoring, coloringDarkenRatio);
 		this.isDisplayEcdemic = isDisplayEcdemic;
+		return this;
+	}
+	
+	public EntrySetting setMeaningDomainPresence(boolean isMeaningDomainPresence) {
+		this.isMeaningDomainPresence = isMeaningDomainPresence;
 		return this;
 	}
 }

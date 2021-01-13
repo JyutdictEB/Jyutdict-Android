@@ -22,7 +22,7 @@ public class StringUtil {
 	 * 支持擴展B區及以後的漢字
 	 * 允許以多個漢字作輸入
 	 * @param gbString 包含一個或多個字符的字符串
-	 * @return 以"uXXXX"或"uXXXXX"爲格式的統一碼字符串，X是0~F的十六進制數碼，字母使用大寫，各碼位之間用空格分隔
+	 * @return 以"U+XXXX"或"U+XXXXX"爲格式的統一碼字符串，X是0~F的十六進制數碼，字母使用大寫，各碼位之間用空格分隔
 	 */
 	public static String charaToUnicode(final String gbString) {
 		char[] utfBytes = gbString.toCharArray();
@@ -40,7 +40,7 @@ public class StringUtil {
 				}
 			}
 			if (i!=0) unicodeBytes.append(" ");
-			unicodeBytes.append("u").append(hexB.toUpperCase());
+			unicodeBytes.append("U+").append(hexB.toUpperCase());
 		}
 		return unicodeBytes.toString();
 	}

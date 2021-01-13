@@ -24,6 +24,9 @@ public class HeaderInfo {
 	public static final String COLUMN_NAME_CLASS_SECONDARY = "中類";
 	public static final String COLUMN_NAME_CLASS_MINOR = "小類";
 	public static final String COLUMN_NAME_EXAMPLE = "例";
+	public static final String COLUMN_NAME_IDS = "IDS";
+	public static final String COLUMN_NAME_GRAMMAR_MARKER = "語法";
+	
 	
 	private static int infoLength = 0; // 表头总列数
 	private static Vector<String> cityList = new Vector<>();  // 地方點列表，cityList[0]=>"穗" etc
@@ -44,6 +47,9 @@ public class HeaderInfo {
 	private static int authorizedCharaColNum = 0; // 錔字所在列序號
 	private static int authorizedPronColNum = 0; // 綜合音所在列序號
 	private static int exampleColNum = 0; // 例詞所在列序號
+	private static int idsColNum = 0; // 例詞所在列序號
+	private static int grammarMarkerColNum = 0; // 例詞所在列序號
+	
 	
 	/**
 	 * 構造函數
@@ -109,6 +115,10 @@ public class HeaderInfo {
 						noteColNum = id; break;
 					case COLUMN_NAME_EXAMPLE:
 						exampleColNum = id; break;
+					case COLUMN_NAME_IDS:
+						idsColNum = id; break;
+					case COLUMN_NAME_GRAMMAR_MARKER:
+						grammarMarkerColNum = id; break;
 					default:
 						break;
 				}

@@ -276,10 +276,13 @@ public class ResultFragment extends Fragment {
 					jsonArray = new JSONArray(jsonString);
 					JSONObject entry;
 					
-					EntrySetting entrySettings = new EntrySetting(EnumConst.QUERYING_SHEET).
-							setAreaColoringInfo(
+					EntrySetting entrySettings = new EntrySetting(EnumConst.QUERYING_SHEET)
+							.setAreaColoringInfo(
 									sp.getBoolean("area_coloring", true),
-									sp.getFloat("area_coloring_darken_ratio", 0.92f));
+									sp.getFloat("area_coloring_darken_ratio", 0.92f))
+							.setMeaningDomainPresence(
+									sp.getBoolean("phrase_meaning_domain", false)
+							);
 					
 					for (int i = 1; i<jsonArray.length(); i++) {
 						entry = jsonArray.getJSONObject(i);

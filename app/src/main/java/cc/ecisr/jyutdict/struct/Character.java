@@ -81,12 +81,24 @@ public class Character {
 		// 根据分号换行：在「；[①-⑩]」條件下
 		String[] meanings = oriString.split("[；。？！] *?((?=&lt;)|(?=[①-⑩]))");
 		
-		for (String meaning: meanings) {
-			if ("".equals(meaning)) continue;
-			if (meaning.contains("[粵]")) {
-				sb.append("<b>").append(meaning).append("</b>");
+		String[] grammarMarker = key2val.get(HeaderInfo.COLUMN_NAME_GRAMMAR_MARKER).split("[;；] ?");
+		boolean grammarMarkerPresent = grammarMarker.length == meanings.length;
+		
+		
+		for (int i=0; i<meanings.length; i++) {
+			if ("".equals(meanings[i])) continue;
+			if (meanings[i].contains("[粵]")) {
+				if (grammarMarkerPresent && !"".equals(grammarMarker[i])) {
+					sb.append("[").append(grammarMarker[i]).append("]<b>").append(meanings[i]).append("</b>");
+				} else {
+					sb.append("<b>").append(meanings[i]).append("</b>");
+				}
 			} else {
-				sb.append(meaning);
+				if (grammarMarkerPresent && !"".equals(grammarMarker[i])) {
+					sb.append("[").append(grammarMarker[i]).append("]").append(meanings[i]);
+				} else {
+					sb.append(meanings[i]);
+				}
 			}
 			sb.append(ENTER);
 		}
@@ -127,9 +139,10 @@ public class Character {
 		// 如 "廣州: jat1"
 		// 在下方循環體內生成並合併進 ssb
 		StringBuilder sb = new StringBuilder();
+		
 		for (String key: cityList) {
 			value = key2val.get(key);
-			if (value==null || "".equals(value) || !HeaderInfo.isNameACity(key)) continue; // isNameACity(key)有甚麼用？我也忘了
+			if (value==null || "".equals(value.trim()) || !HeaderInfo.isNameACity(key)) continue; // isNameACity(key)有甚麼用？我忘了
 			
 			String[] fullName = HeaderInfo.getFullName(key);
 			sb.delete(0, sb.length());
@@ -177,14 +190,18 @@ public class Character {
 						presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 			}
 		}
+		ssb.delete(ssb.length()-" \t".length(), ssb.length());
 		
 		if (settings.isDisplayEcdemic) {
 			boolean isForeignPronEnterExist = false;
 			
 			for (String key : foreignList) {
 				value = key2val.get(key);
-				if (value == null || "".equals(value)) continue;
-				if (!isForeignPronEnterExist) {
+				if (value == null || "".equals(value.trim())) continue;
+				
+				if (isForeignPronEnterExist) {
+					ssb.append(" \t");
+				} else {
 					ssb.append("\n\n");
 					ssb.setSpan(new RelativeSizeSpan(0.5f), ssb.length()-1, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 					isForeignPronEnterExist = true;
@@ -204,7 +221,7 @@ public class Character {
 					presentStringBeginPosition = ssb.length();
 				}
 				
-				ssb.append(value.replace('\n', ',')).append(" \t");
+				ssb.append(value.replace('\n', ','));
 				presentStringEndPosition = ssb.length();
 				
 				// 若讀音存在「?」，使用斜體標註
@@ -220,18 +237,19 @@ public class Character {
 		String note = key2val.get(HeaderInfo.COLUMN_NAME_NOTE);
 		// classified 爲「大類」一列的值
 		String classified = key2val.get(HeaderInfo.COLUMN_NAME_CLASS_MAJOR);
-		if (!"".equals(note) || !"".equals(classified)) {
+//		if ((!"".equals(note) || !"".equals(classified)) && settings.isMeaningDomainPresence) {
+		if (!"".equals(classified) && settings.isMeaningDomainPresence) {
 			ssb.append("\n");
 			
-			// 打印備註
-			if (!"".equals(note)) {  // "備註"列
-				ssb.append("\n");
-				presentStringBeginPosition = ssb.length();
-				ssb.append("註 ").append(key2val.get(HeaderInfo.COLUMN_NAME_NOTE));
-				presentStringEndPosition = ssb.length();
-				ssb.setSpan(new StyleSpan(Typeface.ITALIC),
-						presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-			}
+//			// 打印備註
+//			if (!"".equals(note)) {  // "備註"列
+//				ssb.append("\n");
+//				presentStringBeginPosition = ssb.length();
+//				ssb.append("註 ").append(key2val.get(HeaderInfo.COLUMN_NAME_NOTE));
+//				presentStringEndPosition = ssb.length();
+//				ssb.setSpan(new StyleSpan(Typeface.ITALIC),
+//						presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+//			}
 			
 			// 打印詞場
 			if (!"".equals(classified)) { // "大類"列
@@ -290,8 +308,6 @@ public class Character {
 	 * 向屏幕打印統一碼、俗字
 	 * 對應字項 Layout 左中部分
 	 *
-	 * 俗字的顯示位置可能需要調整
-	 *
 	 * @return Spanned 格式的富文本，可直接調用 setText() 顯示
 	 */
 	public Spanned printUnicode() {
@@ -307,18 +323,21 @@ public class Character {
 //					0, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 //		}
 		
-		// 打印俗字
-		String adaptedChara = key2val.get(HeaderInfo.COLUMN_NAME_CONVENTIONAL);
-		if (!"".equals(adaptedChara)) {
+		// 顯示IDS
+		String ids = key2val.get(HeaderInfo.COLUMN_NAME_IDS);
+		if (!"".equals(ids)) {
 			if (!"".equals(unicode)) ssb.append("\n");
-			ssb.append("(").append(adaptedChara).append(")");
+			ssb.append("[").append(ids).append("]");
 		}
+		
 		return ssb;
 	}
 	
 	/**
 	 * 向屏幕打印讀音（綜合音）
 	 * 對應字項 Layout 左下部分
+	 *
+	 * 俗字的顯示位置可能需要調整
 	 *
 	 * @return Spanned 格式的富文本，可直接調用 setText() 顯示
 	 */
@@ -328,6 +347,13 @@ public class Character {
 		if (pron.contains("?")) {
 			ssb.setSpan(new StyleSpan(Typeface.ITALIC),
 					0, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+		}
+		
+		// 顯示俗字
+		String adaptedChara = key2val.get(HeaderInfo.COLUMN_NAME_CONVENTIONAL);
+		if (!"".equals(adaptedChara)) {
+			if (!"".equals(pron)) ssb.append("\n");
+			ssb.append("(").append(adaptedChara).append(")");
 		}
 		
 		return ssb;

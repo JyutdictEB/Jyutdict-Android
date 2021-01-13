@@ -46,5 +46,9 @@
 <!--            app:summaryOn="@string/attachment_summary_on"-->
 <!--            app:title="@string/attachment_title" />-->
 
+        <SwitchPreference
+            app:key="phrase_meaning_domain"
+            app:title="@string/display_title_phrase_meaning_domain"
+            app:defaultValue="false"/>
     </PreferenceCategory>
 </PreferenceScreen>
