@@ -26,7 +26,9 @@ public class HeaderInfo {
 	public static final String COLUMN_NAME_EXAMPLE = "例";
 	public static final String COLUMN_NAME_IDS = "IDS";
 	public static final String COLUMN_NAME_GRAMMAR_MARKER = "語法";
-	
+	public static final String COLUMN_NAME_BOOKS_CHARA = "錔";
+	public static final String COLUMN_NAME_BOOKS_PRON = "音";
+	public static final String COLUMN_NAME_BOOKS_MEANING = "義";
 	
 	private static int infoLength = 0; // 表头总列数
 	private static Vector<String> cityList = new Vector<>();  // 地方點列表，cityList[0]=>"穗" etc
@@ -47,8 +49,8 @@ public class HeaderInfo {
 	private static int authorizedCharaColNum = 0; // 錔字所在列序號
 	private static int authorizedPronColNum = 0; // 綜合音所在列序號
 	private static int exampleColNum = 0; // 例詞所在列序號
-	private static int idsColNum = 0; // 例詞所在列序號
-	private static int grammarMarkerColNum = 0; // 例詞所在列序號
+	private static int idsColNum = 0; // IDS所在列序號
+	private static int grammarMarkerColNum = 0; // 語法標記所在列序號
 	
 	
 	/**

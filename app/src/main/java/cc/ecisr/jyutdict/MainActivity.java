@@ -16,6 +16,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -165,6 +166,7 @@ public class MainActivity extends AppCompatActivity {
 						break;
 				}
 				btnQueryConfirm.setEnabled(true);
+				btnQueryConfirm.setTextColor(getResources().getColor(R.color.colorPrimary));
 			}
 		};
 		
@@ -276,20 +278,27 @@ public class MainActivity extends AppCompatActivity {
 		return super.onOptionsItemSelected(item);
 	}
 	
-	/**
-	 * onDestroy()
-	 * 儲存主頁面幾個開關與下拉欄的的狀態，再退出 app
-	 */
 	@Override
 	protected void onDestroy() {
+		saveLayoutStatus();
+		super.onDestroy();
+	}
+	
+	
+	/**
+	 * saveLayoutStatus()
+	 *
+	 * 儲存主頁面幾個開關與下拉欄的的狀態
+	 */
+	private void saveLayoutStatus() {
 		SharedPreferences.Editor editor = sp.edit();
 		editor.putBoolean("switch_1_is_checked", switchQueryOpts1.isChecked());
 		editor.putBoolean("switch_2_is_checked", switchQueryOpts2.isChecked());
 		editor.putBoolean("switch_3_is_checked", switchQueryOpts3.isChecked());
 		editor.putInt("spinner_selected_position", spinnerQueryLocation.getSelectedItemPosition());
 		editor.apply();
-		super.onDestroy();
 	}
+	
 	
 	/**
 	 * 更新輸入框中的字符串到 {@code this.inputString} 中
@@ -382,6 +391,8 @@ public class MainActivity extends AppCompatActivity {
 			.setHandler(mainHandler)
 			.start();
 		btnQueryConfirm.setEnabled(false);
+		btnQueryConfirm.setTextColor(getResources().getColor(R.color.colorUnavailable));
+		saveLayoutStatus();
 	}
 	
 	@Override

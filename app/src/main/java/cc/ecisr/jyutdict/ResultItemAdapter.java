@@ -59,10 +59,10 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 		// 短按彈出操作菜單
 		holder.itemView.setOnClickListener(v -> mListener.onClick(holder));
 		// 長按複製
-		holder.itemView.setOnLongClickListener(v -> {
-			mListener.onLongClick(holder);
-			return true;
-		});
+//		holder.itemView.setOnLongClickListener(v -> {
+//			mListener.onLongClick(holder);
+//			return true;
+//		});
 		
 		ViewGroup.LayoutParams layoutParams = holder.itemView.getLayoutParams();
 		layoutParams.height = LinearLayout.LayoutParams.WRAP_CONTENT;

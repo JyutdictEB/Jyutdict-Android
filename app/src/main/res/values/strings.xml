@@ -30,7 +30,7 @@
     <string name="tips_version_checking">正在检测更新版本</string>
     <string name="tips_version_checked">已为最新</string>
     <string name="tips_version_detected">有新版本，請於「幫助」頁面底部進入下載地址</string>
-    <string name="permission_requesting">本應用需要透過網絡提供查詢服務，故還請允許相關的權限</string>
+    <string name="permission_requesting">本應用需要通過網絡提供查詢服務，故還請允許相關的權限</string>
 
     <!-- SettingActivity -->
     <string name="title_activity_settings">設置</string>

@@ -20,7 +20,8 @@
         app:layout_constraintTop_toTopOf="parent"
         android:paddingHorizontal="5dp"
         android:background="?android:attr/selectableItemBackground"
-        android:paddingVertical="5dp">
+        android:paddingVertical="5dp"
+        android:baselineAligned="false">
 
         <LinearLayout
             android:id="@+id/item_chara"
@@ -92,6 +93,8 @@
                 android:textSize="14sp"
                 android:text="@string/result_list_bottom"
                 android:textColor="@color/colorBlack"
+                android:textIsSelectable="true"
+                android:descendantFocusability="afterDescendants"
                 />
 
         </LinearLayout>

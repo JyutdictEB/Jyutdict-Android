@@ -30,11 +30,11 @@ public class Character {
 	// 如泛粵字表的一項有格式：
 	// { "繁"=>"一", "綜"=>"jat1", "穗"=>"jat", ..., "釋義"=>"…", ... }
 	// 目前（v0.2.5/200719）僅用在泛粵字表上，怎麼應用到通語字表上還需要再考慮一下
-	private Map<String, String> key2val;
+	private final Map<String, String> key2val;
 	
 	// 輸出到屏幕上時的設置
 	// 包含如“是否對地方名著色”等顯示設置
-	private EntrySetting settings;
+	private final EntrySetting settings;
 	
 	/**
 	 * 構造函數
@@ -67,6 +67,26 @@ public class Character {
 	public Spanned printMeanings() {
 		StringBuilder sb = new StringBuilder();
 		
+		// 字書上的錔字
+		String booksChara = key2val.get(HeaderInfo.COLUMN_NAME_BOOKS_CHARA);
+		String booksPron = key2val.get(HeaderInfo.COLUMN_NAME_BOOKS_PRON);
+		String booksMeaning = key2val.get(HeaderInfo.COLUMN_NAME_BOOKS_MEANING);
+		if (!"".equals(booksChara) || !"".equals(booksPron) || !"".equals(booksMeaning)) {
+			sb.append("—— <i>");
+			if (!"".equals(booksChara)) {
+				sb.append(booksChara);
+				if (!"".equals(booksPron) || !"".equals(booksMeaning)) {
+					sb.append(": ").append(booksPron);
+					if (!"".equals(booksPron) && !"".equals(booksMeaning)) {
+						sb.append(" | ");
+					}
+					sb.append(booksMeaning);
+				}
+			}
+			sb.append("</i>").append(ENTER);
+		}
+		
+		// 釋義
 		// 默认不会发生空指针异常，因为服务器返回的json必定存在键COLUMN_NAME_MEANING
 		String oriString = key2val.get(HeaderInfo.COLUMN_NAME_MEANING)
 				.replaceAll("：?需要例句", "")
@@ -82,23 +102,33 @@ public class Character {
 		String[] meanings = oriString.split("[；。？！] *?((?=&lt;)|(?=[①-⑩]))");
 		
 		String[] grammarMarker = key2val.get(HeaderInfo.COLUMN_NAME_GRAMMAR_MARKER).split("[;；] ?");
-		boolean grammarMarkerPresent = grammarMarker.length == meanings.length;
+		boolean grammarMarkerPresent = grammarMarker.length == oriString.split("；").length;
 		
-		
-		for (int i=0; i<meanings.length; i++) {
-			if ("".equals(meanings[i])) continue;
-			if (meanings[i].contains("[粵]")) {
-				if (grammarMarkerPresent && !"".equals(grammarMarker[i])) {
-					sb.append("[").append(grammarMarker[i]).append("]<b>").append(meanings[i]).append("</b>");
+		int grammarMarkerOrder = 0;
+		for (String meaning : meanings) {
+			if ("".equals(meaning)) continue;
+			
+			if (grammarMarkerPresent && !"".equals(grammarMarker[grammarMarkerOrder])) {
+				if (meanings.length==1) {
+					sb.append("[")
+						.append(grammarMarker[grammarMarkerOrder]
+						.replace("？","?"))
+						.append("]");
 				} else {
-					sb.append("<b>").append(meanings[i]).append("</b>");
+					meaning = meaning.replaceAll(
+							"(?<=[①-⑩])",
+							"["+
+									grammarMarker[grammarMarkerOrder]
+									.replace("？","?")+"]"
+					);
+					grammarMarkerOrder++;
 				}
+			}
+
+			if (meaning.contains("[粵]") && meanings.length>1) {
+				sb.append("<b>").append(meaning).append("</b>");
 			} else {
-				if (grammarMarkerPresent && !"".equals(grammarMarker[i])) {
-					sb.append("[").append(grammarMarker[i]).append("]").append(meanings[i]);
-				} else {
-					sb.append(meanings[i]);
-				}
+				sb.append(meaning);
 			}
 			sb.append(ENTER);
 		}
@@ -234,7 +264,7 @@ public class Character {
 		
 		
 		// note 爲「備註」一列的值
-		String note = key2val.get(HeaderInfo.COLUMN_NAME_NOTE);
+//		String note = key2val.get(HeaderInfo.COLUMN_NAME_NOTE);
 		// classified 爲「大類」一列的值
 		String classified = key2val.get(HeaderInfo.COLUMN_NAME_CLASS_MAJOR);
 //		if ((!"".equals(note) || !"".equals(classified)) && settings.isMeaningDomainPresence) {
