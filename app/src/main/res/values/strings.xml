@@ -3,7 +3,7 @@
     <string name="app_version">當前版本：%1$d.%2$d.%3$d\n長按此處檢測新版本</string>
     <string name="app_version_0">0</string>
     <string name="app_version_1">3</string>
-    <string name="app_version_2">0</string>
+    <string name="app_version_2">7</string>
     <string name="app_about">泛粵大典附屬應用 by EcisRhetha\nwww.jyutdict.org</string>
 
     <!-- MainActivity -->
@@ -15,7 +15,10 @@
     <string name="result_list_upper">分韻 第六東董凍篤-虫 , 穿東陽平(chung4) , 復也曡也 | 第六東董凍篤-仲 , 照東陽去(zhung) , 厚也又慎重輕重\n英華 chung꜅(zhung6) | ꜁ch\'ung(chung4)</string>
     <string name="result_list_bottom">U+8FFFFF</string>
     <string name="search_tips">請輸入漢字或讀音</string>
+    <string name="search_tips_expend">留空檢索以隨機展示</string>
+    <string name="search_tips_backward">請輸入檢索字符串</string>
     <string name="search_button">查</string>
+    <string name="search_clear">×</string>
     <string name="search_common_sheet">通用字表</string>
     <string name="search_jyut_sheet">泛粵字表</string>
     <string name="search_reversal">反查釋義</string>
@@ -27,10 +30,13 @@
 
     <!-- Toast Message-->
     <string name="error_tips_network">網絡或服務器錯誤，錯誤碼：%1$s</string>
+    <string name="error_tips_network_out_of_time">未能連接服務器</string>
     <string name="tips_version_checking">正在检测更新版本</string>
     <string name="tips_version_checked">已为最新</string>
     <string name="tips_version_detected">有新版本，請於「幫助」頁面底部進入下載地址</string>
     <string name="permission_requesting">本應用需要通過網絡提供查詢服務，故還請允許相關的權限</string>
+    <string name="tips_no_result">無結果</string>
+    <string name="tips_chara_copied">已複製：%1$s</string>
 
     <!-- SettingActivity -->
     <string name="title_activity_settings">設置</string>

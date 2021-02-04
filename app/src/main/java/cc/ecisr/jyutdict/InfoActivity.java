@@ -3,7 +3,6 @@ package cc.ecisr.jyutdict;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
 
 /**
@@ -19,7 +18,7 @@ public class InfoActivity extends AppCompatActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_info);
 		webView = findViewById(R.id.web_view);
-		WebSettings webSettings = webView.getSettings();
+		// WebSettings webSettings = webView.getSettings();
 		
 		webView.loadUrl(INFO_HTML_FILE_URL);
 		

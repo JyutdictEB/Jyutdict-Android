@@ -41,7 +41,7 @@
                 android:foregroundGravity="center"
                 android:layout_gravity="center"
                 android:paddingHorizontal="15dp"
-                android:textSize="54sp"
+                android:textSize="50sp"
                 android:text="@string/result_list_chara"
                 android:textColor="@color/colorBlack"
                 />

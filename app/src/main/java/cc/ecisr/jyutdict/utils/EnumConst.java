@@ -10,4 +10,7 @@ public class EnumConst {
 	
 	public static final int GETTING_CONTENT_LOCATION = 0;
 	public static final int GETTING_CONTENT_WANSHYU = 1;
+	
+	public static final int ACTIVITY_REQUESTING_SETTING = 8308;
+	public static final int ACTIVITY_CHECKING_INFO_PRIVACY = 8309;
 }

@@ -31,19 +31,19 @@ public class HeaderInfo {
 	public static final String COLUMN_NAME_BOOKS_MEANING = "義";
 	
 	private static int infoLength = 0; // 表头总列数
-	private static Vector<String> cityList = new Vector<>();  // 地方點列表，cityList[0]=>"穗" etc
-	private static Vector<String> foreignList = new Vector<>();  // 域外音列表，foreignList[0]=>"官" etc
-	private static Vector<String> fullList = new Vector<>();  // 所有列匯總，fullList[0]=>"繁" etc
+	private static final Vector<String> cityList = new Vector<>();  // 地方點列表，cityList[0]=>"穗" etc
+	private static final Vector<String> foreignList = new Vector<>();  // 域外音列表，foreignList[0]=>"官" etc
+	private static final Vector<String> fullList = new Vector<>();  // 所有列匯總，fullList[0]=>"繁" etc
 	
-	private static Map<String, Boolean> isCity = new HashMap<>();
-	private static Map<String, Integer> colNumber = new HashMap<>();  // colNumber.get("穗")=>0 etc
-	private static Map<String, String> cityColor = new HashMap<>(); // cityColor.get("穗")=>"#FFFFFF" etc
-	private static Map<String, String[]> fullName = new HashMap<>(); // fullName.get("穗")=>["广州",""] etc
+	private static final Map<String, Boolean> isCity = new HashMap<>();
+	private static final Map<String, Integer> colNumber = new HashMap<>();  // colNumber.get("穗")=>0 etc
+	private static final Map<String, String> cityColor = new HashMap<>(); // cityColor.get("穗")=>"#FFFFFF" etc
+	private static final Map<String, String[]> fullName = new HashMap<>(); // fullName.get("穗")=>["广州",""] etc
 	
-	private static Map<String, String> foreignColor = new HashMap<>(); // foreignColor.get("官")=>"#FFFFFF" etc
+	private static final Map<String, String> foreignColor = new HashMap<>(); // foreignColor.get("官")=>"#FFFFFF" etc
 	
 	private static int meaningsColNum = 0; // 釋義所在列序號
-	private static int[] classificationColNum = new int[3]; // 詞場所在列序號
+	private static final int[] classificationColNum = new int[3]; // 詞場所在列序號
 	private static int commonlyUsedCharaColNum = 0; // 俗字所在列序號
 	private static int noteColNum = 0; // 註所在列序號
 	private static int authorizedCharaColNum = 0; // 錔字所在列序號
@@ -62,7 +62,7 @@ public class HeaderInfo {
 	 *                   {"id":1,"col":"穗","is_city":1,"city":"廣州","sub":"","color":"#FD9521"},
 	 *                   {"id":2,"col":"客","is_city":2,"fullname":"客家話","color":"#79BFE4"} ...]
 	 */
-	public HeaderInfo(JSONArray headerInfo) {
+	public static void load(JSONArray headerInfo) {
 		infoLength = headerInfo.length();
 		for (int i=0; i<infoLength; i++) {
 			try {

@@ -80,7 +80,17 @@ public class Character {
 					if (!"".equals(booksPron) && !"".equals(booksMeaning)) {
 						sb.append(" | ");
 					}
-					sb.append(booksMeaning);
+					if (!"".equals(booksMeaning)) {
+						sb.append("「").append(booksMeaning).append("」");
+					}
+				}
+			} else {
+				sb.append(booksPron);
+				if (!"".equals(booksPron) && !"".equals(booksMeaning)) {
+					sb.append(" | ");
+				}
+				if (!"".equals(booksMeaning)) {
+					sb.append("「").append(booksMeaning).append("」");
 				}
 			}
 			sb.append("</i>").append(ENTER);
@@ -110,17 +120,12 @@ public class Character {
 			
 			if (grammarMarkerPresent && !"".equals(grammarMarker[grammarMarkerOrder])) {
 				if (meanings.length==1) {
-					sb.append("[")
+					sb.append("‹")
 						.append(grammarMarker[grammarMarkerOrder]
 						.replace("？","?"))
-						.append("]");
+						.append("›");
 				} else {
-					meaning = meaning.replaceAll(
-							"(?<=[①-⑩])",
-							"["+
-									grammarMarker[grammarMarkerOrder]
-									.replace("？","?")+"]"
-					);
+					meaning = meaning.replaceFirst("(?<=[①-⑩])","‹"+grammarMarker[grammarMarkerOrder].replace("？","?")+"›");
 					grammarMarkerOrder++;
 				}
 			}

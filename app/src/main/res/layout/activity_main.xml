@@ -38,13 +38,14 @@
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toTopOf="parent"
+            android:paddingHorizontal="5dp"
+            >
 
-
-            <EditText
+            <cc.ecisr.jyutdict.widget.EditTextWithClear
                 android:id="@+id/edit_text_input"
                 android:layout_width="0dp"
-                android:layout_height="40dp"
+                android:layout_height="match_parent"
                 android:layout_weight="2"
                 android:backgroundTint="@color/colorPrimary"
                 android:ems="10"
@@ -56,24 +57,30 @@
                 android:maxLines="1"
                 android:paddingHorizontal="15dp"
                 android:paddingVertical="0dp"
-                android:textSize="16dp"
-                android:theme="@style/MyEditText"
-                app:layout_constraintStart_toEndOf="@+id/textView"
-                app:layout_constraintTop_toTopOf="@+id/textView" />
-
+                android:textSize="18sp"
+                android:theme="@style/MyEditText"/>
+            <Button
+                android:id="@+id/btn_clear"
+                android:layout_width="25dp"
+                android:layout_height="match_parent"
+                android:background="#00000000"
+                android:foreground="?selectableItemBackground"
+                android:text="@string/search_clear"
+                android:textColor="@color/colorPrimary"
+                android:textSize="26sp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginRight="10dp" />
             <Button
                 android:id="@+id/btn_query"
-                android:layout_width="75dp"
-                android:layout_height="40dp"
+                android:layout_width="70dp"
+                android:paddingEnd="5dp"
+                android:paddingRight="5dp"
+                android:layout_height="match_parent"
                 android:background="#00000000"
                 android:foreground="?selectableItemBackground"
                 android:text="@string/search_button"
                 android:textColor="@color/colorPrimary"
-                android:paddingVertical="0dp"
-                android:textSize="16dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/textView"
-                />
+                android:textSize="18sp"/>
 
         </LinearLayout>
 
@@ -89,22 +96,22 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/input_line">
 
-            <Switch
+            <cc.ecisr.jyutdict.widget.SwitchCustomized
                 android:id="@+id/switch_select_sheet"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:text="@string/search_common_sheet"
-                android:theme="@style/ColorSwitchStyle"
+                android:theme="@style/SwitchStyle"
                 app:layout_constraintStart_toStartOf="@+id/input_line"
                 app:layout_constraintTop_toBottomOf="@+id/input_line" />
 
-            <Switch
+            <cc.ecisr.jyutdict.widget.SwitchCustomized
                 android:id="@+id/switch_reverse_search"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_marginHorizontal="10dp"
                 android:text="@string/search_reversal"
-                android:theme="@style/ColorSwitchStyle"
+                android:theme="@style/SwitchStyle"
                 android:visibility="invisible"
                 app:layout_constraintStart_toEndOf="@+id/switch_select_sheet"
                 app:layout_constraintTop_toTopOf="@+id/switch_select_sheet" />
@@ -131,12 +138,12 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/input_switch">
 
-            <Switch
+            <cc.ecisr.jyutdict.widget.SwitchCustomized
                 android:id="@+id/switch_use_regex"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:text="@string/search_enable_regex"
-                android:theme="@style/ColorSwitchStyle"
+                android:theme="@style/SwitchStyle"
                 app:layout_constraintStart_toStartOf="@+id/input_line"
                 app:layout_constraintTop_toBottomOf="@+id/input_line" />
         </LinearLayout>

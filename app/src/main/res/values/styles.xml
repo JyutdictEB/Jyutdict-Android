@@ -14,8 +14,9 @@
         <item name="colorControlActivated">@color/colorAccent</item>
     </style>
 
-    <style name="ColorSwitchStyle">
+    <style name="SwitchStyle" parent="Theme.AppCompat.Light">
         <item name="colorControlActivated">@color/colorPrimaryDark</item>
+        <!--<item name="colorSwitchThumbNormal">@color/colorHover</item> // 关闭时的颜色-->
+        <!--<item name="android:colorForeground">@color/colorGray</item> // 关闭时的轨迹颜色-->
     </style>
-
 </resources>

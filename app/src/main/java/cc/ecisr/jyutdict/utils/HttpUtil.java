@@ -30,7 +30,7 @@ public class HttpUtil {
 	private String urlStr = "";
 	private Handler handler;
 	private GetThread getThread;
-	private Boolean mode; // False For GET, True For POST
+	private final Boolean mode; // False For GET, True For POST
 	
 	private int messageWhat;
 	

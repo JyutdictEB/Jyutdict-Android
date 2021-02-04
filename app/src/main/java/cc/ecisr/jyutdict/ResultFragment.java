@@ -61,12 +61,12 @@ public class ResultFragment extends Fragment {
 					ArrayList<String> charaInWordsList = new ArrayList<>();
 					
 					final String chara = holder.getChara();
-					final boolean isCopiable = chara.length() != 0 && !"？".equals(chara);
+					final boolean isCopiable = chara.length() != 0 && !"□".equals(chara);
 					if (isCopiable) {
 						selectionList.add(getString(R.string.entry_menu_copy_chara, chara));
 					}
 					
-					final Pattern pt= Pattern.compile("((?<=（[～~])[^～~]+?(?=）))|((?<=（)[^～~]+?(?=[～~]）))");
+					final Pattern pt= Pattern.compile("((?<=（[～~])[^～~]+?(?=）))|((?<=（)[^～~]+?(?=[～~]+?）))");
 					Matcher mt=pt.matcher(holder.tvRightTop.getText().toString());
 					while (mt.find()){
 						charaInWordsList.add(mt.group(0));
@@ -119,10 +119,10 @@ public class ResultFragment extends Fragment {
 	
 	private void copy(String chara) {
 		ClipboardManager cm = (ClipboardManager) getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
-		ClipData mClipData = ClipData.newPlainText("Label", chara);
+		ClipData mClipData = ClipData.newPlainText("jyut_chara", chara);
 		if (cm != null) {
 			cm.setPrimaryClip(mClipData);
-			ToastUtil.msg(getContext(), "已複製："+chara);
+			ToastUtil.msg(getContext(), getString(R.string.tips_chara_copied, chara));
 		}
 	}
 	
@@ -283,10 +283,13 @@ public class ResultFragment extends Fragment {
 							.setMeaningDomainPresence(
 									sp.getBoolean("phrase_meaning_domain", false)
 							);
-					
+					if (jsonArray.length() <= 1) {
+						ToastUtil.msg(getContext(), getString(R.string.tips_no_result));
+					}
 					for (int i = 1; i<jsonArray.length(); i++) {
 						entry = jsonArray.getJSONObject(i);
 						character = new Character(entry, entrySettings);
+						
 						addItem(character.printCharacter(),
 								character.printUnicode(),
 								character.printPronunciation(),
