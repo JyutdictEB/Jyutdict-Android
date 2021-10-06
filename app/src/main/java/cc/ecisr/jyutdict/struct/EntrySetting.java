@@ -20,6 +20,8 @@ public class EntrySetting {
 	// 是否顯示域外音
 	boolean isDisplayEcdemic = true;
 	
+	boolean isUsingNightMode = false;
+	
 	public EntrySetting(int type) {
 		this.type = type;
 	}
@@ -38,6 +40,11 @@ public class EntrySetting {
 	
 	public EntrySetting setMeaningDomainPresence(boolean isMeaningDomainPresence) {
 		this.isMeaningDomainPresence = isMeaningDomainPresence;
+		return this;
+	}
+	
+	public EntrySetting setUsingNightMode(boolean isUsingNightMode) {
+		this.isUsingNightMode = isUsingNightMode;
 		return this;
 	}
 }

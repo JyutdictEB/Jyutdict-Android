@@ -5,10 +5,15 @@ import android.graphics.Typeface;
 import android.text.Html;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StrikethroughSpan;
 import android.text.style.StyleSpan;
+import android.view.View;
+
+import androidx.annotation.NonNull;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,6 +24,7 @@ import java.util.Map;
 
 import cc.ecisr.jyutdict.utils.ColorUtil;
 import cc.ecisr.jyutdict.utils.StringUtil;
+import cc.ecisr.jyutdict.utils.ToastUtil;
 
 /**
  * Character 類，用於儲存一條字頭項，與輸出顯示內容
@@ -30,11 +36,17 @@ public class Character {
 	// 如泛粵字表的一項有格式：
 	// { "繁"=>"一", "綜"=>"jat1", "穗"=>"jat", ..., "釋義"=>"…", ... }
 	// 目前（v0.2.5/200719）僅用在泛粵字表上，怎麼應用到通語字表上還需要再考慮一下
-	private final Map<String, String> key2val;
+	private final MapHelper key2val;
+	
+	// 每行所有單元格的附註，以 json 形式保存
+	private JSONObject cellNotes;
 	
 	// 輸出到屏幕上時的設置
 	// 包含如“是否對地方名著色”等顯示設置
 	private final EntrySetting settings;
+	
+	// 父級界面的 view，在實例化時傳入，用於在 view 上顯示 toast 等通知
+	View view;
 	
 	/**
 	 * 構造函數
@@ -44,16 +56,18 @@ public class Character {
 	 *
 	 * @param settings 一個 EntrySettings 類對象，以初始化 this.settings
 	 */
-	public Character(JSONObject charaEntry, final EntrySetting settings) {
+	public Character(JSONObject charaEntry, final EntrySetting settings, final View v) {
 		this.settings = settings;
-		key2val = new HashMap<>(HeaderInfo.getInfoLength());
+		key2val = new MapHelper(HeaderInfo.getInfoLength());
 		Iterator<String> keysIterator = charaEntry.keys(); // 獲取地名鍵
-		while (keysIterator.hasNext()) {
-			String key = keysIterator.next();
-			try {
-				key2val.put(key, charaEntry.getString(key));
-			} catch (JSONException ignored) {} // 理应不进入此处
-		}
+		try {
+			while (keysIterator.hasNext()) {
+				String key = keysIterator.next();
+				key2val.put(key, charaEntry.optString(key, ""));
+			}
+			cellNotes = new JSONObject(key2val.get(HeaderInfo.COLUMN_NAME_CELL_NOTE));
+		} catch (JSONException ignored) {}
+		view = v;
 	}
 	
 	/**
@@ -99,7 +113,6 @@ public class Character {
 		// 釋義
 		// 默认不会发生空指针异常，因为服务器返回的json必定存在键COLUMN_NAME_MEANING
 		String oriString = key2val.get(HeaderInfo.COLUMN_NAME_MEANING)
-				.replaceAll("：?需要例句", "")
 				.replaceAll("<", "&lt;")
 				.replaceAll("(?<=[^①-⑩\"“])&lt;", "；&lt;");
 		
@@ -188,7 +201,11 @@ public class Character {
 			// 對地區名著色
 			if (settings.isAreaColoring) {
 				presentStringEndPosition = ssb.length();
-				int textColor = ColorUtil.darken(HeaderInfo.getCityColor(key), settings.areaColoringDarkenRatio); // 將顏色調暗
+				int textColor = ColorUtil.darken(HeaderInfo.getCityColor(key),
+						settings.isUsingNightMode ?
+								2 - settings.areaColoringDarkenRatio : // 將顏色調亮
+								settings.areaColoringDarkenRatio  // 將顏色調暗
+				);
 				ssb.setSpan(new ForegroundColorSpan(textColor),
 						presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 				presentStringBeginPosition = ssb.length();
@@ -198,8 +215,8 @@ public class Character {
 			if (!value.contains("^")) {
 				ssb.append(value);
 			} else {
-				String[] splitedPron = value.split("\\^");
-				for (String subStr: splitedPron) {
+				String[] splitPron = value.split("\\^");
+				for (String subStr: splitPron) {
 					if (subStr.charAt(0) <= 'z') {
 						ssb.append(subStr);
 					} else {
@@ -224,15 +241,26 @@ public class Character {
 				ssb.setSpan(new StyleSpan(Typeface.ITALIC),
 						presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 			}
+			
+			if (cellNotes!=null && !cellNotes.optString(key).equals("")) {
+				sb.delete(0, sb.length());
+				sb.append(">「").append(key2val.get(HeaderInfo.COLUMN_NAME_CHARACTER));
+				sb.append("」(").append(key2val.get(HeaderInfo.COLUMN_NAME_PRONUNCIATION)).append(")   [");
+				sb.append(key).append("] ").append(value).append(", \n");
+				sb.append(cellNotes.optString(key).replaceAll("\n\t-.+", "\t\t- by Anonymous").replaceAll("\n-{10,}", ""));
+				final String s = sb.toString();
+				ssb.setSpan(new CustomClickable(v -> ToastUtil.tips(view, s, "善")) {},
+						presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+			}
 		}
 		ssb.delete(ssb.length()-" \t".length(), ssb.length());
 		
 		if (settings.isDisplayEcdemic) {
 			boolean isForeignPronEnterExist = false;
 			
-			for (String key : foreignList) {
+			for (String key: foreignList) {
 				value = key2val.get(key);
-				if (value == null || "".equals(value.trim())) continue;
+				if (value == null || "".equals(value)) continue;
 				
 				if (isForeignPronEnterExist) {
 					ssb.append(" \t");
@@ -250,7 +278,11 @@ public class Character {
 				// 對地區名著色
 				if (settings.isAreaColoring) {
 					presentStringEndPosition = ssb.length();
-					int textColor = ColorUtil.darken(HeaderInfo.getForeignColor(key), settings.areaColoringDarkenRatio); // 將顏色調暗
+					int textColor = ColorUtil.darken(HeaderInfo.getForeignColor(key),
+							settings.isUsingNightMode ?
+									2 - settings.areaColoringDarkenRatio : // 將顏色調亮
+									settings.areaColoringDarkenRatio  // 將顏色調暗
+					);
 					ssb.setSpan(new ForegroundColorSpan(textColor),
 							presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 					presentStringBeginPosition = ssb.length();
@@ -262,6 +294,17 @@ public class Character {
 				// 若讀音存在「?」，使用斜體標註
 				if (value.contains("?")) {
 					ssb.setSpan(new StyleSpan(Typeface.ITALIC),
+							presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+				}
+				
+				if (cellNotes!=null && !cellNotes.optString(key).equals("")) {
+					sb.delete(0, sb.length());
+					sb.append(">「").append(key2val.get(HeaderInfo.COLUMN_NAME_CHARACTER));
+					sb.append("」(").append(key2val.get(HeaderInfo.COLUMN_NAME_PRONUNCIATION)).append(")   [");
+					sb.append(key).append("] ").append(value).append(", \n");
+					sb.append(cellNotes.optString(key).replaceAll("\n\t-.+", "\t\t- by Anonymous").replaceAll("\n-{10,}", ""));
+					final String s = sb.toString();
+					ssb.setSpan(new CustomClickable(v -> ToastUtil.tips(view, s, "善")) {},
 							presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 				}
 			}
@@ -287,20 +330,19 @@ public class Character {
 //			}
 			
 			// 打印詞場
-			if (!"".equals(classified)) { // "大類"列
-				ssb.append("\n");
-				sb.delete(0, sb.length()).append(classified);
-				String class_secondary = key2val.get(HeaderInfo.COLUMN_NAME_CLASS_SECONDARY);
-				String class_minor = key2val.get(HeaderInfo.COLUMN_NAME_CLASS_MINOR);
-				if (!"".equals(class_secondary)) sb.append("\n").append(class_secondary);
-				if (!"".equals(class_minor)) sb.append("\n").append(class_minor);
-				presentStringBeginPosition = ssb.length();
-				ssb.append(sb);
-				presentStringEndPosition = ssb.length();
-				
-				ssb.setSpan(new ForegroundColorSpan(Color.parseColor("#BBBBBB")),
-						presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-			}
+			// "大類"列
+			ssb.append("\n");
+			sb.delete(0, sb.length()).append(classified);
+			String class_secondary = key2val.get(HeaderInfo.COLUMN_NAME_CLASS_SECONDARY);
+			String class_minor = key2val.get(HeaderInfo.COLUMN_NAME_CLASS_MINOR);
+			if (!"".equals(class_secondary)) sb.append("\n").append(class_secondary);
+			if (!"".equals(class_minor)) sb.append("\n").append(class_minor);
+			presentStringBeginPosition = ssb.length();
+			ssb.append(sb);
+			presentStringEndPosition = ssb.length();
+			
+			ssb.setSpan(new ForegroundColorSpan(Color.parseColor("#BBBBBB")),
+					presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 		}
 		return ssb;
 	}
@@ -349,8 +391,11 @@ public class Character {
 		String chara = key2val.get(HeaderInfo.COLUMN_NAME_CHARACTER)
 				.replaceAll("[?/!？！見歸 ]", "");
 		SpannableStringBuilder ssb = new SpannableStringBuilder();
-		String unicode = StringUtil.charaToUnicode(chara);
-		ssb.append(unicode);
+		String unicode = "";
+		if (StringUtil.countCharaLength(chara) < 2) {
+			unicode = StringUtil.charaToUnicode(chara);
+			ssb.append(unicode);
+		}
 		
 //      獲取到的萬國碼碼位在保留區
 //		if (unicode.startsWith("U+E") || (unicode.startsWith("U+F")&&unicode.charAt(3)<'9')) {
@@ -392,5 +437,37 @@ public class Character {
 		}
 		
 		return ssb;
+	}
+	
+	static class CustomClickable extends ClickableSpan implements View.OnClickListener {
+		private final View.OnClickListener mListener;
+		public CustomClickable(View.OnClickListener mListener) {
+			this.mListener = mListener;
+		}
+		@Override
+		public void onClick(@NonNull View v) {
+			mListener.onClick(v);
+		}
+		
+		@Override
+		public void updateDrawState(@NonNull TextPaint ds) {
+			ds.setUnderlineText(true);
+			
+		}
+	}
+	
+	
+	private static class MapHelper {
+		Map<String, String> map;
+		public MapHelper(int length) {
+			map = new HashMap<>(length);
+		}
+		public void put(String key, String value) {
+			map.put(key, value);
+		}
+		public String get(String key) {
+			String result = map.get(key);
+			return result==null ? "" : result.trim();
+		}
 	}
 }

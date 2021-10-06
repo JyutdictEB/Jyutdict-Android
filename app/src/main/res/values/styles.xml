@@ -1,13 +1,22 @@
 <resources>
 
-    <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="clockBackground">@color/colorBackground</item>
+        <item name="clockTextColor">@color/colorBlack</item>
+        <item name="clockTextColorDim">@color/colorGrayDark</item>
     </style>
 
+    <style name="DarkTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="clockBackground">@color/colorBackgroundDark</item>
+        <item name="clockTextColor">@color/colorHover</item>
+        <item name="clockTextColorDim">@color/colorGrayDark</item>
+    </style>
 
     <style name="MyEditText" parent="Theme.AppCompat.Light">
         <item name="colorControlNormal">@color/colorPrimary</item>

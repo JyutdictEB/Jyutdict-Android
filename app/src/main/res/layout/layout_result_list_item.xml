@@ -8,7 +8,7 @@
     android:layout_marginTop="7dp"
     android:layout_marginBottom="3dp"
     android:layout_marginHorizontal="10dp"
-    android:background="@color/colorWhite"
+    android:background="?attr/clockBackground"
     android:elevation="2dp">
 
     <LinearLayout
@@ -40,10 +40,10 @@
                 android:gravity="center"
                 android:foregroundGravity="center"
                 android:layout_gravity="center"
-                android:paddingHorizontal="15dp"
-                android:textSize="50sp"
+                android:paddingHorizontal="12dp"
+                android:textSize="46sp"
                 android:text="@string/result_list_chara"
-                android:textColor="@color/colorBlack"
+                android:textColor="?attr/clockTextColor"
                 />
             <TextView
                 android:id="@+id/chara_info"
@@ -53,7 +53,7 @@
                 android:paddingHorizontal="5dp"
                 android:textSize="12sp"
                 android:text="@string/result_list_info"
-                android:textColor="@color/colorBlack"
+                android:textColor="?attr/clockTextColor"
                 />
             <TextView
                 android:id="@+id/chara_extra"
@@ -64,7 +64,7 @@
                 android:paddingHorizontal="5dp"
                 android:textSize="14sp"
                 android:text="@string/result_list_extra"
-                android:textColor="@color/colorBlack"
+                android:textColor="?attr/clockTextColor"
                 />
         </LinearLayout>
         <LinearLayout
@@ -83,7 +83,7 @@
                 android:paddingVertical="4dp"
                 android:textSize="14sp"
                 android:text="@string/result_list_upper"
-                android:textColor="@color/colorBlack"
+                android:textColor="?attr/clockTextColor"
                 />
             <TextView
                 android:id="@+id/content_location"
@@ -92,7 +92,7 @@
                 android:paddingVertical="4dp"
                 android:textSize="14sp"
                 android:text="@string/result_list_bottom"
-                android:textColor="@color/colorBlack"
+                android:textColor="?attr/clockTextColor"
                 android:textIsSelectable="true"
                 android:descendantFocusability="afterDescendants"
                 />

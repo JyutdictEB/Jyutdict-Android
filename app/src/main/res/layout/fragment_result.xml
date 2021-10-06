@@ -8,10 +8,11 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/result_list"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:foregroundGravity="center"
-        app:layout_constraintTop_toTopOf="parent"
+        android:background="?attr/clockBackground"
         android:scrollbarSize="3dp"
         android:scrollbarThumbVertical="@color/colorPrimary"
-        android:scrollbars="vertical"/>
+        android:scrollbars="vertical"
+        app:layout_constraintTop_toTopOf="parent" />
 </RelativeLayout>

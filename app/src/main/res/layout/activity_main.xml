@@ -7,8 +7,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     tools:context=".MainActivity">
-<!--TODO 橫屏 // DO不了，要先解決Fragment重疊的問題-->
-        <androidx.appcompat.widget.Toolbar
+    <androidx.appcompat.widget.Toolbar
         android:id="@+id/tool_bar"
         android:paddingTop="25dp"
         android:paddingHorizontal="20dp"
@@ -28,7 +27,7 @@
 
         android:paddingVertical="15dp"
         android:paddingHorizontal="10dp"
-        android:background="@color/colorBackground"
+        android:background="?attr/clockBackground"
         android:elevation="3dp">
 
         <LinearLayout
@@ -58,6 +57,8 @@
                 android:paddingHorizontal="15dp"
                 android:paddingVertical="0dp"
                 android:textSize="18sp"
+                android:textColor="?attr/clockTextColor"
+                android:textColorHint="?attr/clockTextColorDim"
                 android:theme="@style/MyEditText"/>
             <Button
                 android:id="@+id/btn_clear"
@@ -101,6 +102,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:text="@string/search_common_sheet"
+                android:textColor="?attr/clockTextColor"
                 android:theme="@style/SwitchStyle"
                 app:layout_constraintStart_toStartOf="@+id/input_line"
                 app:layout_constraintTop_toBottomOf="@+id/input_line" />
@@ -111,6 +113,7 @@
                 android:layout_height="match_parent"
                 android:layout_marginHorizontal="10dp"
                 android:text="@string/search_reversal"
+                android:textColor="?attr/clockTextColor"
                 android:theme="@style/SwitchStyle"
                 android:visibility="invisible"
                 app:layout_constraintStart_toEndOf="@+id/switch_select_sheet"
@@ -121,7 +124,8 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:visibility="invisible"
+                android:textColor="?attr/clockTextColor"
+                android:visibility="visible"
                 app:layout_constraintEnd_toEndOf="@+id/input_line"
                 app:layout_constraintTop_toTopOf="@+id/switch_select_sheet" />
         </LinearLayout>
@@ -143,6 +147,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:text="@string/search_enable_regex"
+                android:textColor="?attr/clockTextColor"
                 android:theme="@style/SwitchStyle"
                 app:layout_constraintStart_toStartOf="@+id/input_line"
                 app:layout_constraintTop_toBottomOf="@+id/input_line" />
@@ -160,20 +165,22 @@
         android:progress="50"
         android:layout_gravity="bottom"
         android:indeterminateTint="@color/colorPrimary"
+        android:background="?attr/clockBackground"
         android:visibility="gone" />
 
-    <fragment
+    <RelativeLayout
         android:id="@+id/result_fragment"
         android:name="cc.ecisr.jyutdict.ResultFragment"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:background="?attr/clockBackground"
         />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="40dp"
-        android:background="@color/colorBackground"
+        android:background="?attr/clockBackground"
         android:elevation="3dp"/>
 
 </LinearLayout>

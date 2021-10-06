@@ -37,7 +37,6 @@ public class ResultFragment extends Fragment {
 	private static final String TAG = "`ResultFragment";
 	
 	static private RecyclerView mRvMain;  // 不加static会显示两个View // a SHITTY method
-	private View selfView;
 	
 	// TODO 不 parse JSON in Fragment
 	// TODO 高度不會變動的滾動條 // 需要自定義滾動條類
@@ -45,77 +44,75 @@ public class ResultFragment extends Fragment {
 	@Nullable
 	@Override
 	public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-		if (selfView != null) { // 避免重新設置view
-			ViewGroup parent = (ViewGroup) selfView.getParent();
-			if (parent != null) parent.removeView(selfView);
-			return selfView;
-		}
-		
-		if (mRvMain == null) {
-			selfView = inflater.inflate(R.layout.fragment_result, container, false);
-			mRvMain = selfView.findViewById(R.id.result_list);
-			ResultItemAdapter marketItemAdapter = new ResultItemAdapter(getActivity(), new ResultItemAdapter.OnItemClickListener() {
-				@Override
-				public void onClick(@NonNull ResultItemAdapter.LinearViewHolder holder) {
-					ArrayList<String> selectionList = new ArrayList<>();
-					ArrayList<String> charaInWordsList = new ArrayList<>();
-					
-					final String chara = holder.getChara();
-					final boolean isCopiable = chara.length() != 0 && !"□".equals(chara);
-					if (isCopiable) {
-						selectionList.add(getString(R.string.entry_menu_copy_chara, chara));
-					}
-					
-					final Pattern pt= Pattern.compile("((?<=（[～~])[^～~]+?(?=）))|((?<=（)[^～~]+?(?=[～~]+?）))");
-					Matcher mt=pt.matcher(holder.tvRightTop.getText().toString());
-					while (mt.find()){
-						charaInWordsList.add(mt.group(0));
-						selectionList.add(getString(R.string.entry_menu_search_common, mt.group(0)));
-						selectionList.add(getString(R.string.entry_menu_search_special, mt.group(0)));
-					}
-					
-					if (selectionList.size()!=0) {
-						final String[] selections = selectionList.toArray(new String[0]);
-						new AlertDialog.Builder(getContext())
-								.setItems(selections, (dialogInterface, i) -> {
-									if (i == 0 && isCopiable) {
-										copy(chara);
-									} else {
-										int elseItemAddedCount = (isCopiable ? 1 : 0);
-										int mode = (i % 2 == elseItemAddedCount) ?
-												EnumConst.QUERYING_CHARA :
-												EnumConst.QUERYING_SHEET;
-										((MainActivity) getActivity()).search(
-												charaInWordsList.get((i - 1) >> elseItemAddedCount),
-												mode);
-									}
-								}).create().show();
-					}
+		View selfView = inflater.inflate(R.layout.fragment_result, container, false);
+		mRvMain = selfView.findViewById(R.id.result_list);
+		ResultItemAdapter marketItemAdapter = new ResultItemAdapter(getActivity(), new ResultItemAdapter.OnItemClickListener() {
+			@Override
+			public void onClick(@NonNull ResultItemAdapter.LinearViewHolder holder) {
+				ArrayList<String> selectionList = new ArrayList<>();
+				ArrayList<String> charaInWordsList = new ArrayList<>();
+				
+				final String chara = holder.getChara();
+				final boolean isCopiable = chara.length() != 0 && !"□".equals(chara);
+				if (isCopiable) {
+					selectionList.add(getString(R.string.entry_menu_copy_chara, chara));
 				}
 				
-				@Override
-				public void onLongClick(@NonNull ResultItemAdapter.LinearViewHolder holder) {
-					if (holder.getChara().length()!=0 && getActivity()!=null) {
-						copy(holder.getChara());
-					}
+				final Pattern pt= Pattern.compile("((?<=（[～~])[^～~]+?(?=）))|((?<=（)[^～~]+?(?=[～~]+?）))");
+				Matcher mt=pt.matcher(holder.tvRightTop.getText().toString());
+				while (mt.find()){
+					charaInWordsList.add(mt.group(0));
+					selectionList.add(getString(R.string.entry_menu_search_common, mt.group(0)));
+					selectionList.add(getString(R.string.entry_menu_search_special, mt.group(0)));
 				}
-			});
-			mRvMain.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
-			mRvMain.setItemAnimator(new DefaultItemAnimator());
-			mRvMain.setAdapter(marketItemAdapter);
-//			if (getActivity() != null) {
-//				mRvMain.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL));
-//			}
-//			Log.i(TAG, "onCreateView: 1");
-		} else if (savedInstanceState!=null) {
-//			mRvMain = (RecyclerView) savedInstanceState.get("rv_main");
-//			Log.i(TAG, "onCreateView: 2");
-		} else {
-//			Log.i(TAG, "onCreateView: 3");
-		}
-		Log.d(TAG, "onCreateView: " + System.identityHashCode(this));
+				
+				if (selectionList.size()!=0) {
+					final String[] selections = selectionList.toArray(new String[0]);
+					new AlertDialog.Builder(getContext())
+							.setItems(selections, (dialogInterface, i) -> {
+								if (i == 0 && isCopiable) {
+									copy(chara);
+								} else {
+									int elseItemAddedCount = (isCopiable ? 1 : 0);
+									int mode = (i % 2 == elseItemAddedCount) ?
+											EnumConst.QUERYING_CHARA :
+											EnumConst.QUERYING_SHEET;
+									((MainActivity) getActivity()).search(
+											charaInWordsList.get((i - 1) >> elseItemAddedCount),
+											mode);
+								}
+							}).create().show();
+				}
+			}
+			
+			@Override
+			public void onLongClick(@NonNull ResultItemAdapter.LinearViewHolder holder) {
+				if (holder.getChara().length()!=0 && getActivity()!=null) {
+					copy(holder.getChara());
+				}
+			}
+		});
+		mRvMain.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
+		mRvMain.setItemAnimator(new DefaultItemAnimator());
+		mRvMain.setAdapter(marketItemAdapter);
+		//mRvMain.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL));
+		
 		return selfView;
 	}
+	
+	@Override
+	public void onSaveInstanceState(@NonNull Bundle outState) {
+		Log.d(TAG, "onSaveInstanceState: " + System.identityHashCode(this));
+		super.onSaveInstanceState(outState);
+	}
+	
+	@Override
+	public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+		Log.d(TAG, "onViewCreated: " + System.identityHashCode(this));
+		//mRvMain.getAdapter().notifyDataSetChanged();
+		super.onViewCreated(view, savedInstanceState);
+	}
+	
 	
 	private void copy(String chara) {
 		ClipboardManager cm = (ClipboardManager) getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
@@ -124,31 +121,6 @@ public class ResultFragment extends Fragment {
 			cm.setPrimaryClip(mClipData);
 			ToastUtil.msg(getContext(), getString(R.string.tips_chara_copied, chara));
 		}
-	}
-	
-	
-	@Override
-	public void onSaveInstanceState(@NonNull Bundle outState) {
-		Log.d(TAG, "onSaveInstanceState: ");
-		super.onSaveInstanceState(outState);
-	}
-	
-	@Override
-	public void onDestroyView() {
-		Log.d(TAG, "onDestroyView: " + System.identityHashCode(this));
-		super.onDestroyView();
-	}
-	
-	@Override
-	public void onDestroy() {
-		Log.d(TAG, "onDestroy: ");
-		super.onDestroy();
-	}
-	
-	@Override
-	public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-		Log.d(TAG, "onViewCreated: ");
-		super.onViewCreated(view, savedInstanceState);
 	}
 	
 	/**
@@ -281,14 +253,14 @@ public class ResultFragment extends Fragment {
 									sp.getBoolean("area_coloring", true),
 									sp.getFloat("area_coloring_darken_ratio", 0.92f))
 							.setMeaningDomainPresence(
-									sp.getBoolean("phrase_meaning_domain", false)
-							);
+									sp.getBoolean("phrase_meaning_domain", false))
+							.setUsingNightMode(sp.getBoolean("night_mode", false));
 					if (jsonArray.length() <= 1) {
 						ToastUtil.msg(getContext(), getString(R.string.tips_no_result));
 					}
 					for (int i = 1; i<jsonArray.length(); i++) {
 						entry = jsonArray.getJSONObject(i);
-						character = new Character(entry, entrySettings);
+						character = new Character(entry, entrySettings, getView());
 						
 						addItem(character.printCharacter(),
 								character.printUnicode(),
@@ -359,11 +331,11 @@ public class ResultFragment extends Fragment {
 								// syllablesKey == "haa" "ki" "ge"...
 								syllablesKey = syllablesIterator.next();
 								int keyInt = ("".equals(syllablesKey)) ? 0 : Integer.parseInt(syllablesKey)-1;
-								stringForSortToneMask |= 1 << keyInt;
+								stringForSortToneMask |= 1L << keyInt;
 								stringForSortTone[keyInt] = syllablesInCityKey + syllablesKey + ": " + syllables.getString(syllablesKey);
 							}
 							for (int j = 0; j <= 15 && stringForSortToneMask != 0L; j++) {
-								if ((stringForSortToneMask & (1 << j)) != 0L) {
+								if ((stringForSortToneMask & (1L << j)) != 0L) {
 									contentInOneLocation.append("<br>").append(stringForSortTone[j]);
 									stringForSortToneMask ^= 1 << j;
 								}
@@ -447,4 +419,6 @@ public class ResultFragment extends Fragment {
 			);
 		}
 	}
+	
+	
 }

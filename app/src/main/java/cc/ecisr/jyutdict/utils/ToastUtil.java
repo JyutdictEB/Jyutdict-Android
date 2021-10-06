@@ -2,9 +2,12 @@ package cc.ecisr.jyutdict.utils;
 
 import android.content.Context;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.snackbar.Snackbar;
+
+import cc.ecisr.jyutdict.R;
 
 public class ToastUtil {
 	private static Toast mToast;
@@ -16,15 +19,25 @@ public class ToastUtil {
 		mToast.show();
 	}
 	
+	private static Snackbar mSnackbar;
 	public static void tips(View view, String msg, String button) {
-		Snackbar.make(view, msg, Snackbar.LENGTH_LONG)
-				.setAction(button, new View.OnClickListener() {
-					@Override
-					public void onClick(View view) {
-						//showMsg(view.getContext(),"你点了");
-					}
-				})
-				.show();
+		if (mSnackbar != null) {
+			mSnackbar.dismiss();
+		}
+		mSnackbar = Snackbar.make(view, msg, Snackbar.LENGTH_INDEFINITE)
+				.setAction(button, view1 -> {
+					//
+				});
+		
+		TextView snackTextView = mSnackbar.getView().findViewById(R.id.snackbar_text);
+		snackTextView.setMaxLines(5);
+		//snackTextView.setPadding(50,50,50,50);
+		TextView snackButtonView = mSnackbar.getView().findViewById(R.id.snackbar_action);
+		snackButtonView.setTextSize(18);
+		snackButtonView.setTextColor(view.getResources().getColor(R.color.colorPrimary));
+		
+		
+		mSnackbar.show();
 	}
 	
 }

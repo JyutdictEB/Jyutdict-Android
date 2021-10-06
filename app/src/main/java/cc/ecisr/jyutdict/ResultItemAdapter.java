@@ -3,6 +3,7 @@ package cc.ecisr.jyutdict;
 import android.content.Context;
 import android.text.Html;
 import android.text.Spanned;
+import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,8 +16,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 
 public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.LinearViewHolder> {
-	private Context mContext;
-	private OnItemClickListener mListener;
+	private final Context mContext;
+	private final OnItemClickListener mListener;
 	
 	ResultItemAdapter(Context context, OnItemClickListener listener) {
 		this.mContext = context; // 主activity
@@ -45,6 +46,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 		holder.tvCharaExtra.setText(extra);
 		holder.tvRightTop.setText(wanshyu);
 		holder.tvRightBottom.setText(location);
+		holder.tvRightBottom.setMovementMethod(LinkMovementMethod.getInstance());
 		int lyCharaVisibility = (header.length()!=0 || info.length()!=0) ? View.VISIBLE : View.GONE;
 		int tvContentInfoVisibility = (info.length()!=0) ? View.VISIBLE : View.GONE;
 		int tvContentExtraVisibility = (extra.length()!=0) ? View.VISIBLE : View.GONE;

@@ -14,7 +14,7 @@ import java.net.URL;
 public class HttpUtil {
 	private static final String TAG = "`HttpUtil";
 	
-	public static final Boolean POST = true;
+	//public static final Boolean POST = true;
 	public static final Boolean GET = false;
 	
 	// 未設置請求的 url
@@ -89,7 +89,8 @@ public class HttpUtil {
 						
 						m.what = messageWhat;
 						m.obj = resultData.toString();
-						Log.i(TAG, "receive: " + resultData.toString());
+						Log.i(TAG, "received, LEN = " + resultData.length() + ", WHAT = " + messageWhat);
+						Log.v(TAG, "received content: \n" + resultData.toString());
 					} else {
 						m.what = REQUEST_CONTENT_FAIL;
 						m.obj = String.valueOf(conn.getResponseCode());
@@ -103,13 +104,11 @@ public class HttpUtil {
 				if (handler != null) {
 					handler.sendMessage(handler.obtainMessage(EMPTY_URL_OR_HANDLER, ""));
 				} else {
-					Log.e(TAG, "空線程Handler！");
+					Log.e(TAG, "空線程Handler！" + urlStr);
 				}
 			}
 		}
 	}
 	
-	
-	class PostThread extends Thread {
-	}
+	//class PostThread extends Thread {}
 }

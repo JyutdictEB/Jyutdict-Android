@@ -7,11 +7,12 @@ Using APIs provided by [API List](https://www.jyutdict.org/api/)
 可檢索：通語字+音和泛粵字表中的錔字+綜合音+各地音（若有）+釋義，詳見 [關於泛粵大典](https://www.jyutdict.org/about)。  
 各資料來源見應用內的說明頁，或"./app/src/main/assets/info/info.html"  
   
-### 已知較明顯的bugs:  
-在主頁面按下返回后再開啟，應用會閃退：這是因爲避免新建出了兩個fragment而不得已臨時用了點trick帶來的副作用。  
-因此不能轉橫豎屏╮(╯▽╰)╭  
-  
 ## 版本歷史 ##  
+### v0.5.0/211007  
+修復幾個崩潰 bugs  
++ 橫屏顯示  
++ 黑暗主題  
++ 支持單元格附註的顯示  
   
 ### v0.3.7/210205  
 修復幾個顯示 bugs  

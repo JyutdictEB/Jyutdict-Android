@@ -10,7 +10,6 @@ import android.webkit.WebView;
  */
 public class InfoActivity extends AppCompatActivity {
 	WebView webView;
-//	static final String INFO_HTML_FILE_URL = "https://www.jyutdict.org/about";
 	static final String INFO_HTML_FILE_URL = "file:///android_asset/info/info.html";
 	
 	@Override

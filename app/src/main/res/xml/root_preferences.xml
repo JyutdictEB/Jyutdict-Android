@@ -50,5 +50,10 @@
             app:key="phrase_meaning_domain"
             app:title="@string/display_title_phrase_meaning_domain"
             app:defaultValue="false"/>
+
+        <SwitchPreference
+            app:key="night_mode"
+            app:title="@string/display_title_night_mode"
+            app:defaultValue="false"/>
     </PreferenceCategory>
 </PreferenceScreen>

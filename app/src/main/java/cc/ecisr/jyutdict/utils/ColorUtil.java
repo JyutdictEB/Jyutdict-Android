@@ -6,7 +6,6 @@ import android.graphics.Color;
  * ColorUtil 類，用於存放處理顏色相關的函數
  */
 public class ColorUtil {
-	private static final String TAG = "`ColorUtil";
 	
 	/**
 	 * 獲取顏色亮度
@@ -35,6 +34,28 @@ public class ColorUtil {
 		int color = Color.parseColor(colorString);
 		float[] hsv = new float[3];
 		Color.colorToHSV(color, hsv);
+		hsv[2] *= ratio;
+		hsv[1] /= ratio*ratio;
+		return Color.HSVToColor(hsv);
+	}
+	
+	/**
+	 * 將輸入顏色的明度 ∈[0, 1] 映射到區間 [a, b]
+	 * 以調節該顏色明度
+	 * 爲了保持顏色的飽和度，明度在乘以係數的同時，飽和度除以該係數的平方
+	 * 如，a=0.5, b=1.0，原顏色明度 =0.5 時，輸出明度 =0.75
+	 *
+	 * @param colorString 表示顏色的十六進制字符串，如"#FFFFFFF"
+	 * @param a 映射左區間
+	 * @param b 映射右區間
+	 * @return 以整形數字表示的顏色代碼
+	 */
+	public static int remapValue(String colorString, double a, double b) {
+		int color = Color.parseColor(colorString);
+		float[] hsv = new float[3];
+		Color.colorToHSV(color, hsv);
+		double ratio = hsv[2] * (b - a) + a;
+		
 		hsv[2] *= ratio;
 		hsv[1] /= ratio*ratio;
 		return Color.HSVToColor(hsv);

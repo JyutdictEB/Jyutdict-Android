@@ -2,8 +2,8 @@
     <string name="app_name">泛粵典</string>
     <string name="app_version">當前版本：%1$d.%2$d.%3$d\n長按此處檢測新版本</string>
     <string name="app_version_0">0</string>
-    <string name="app_version_1">3</string>
-    <string name="app_version_2">7</string>
+    <string name="app_version_1">5</string>
+    <string name="app_version_2">0</string>
     <string name="app_about">泛粵大典附屬應用 by EcisRhetha\nwww.jyutdict.org</string>
 
     <!-- MainActivity -->
@@ -46,6 +46,6 @@
     <string name="display_title_area_coloring">啟用地區著色</string>
     <string name="display_title_area_coloring_ratio">著色明度係數(默認0.92)</string>
     <string name="display_title_phrase_meaning_domain">顯示詞場</string>
-
+    <string name="display_title_night_mode">啟用黑暗主題</string>
 
 </resources>

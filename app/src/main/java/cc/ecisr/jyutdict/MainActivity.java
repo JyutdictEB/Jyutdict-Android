@@ -94,6 +94,9 @@ public class MainActivity extends AppCompatActivity {
 	// 並根據這個狀態來解析JSON
 	int queryObjectWhat = EnumConst.QUERYING_CHARA;
 	
+	// 夜间模式
+	//private static boolean isNightMode = false;
+	
 	/**
 	 * 初始化界面，獲取界面上各物件的視圖
 	 */
@@ -116,9 +119,12 @@ public class MainActivity extends AppCompatActivity {
 		locationsAdapter.add("字/音");
 	}
 	
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		sp = getSharedPreferences("settings", MODE_PRIVATE); // 要讀取夜間模式設置，所以 sp 放前面
+		applyLightDarkTheme();
 		setContentView(R.layout.activity_main);
 		UltimateBar.Companion.with(this)
 				.statusDark(true)           // 状态栏灰色模式(Android 6.0+)
@@ -129,6 +135,8 @@ public class MainActivity extends AppCompatActivity {
 		if (savedInstanceState == null) {
 			resultFragment = new ResultFragment();
 			getSupportFragmentManager().beginTransaction().add(R.id.result_fragment, resultFragment).commit();
+		} else {
+			resultFragment = (ResultFragment) getSupportFragmentManager().getFragment(savedInstanceState, "result_fragment");
 		}
 		initPermission();
 		
@@ -140,13 +148,7 @@ public class MainActivity extends AppCompatActivity {
 								msg.obj.toString()
 						).getJSONArray("__valid_options");
 						HeaderInfo.load(headerArray);
-						
-						locationsAdapter.addAll(HeaderInfo.getCityList());
-						
-						spinnerQueryLocation.setSelection(
-								sp.getInt("spinner_selected_position", 0));
-						isPrepared = true;
-						query.setHandler(mainHandler);
+						setLocationsAdapter();
 						if (!isJustInitialized && inputEditText.getText().length() != 0) search();
 					} catch (JSONException ignored) {}
 					break;
@@ -206,6 +208,7 @@ public class MainActivity extends AppCompatActivity {
 				} else {
 					btnQueryClear.setVisibility(View.VISIBLE);
 				}
+				
 			}
 			@Override
 			public void afterTextChanged(Editable s) {
@@ -225,7 +228,6 @@ public class MainActivity extends AppCompatActivity {
 		btnQueryClear.setVisibility(View.GONE);
 		
 		// 讀取幾個開關之前的狀態
-		sp = getSharedPreferences("settings", MODE_PRIVATE);
 		switchQueryOpts1.setSetCheckedListener(this::setInputEditTextHint);
 		switchQueryOpts2.setSetCheckedListener(this::setInputEditTextHint);
 		switchQueryOpts1.setChecked(sp.getBoolean("switch_1_is_checked", false));
@@ -235,16 +237,42 @@ public class MainActivity extends AppCompatActivity {
 		lyAdvancedSearch.setVisibility(sp.getBoolean("advanced_search", false) ? View.VISIBLE : View.GONE);
 		switchQueryOpts1.setOnCheckedChangeListener((buttonView, isChecked) -> setSearchView());
 		switchQueryOpts2.setOnCheckedChangeListener((buttonView, isChecked) -> setSearchView());
+		//inputEditText.setOnClickListener(v -> toggleNightTheme());
 		setSearchView();
 		
 		// 獲取泛粵字表的表頭
-		query.setUrl("http://jyutdict.org/api/v0.9/sheet?query=&header")
-				.setHandler(mainHandler, EnumConst.INITIALIZE_LOCATIONS);
+		setLocationsAdapter();
+
 		boolean hadCheckedInfoActivity = sp.getBoolean("had_checked_info_activity_2", false);
 		if (hadCheckedInfoActivity) {
-			query.start();
+			if (!isPrepared) {
+				query.start();
+			}
 		} else {
-			printTipsMessageBox();
+			displayTipsMessageBox();
+		}
+	}
+	
+	private void applyLightDarkTheme() {
+		boolean isNightMode = sp.getBoolean("night_mode", false);
+		if (isNightMode) {
+			setTheme(R.style.DarkTheme);
+		} else {
+			setTheme(R.style.AppTheme);
+		}
+	}
+	
+	private void setLocationsAdapter() {
+		if (isPrepared) return;
+		if (HeaderInfo.isLoaded) {
+			locationsAdapter.addAll(HeaderInfo.getCityList());
+			spinnerQueryLocation.setSelection(
+					sp.getInt("spinner_selected_position", 0));
+			isPrepared = true;
+			query.setHandler(mainHandler);
+		} else {
+			query.setUrl("http://jyutdict.org/api/v0.9/sheet?query=&header")
+					.setHandler(mainHandler, EnumConst.INITIALIZE_LOCATIONS);
 		}
 	}
 	
@@ -260,6 +288,7 @@ public class MainActivity extends AppCompatActivity {
 			switchQueryOpts2.setVisibility(View.VISIBLE);
 			int spinnerVisibility = is2Checked ? View.INVISIBLE : View.VISIBLE;
 			spinnerQueryLocation.setVisibility(spinnerVisibility);
+			
 		} else {
 			switch1Text = getString(R.string.search_common_sheet);
 			switchQueryOpts2.setVisibility(View.INVISIBLE);
@@ -297,13 +326,7 @@ public class MainActivity extends AppCompatActivity {
 		}
 		return super.onOptionsItemSelected(item);
 	}
-	
-	@Override
-	protected void onDestroy() {
-		saveLayoutStatus();
-		super.onDestroy();
-	}
-	
+
 	
 	/**
 	 * saveLayoutStatus()
@@ -428,6 +451,12 @@ public class MainActivity extends AppCompatActivity {
 			boolean isEnableAdvancedSearch = (resultCode&0b1) != 0;
 			lyAdvancedSearch.setVisibility(isEnableAdvancedSearch ? View.VISIBLE : View.GONE);
 			if (!isEnableAdvancedSearch) switchQueryOpts3.setChecked(false);
+			
+			boolean isToggleNightMode = (resultCode&0b10) != 0;
+			if (isToggleNightMode) {
+				applyLightDarkTheme();
+				recreate();
+			}
 		} else if (requestCode == EnumConst.ACTIVITY_CHECKING_INFO_PRIVACY) {
 			query.start();
 		}
@@ -449,7 +478,7 @@ public class MainActivity extends AppCompatActivity {
 	/**
 	 * 首次使用時顯示提示框
 	 */
-	private void printTipsMessageBox() {
+	private void displayTipsMessageBox() {
 		new AlertDialog.Builder(this)
 				.setTitle("歡迎使用本應用！")
 				.setMessage("在使用之前，請務必閱覽本應用之說明。\n\n起碼把紅字看完！\n\n註意：內含隱私聲明，返回此界面則代表同意該聲明。")
@@ -515,6 +544,12 @@ public class MainActivity extends AppCompatActivity {
 			void handleMessage(Message msg);
 		}
 	}
-
 	
+	@Override
+	protected void onSaveInstanceState(@NonNull Bundle outState) {
+		super.onSaveInstanceState(outState);
+		if (resultFragment != null) {
+			getSupportFragmentManager().putFragment(outState, "result_fragment", resultFragment);
+		}
+	}
 }

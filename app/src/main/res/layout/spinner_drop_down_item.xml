@@ -22,4 +22,6 @@
     android:singleLine="true"
     android:layout_width="match_parent"
     android:layout_height="30dp"
+    android:textColor="?attr/clockTextColor"
+    android:background="?attr/clockBackground"
     android:ellipsize="marquee"/>

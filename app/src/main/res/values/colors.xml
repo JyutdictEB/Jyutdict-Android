@@ -12,4 +12,8 @@
     <color name="colorWhite">#FFFFFF</color>
     <color name="colorBlack">#0F110C</color>
 
+    <color name="colorGrayDark">#ABAAB1</color>
+    <color name="colorUnavailableDark">#5A5A49</color>
+    <color name="colorHoverDark">#332C47</color>
+    <color name="colorBackgroundDark">#202020</color>
 </resources>
