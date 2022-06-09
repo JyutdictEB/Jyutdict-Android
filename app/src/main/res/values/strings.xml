@@ -2,9 +2,16 @@
     <string name="app_name">泛粵典</string>
     <string name="app_version">當前版本：%1$d.%2$d.%3$d\n長按此處檢測新版本</string>
     <string name="app_version_0">0</string>
-    <string name="app_version_1">5</string>
-    <string name="app_version_2">0</string>
+    <string name="app_version_1">6</string>
+    <string name="app_version_2">5</string>
     <string name="app_about">泛粵大典附屬應用 by EcisRhetha\nwww.jyutdict.org</string>
+
+    <string name="syllable_initial">聲母</string>
+    <string name="syllable_final">韻母</string>
+    <string name="syllable_tone">聲調</string>
+    <string name="button_confirm">確定</string>
+    <string name="button_all_check">全選</string>
+    <string name="button_all_uncheck">全消</string>
 
     <!-- MainActivity -->
     <string name="menu_options">選項</string>
@@ -23,15 +30,23 @@
     <string name="search_jyut_sheet">泛粵字表</string>
     <string name="search_reversal">反查釋義</string>
     <string name="search_enable_regex">使用正則</string>
+    <string name="search_filtering_area">篩選地點</string>
+    <string name="search_coloring_jpp_partial">音節高亮</string>
+    <string name="search_coloring_jpp_partial_notice">選擇所需對比的音節部分\n不選則無高亮</string>
+    <string name="search_coloring_jpp_partial_inner">單字內部對比</string>
+    <string name="search_coloring_jpp_partial_inter">多字對比</string>
+
     <!-- EntryMenu -->
-    <string name="entry_menu_copy_chara">複製：%1$s</string>
+    <string name="entry_menu_copy_chara">複製字項內容</string>
     <string name="entry_menu_search_common">在通用字表檢索：%1$s</string>
     <string name="entry_menu_search_special">在泛粵字表檢索：%1$s</string>
+    <string name="select_drop_down_standard">字/綜合音</string>
+    <string name="select_drop_down_convenience">字/檢索音</string>
 
     <!-- Toast Message-->
     <string name="error_tips_network">網絡或服務器錯誤，錯誤碼：%1$s</string>
     <string name="error_tips_network_out_of_time">未能連接服務器</string>
-    <string name="tips_version_checking">正在检测更新版本</string>
+    <string name="tips_version_checking">正在檢測更新版本</string>
     <string name="tips_version_checked">已为最新</string>
     <string name="tips_version_detected">有新版本，請於「幫助」頁面底部進入下載地址</string>
     <string name="permission_requesting">本應用需要通過網絡提供查詢服務，故還請允許相關的權限</string>
@@ -45,7 +60,8 @@
     <string name="display_header">顯示</string>
     <string name="display_title_area_coloring">啟用地區著色</string>
     <string name="display_title_area_coloring_ratio">著色明度係數(默認0.92)</string>
-    <string name="display_title_phrase_meaning_domain">顯示詞場</string>
+    <string name="display_title_phrase_meaning_domain">[粵表] 顯示詞場</string>
     <string name="display_title_night_mode">啟用黑暗主題</string>
+    <string name="display_title_ipa_present">[通表] 顯示IPA</string>
 
 </resources>

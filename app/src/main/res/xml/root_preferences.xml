@@ -52,8 +52,13 @@
             app:defaultValue="false"/>
 
         <SwitchPreference
+            app:key="ipa_presence"
+            app:title="@string/display_title_ipa_present"
+            app:defaultValue="true"/>
+        <SwitchPreference
             app:key="night_mode"
             app:title="@string/display_title_night_mode"
             app:defaultValue="false"/>
+
     </PreferenceCategory>
 </PreferenceScreen>

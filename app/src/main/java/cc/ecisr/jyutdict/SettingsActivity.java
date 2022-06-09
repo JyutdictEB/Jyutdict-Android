@@ -120,6 +120,7 @@ public class SettingsActivity extends AppCompatActivity {
 		SwitchPreference switchPhraseMeaningDomain;
 		EditTextPreference editAreaColoringDarkenRatio;
 		SwitchPreference switchNightMode;
+		SwitchPreference switchIpaPresent;
 		@Override
 		public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
 			setPreferencesFromResource(R.xml.root_preferences, rootKey);
@@ -128,6 +129,7 @@ public class SettingsActivity extends AppCompatActivity {
 			switchPhraseMeaningDomain = findPreference("phrase_meaning_domain");
 			editAreaColoringDarkenRatio = findPreference("area_coloring_darken_ratio");
 			switchNightMode = findPreference("night_mode");
+			switchIpaPresent = findPreference("ipa_presence");
 			
 			if (editAreaColoringDarkenRatio != null) {
 				editAreaColoringDarkenRatio.setOnBindEditTextListener(editText ->
@@ -144,6 +146,7 @@ public class SettingsActivity extends AppCompatActivity {
 			editor.putBoolean("area_coloring", switchAreaColoring.isChecked());
 			editor.putBoolean("phrase_meaning_domain", switchPhraseMeaningDomain.isChecked());
 			editor.putBoolean("night_mode", switchNightMode.isChecked());
+			editor.putBoolean("ipa_presence", switchIpaPresent.isChecked());
 			editor.putFloat("area_coloring_darken_ratio", Float.parseFloat(editAreaColoringDarkenRatio.getText()));
 			editor.apply();
 			settings |= switchAdvancedSearch.isChecked() ? 1 : 0;

@@ -28,4 +28,8 @@
         <!--<item name="colorSwitchThumbNormal">@color/colorHover</item> // 关闭时的颜色-->
         <!--<item name="android:colorForeground">@color/colorGray</item> // 关闭时的轨迹颜色-->
     </style>
+
+    <style name="ButtonTextColor" parent="@android:style/Widget.Button">
+        <item name="android:textColor">@drawable/btn_text_color</item>
+    </style>
 </resources>

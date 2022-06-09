@@ -1,7 +1,6 @@
 package cc.ecisr.jyutdict;
 
 import android.content.Context;
-import android.text.Html;
 import android.text.Spanned;
 import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
@@ -17,9 +16,9 @@ import java.util.ArrayList;
 
 public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.LinearViewHolder> {
 	private final Context mContext;
-	private final OnItemClickListener mListener;
+	private final iOnItemClickListener mListener;
 	
-	ResultItemAdapter(Context context, OnItemClickListener listener) {
+	ResultItemAdapter(Context context, iOnItemClickListener listener) {
 		this.mContext = context; // 主activity
 		this.mListener = listener; // 提供給fragment的監聽器
 		new ResultInfo(); // 初始化類內靜態列表
@@ -99,9 +98,18 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 		String getChara() {
 			return tvCharaHeader.getText().toString();
 		}
+		String printContent() {
+		    StringBuilder sb = new StringBuilder();
+		    sb.append(tvCharaHeader.getText().toString()).append("\n");
+            sb.append(tvCharaInfo.getText().toString()).append("\n");
+            sb.append(tvCharaExtra.getText().toString()).append("\n");
+            sb.append(tvRightTop.getText().toString()).append("\n");
+            sb.append(tvRightBottom.getText().toString()).append("\n");
+            return sb.toString();
+        }
 	}
 	
-	public interface OnItemClickListener {
+	public interface iOnItemClickListener {
 		void onClick(@NonNull ResultItemAdapter.LinearViewHolder holder);
 		void onLongClick(@NonNull ResultItemAdapter.LinearViewHolder holder);
 	}
@@ -114,23 +122,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 		ResultInfo() {
 			list = new ArrayList<>(0);
 		}
-		
-		/**
-		 * 向本類維護的字項列表中添加一項
-		 *
-		 * @deprecated 使用參數全爲 spanned 的同名方法
-		 * @see #addItem(Spanned, Spanned, Spanned, Spanned, Spanned)
-		 */
-		static void addItem(String charaHeader, String charaInfo, String charaExtra, String contentWanshyu, String contentLocation) {
-			ArrayList<Spanned> item = new ArrayList<>(5);
-			item.add(Html.fromHtml(charaHeader));
-			item.add(Html.fromHtml(charaInfo));
-			item.add(Html.fromHtml(charaExtra));
-			item.add(Html.fromHtml(contentWanshyu));
-			item.add(Html.fromHtml(contentLocation));
-			list.add(item);
-		}
-		
+
 		/**
 		 * 向本類維護的字項列表中添加一項
 		 */

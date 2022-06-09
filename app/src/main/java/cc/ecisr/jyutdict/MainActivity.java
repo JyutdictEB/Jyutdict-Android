@@ -1,5 +1,7 @@
 package cc.ecisr.jyutdict;
 
+import static cc.ecisr.jyutdict.utils.EnumConst.*;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -41,10 +43,11 @@ import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.HashSet;
 
-import cc.ecisr.jyutdict.struct.HeaderInfo;
+import cc.ecisr.jyutdict.struct.FjbHeaderInfo;
+import cc.ecisr.jyutdict.struct.GeneralCharacterManager;
 import cc.ecisr.jyutdict.utils.StringUtil;
-import cc.ecisr.jyutdict.utils.EnumConst;
 import cc.ecisr.jyutdict.utils.HttpUtil;
 import cc.ecisr.jyutdict.utils.ToastUtil;
 import cc.ecisr.jyutdict.widget.EditTextWithClear;
@@ -58,9 +61,9 @@ public class MainActivity extends AppCompatActivity {
 	private static final String URL_API_ROOT = "https://www.jyutdict.org/api/v0.9/";
 	
 	EditTextWithClear inputEditText;
-	Button btnQueryConfirm, btnQueryClear;
+	Button btnQueryConfirm, btnQueryClear, btnFilterArea, btnColoringJppPartial;
 	Spinner spinnerQueryLocation;
-	SwitchCustomized switchQueryOpts1, switchQueryOpts2, switchQueryOpts3;
+	SwitchCustomized switchQueryOpts1, switchQueryOptsRev, switchQueryOptsRegex;
 	ResultFragment resultFragment;
 	ProgressBar loadingProgressBar;
 	Toolbar toolbar;
@@ -89,10 +92,11 @@ public class MainActivity extends AppCompatActivity {
 	// 用於向服務器發送請求，與接收回應
 	HttpUtil query = new HttpUtil(HttpUtil.GET);
 	
-	// 指示蒐索模式，查通用表字/查通用表音/查泛粵表
+	// 指示搜索模式，查通用表字/查通用表音/查泛粵表
 	// 在按下查詢按鈕時更新
 	// 並根據這個狀態來解析JSON
-	int queryObjectWhat = EnumConst.QUERYING_CHARA;
+	int queryingMode = QUERYING_CHARA;
+	int queryingModeConfig = 0;
 	
 	// 夜间模式
 	//private static boolean isNightMode = false;
@@ -105,18 +109,21 @@ public class MainActivity extends AppCompatActivity {
 		inputEditText = findViewById(R.id.edit_text_input);
 		btnQueryConfirm = findViewById(R.id.btn_query);
 		btnQueryClear = findViewById(R.id.btn_clear);
+		btnFilterArea = findViewById(R.id.btn_filter_area);
+		btnColoringJppPartial = findViewById(R.id.btn_coloring_jpp_partial);
 		spinnerQueryLocation = findViewById(R.id.locate_spinner);
 		lyAdvancedSearch = findViewById(R.id.input_advanced_switch);
 		switchQueryOpts1 = findViewById(R.id.switch_select_sheet);
-		switchQueryOpts2 = findViewById(R.id.switch_reverse_search);
-		switchQueryOpts3 = findViewById(R.id.switch_use_regex);
+		switchQueryOptsRev = findViewById(R.id.switch_reverse_search);
+		switchQueryOptsRegex = findViewById(R.id.switch_use_regex);
 		loadingProgressBar = findViewById(R.id.loading_progress);
 		toolbar = findViewById(R.id.tool_bar);
 		
 		setSupportActionBar(toolbar);
 		locationsAdapter = new ArrayAdapter<>(this, R.layout.spinner_drop_down_item);
 		spinnerQueryLocation.setAdapter(locationsAdapter);
-		locationsAdapter.add("字/音");
+		locationsAdapter.add(getString(R.string.select_drop_down_standard));
+		locationsAdapter.add(getString(R.string.select_drop_down_convenience));
 	}
 	
 	
@@ -139,35 +146,34 @@ public class MainActivity extends AppCompatActivity {
 			resultFragment = (ResultFragment) getSupportFragmentManager().getFragment(savedInstanceState, "result_fragment");
 		}
 		initPermission();
-		
+
 		mainHandler = new MainHandler(Looper.getMainLooper(), msg -> {
+			loadingProgressBar.setVisibility(View.GONE);
+			btnColoringJppPartial.setEnabled(true);
 			switch (msg.what) {
-				case EnumConst.INITIALIZE_LOCATIONS: // 初始化表頭
+				case INITIALIZE_LOCATIONS: // 初始化表頭
 					try {
 						JSONArray headerArray = new JSONObject( // TODO 改用其它第三方JSON來解析
 								msg.obj.toString()
 						).getJSONArray("__valid_options");
-						HeaderInfo.load(headerArray);
+						FjbHeaderInfo.load(headerArray);
 						setLocationsAdapter();
-						if (!isJustInitialized && inputEditText.getText().length() != 0) search();
+						if (!isJustInitialized  && inputEditText.getText()!=null && inputEditText.getText().length() != 0) search();
 					} catch (JSONException ignored) {}
 					break;
 				case HttpUtil.REQUEST_CONTENT_SUCCESSFULLY:
-					resultFragment.parseJson(msg.obj.toString(), queryObjectWhat); // 解析json
-					loadingProgressBar.setVisibility(View.GONE);
+					resultFragment.parseJson(msg.obj.toString(), queryingMode | queryingModeConfig);
 					break;
 				case HttpUtil.REQUEST_CONTENT_FAIL:
 					String toastMessage = "0".equals(msg.obj.toString()) ?
 							getString(R.string.error_tips_network_out_of_time) :
 							getString(R.string.error_tips_network, msg.obj.toString());
 					ToastUtil.msg(this, toastMessage);
-					loadingProgressBar.setVisibility(View.GONE);
 					break;
 				default:
 					break;
 			}
 			btnQueryConfirm.setEnabled(true);
-			btnQueryConfirm.setTextColor(getResources().getColor(R.color.colorPrimary));
 		});
 		
 		// 查詢按鈕
@@ -185,14 +191,12 @@ public class MainActivity extends AppCompatActivity {
 		// 監聽焦點在輸入框內的軟鍵盤的確認按鈕
 		inputEditText.setOnEditorActionListener((v, actionId, event) -> {
 			Log.i(TAG, "onEditorAction: " + actionId);
-			if(actionId == EditorInfo.IME_ACTION_SEARCH){
+			if(actionId==EditorInfo.IME_ACTION_SEARCH && MainActivity.this.getCurrentFocus()!=null){
 				search();
-				try { // 關閉軟鍵盤
-					((InputMethodManager) MainActivity.this.getSystemService(Context.INPUT_METHOD_SERVICE))
-							.hideSoftInputFromWindow(MainActivity.this.getCurrentFocus().getWindowToken(),
-									InputMethodManager.HIDE_NOT_ALWAYS);
-					return true;
-				} catch (NullPointerException ignored) {}
+				((InputMethodManager) MainActivity.this.getSystemService(Context.INPUT_METHOD_SERVICE))
+						.hideSoftInputFromWindow(MainActivity.this.getCurrentFocus().getWindowToken(),
+								InputMethodManager.HIDE_NOT_ALWAYS);
+				return true;
 			}
 			return false;
 		});
@@ -229,15 +233,79 @@ public class MainActivity extends AppCompatActivity {
 		
 		// 讀取幾個開關之前的狀態
 		switchQueryOpts1.setSetCheckedListener(this::setInputEditTextHint);
-		switchQueryOpts2.setSetCheckedListener(this::setInputEditTextHint);
+		switchQueryOptsRev.setSetCheckedListener(this::setInputEditTextHint);
 		switchQueryOpts1.setChecked(sp.getBoolean("switch_1_is_checked", false));
-		switchQueryOpts2.setChecked(sp.getBoolean("switch_2_is_checked", false));
-		switchQueryOpts3.setChecked(sp.getBoolean("switch_3_is_checked", false));
-		sp.getBoolean("advanced_search", false);
+		switchQueryOptsRev.setChecked(sp.getBoolean("switch_2_is_checked", false));
+		switchQueryOptsRegex.setChecked(sp.getBoolean("switch_3_is_checked", false));
 		lyAdvancedSearch.setVisibility(sp.getBoolean("advanced_search", false) ? View.VISIBLE : View.GONE);
 		switchQueryOpts1.setOnCheckedChangeListener((buttonView, isChecked) -> setSearchView());
-		switchQueryOpts2.setOnCheckedChangeListener((buttonView, isChecked) -> setSearchView());
+		switchQueryOptsRev.setOnCheckedChangeListener((buttonView, isChecked) -> setSearchView());
 		//inputEditText.setOnClickListener(v -> toggleNightTheme());
+		GeneralCharacterManager.cityFilter = (HashSet<String>) sp.getStringSet("querying_filter_city", new HashSet<>());
+
+		queryingModeConfig = sp.getInt("querying_mode_config", 0);
+		btnColoringJppPartial.setOnClickListener(view -> {
+			AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
+			dialog.setTitle(R.string.search_coloring_jpp_partial_notice);
+			dialog.setNegativeButton(R.string.search_coloring_jpp_partial_inter, (dialogInter, which) -> {
+				queryingModeConfig = (queryingModeConfig & ~DISPLAY_CHECKING_IS_INNER);
+				resultFragment.refreshResult(queryingModeConfig);
+				saveLayoutStatus();
+			});
+			dialog.setPositiveButton(R.string.search_coloring_jpp_partial_inner, (dialogInner, which) -> {
+				queryingModeConfig = (queryingModeConfig & ~DISPLAY_CHECKING_IS_INNER) | DISPLAY_CHECKING_IS_INNER;
+				resultFragment.refreshResult(queryingModeConfig);
+				saveLayoutStatus();
+			});
+			dialog.setMultiChoiceItems(
+					new String[]{
+							getString(R.string.syllable_initial),
+							getString(R.string.syllable_final),
+							getString(R.string.syllable_tone)},
+					new boolean[]{
+							(queryingModeConfig&DISPLAY_CHECKING_INI) != 0,
+							(queryingModeConfig&DISPLAY_CHECKING_FIN) != 0,
+							(queryingModeConfig&DISPLAY_CHECKING_TON) != 0,
+					}, (dialog1, which, isChecked) -> {
+						switch (which) {
+							case 0: queryingModeConfig = (queryingModeConfig&~DISPLAY_CHECKING_INI) | (isChecked?DISPLAY_CHECKING_INI:0); break;
+							case 1: queryingModeConfig = (queryingModeConfig&~DISPLAY_CHECKING_FIN) | (isChecked?DISPLAY_CHECKING_FIN:0); break;
+							case 2: queryingModeConfig = (queryingModeConfig&~DISPLAY_CHECKING_TON) | (isChecked?DISPLAY_CHECKING_TON:0); break;
+						}
+			}).create();
+			dialog.show();
+		});
+		btnFilterArea.setOnClickListener(v -> {
+			ArrayList<String> cityList = GeneralCharacterManager.cityList;
+			HashSet<String> cityFilter = GeneralCharacterManager.cityFilter;
+			boolean[] values = new boolean[cityList.size()];
+			for (int index=0; index<cityList.size(); index++) {
+				values[index] = !cityFilter.contains(cityList.get(index));
+			}
+			AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
+			dialog.setTitle(R.string.search_filtering_area);
+			dialog.setPositiveButton(R.string.button_confirm, (dialogPos, which) -> {
+				resultFragment.refreshResult();
+				saveLayoutStatus();
+			});
+			dialog.setNeutralButton(R.string.button_all_uncheck, (dialogNeg, which) -> {
+				GeneralCharacterManager.cityFilter = new HashSet<>(GeneralCharacterManager.cityList);
+				resultFragment.refreshResult();
+			});
+			dialog.setNegativeButton(R.string.button_all_check, (dialogNeg, which) -> {
+				GeneralCharacterManager.cityFilter = new HashSet<>();
+				resultFragment.refreshResult();
+			});
+			dialog.setMultiChoiceItems(cityList.toArray(new String[0]), values, (dialog1, which, isChecked) -> {
+				if (isChecked) {
+					GeneralCharacterManager.cityFilter.remove(cityList.get(which));
+				} else {
+					GeneralCharacterManager.cityFilter.add(cityList.get(which));
+				}
+			});
+			dialog.create();
+			dialog.show();
+		});
 		setSearchView();
 		
 		// 獲取泛粵字表的表頭
@@ -245,9 +313,7 @@ public class MainActivity extends AppCompatActivity {
 
 		boolean hadCheckedInfoActivity = sp.getBoolean("had_checked_info_activity_2", false);
 		if (hadCheckedInfoActivity) {
-			if (!isPrepared) {
-				query.start();
-			}
+			if (!isPrepared) { query.start(); }
 		} else {
 			displayTipsMessageBox();
 		}
@@ -264,15 +330,15 @@ public class MainActivity extends AppCompatActivity {
 	
 	private void setLocationsAdapter() {
 		if (isPrepared) return;
-		if (HeaderInfo.isLoaded) {
-			locationsAdapter.addAll(HeaderInfo.getCityList());
+		if (FjbHeaderInfo.isLoaded) {
+			locationsAdapter.addAll(FjbHeaderInfo.getCityList());
 			spinnerQueryLocation.setSelection(
 					sp.getInt("spinner_selected_position", 0));
 			isPrepared = true;
 			query.setHandler(mainHandler);
 		} else {
 			query.setUrl("http://jyutdict.org/api/v0.9/sheet?query=&header")
-					.setHandler(mainHandler, EnumConst.INITIALIZE_LOCATIONS);
+					.setHandler(mainHandler, INITIALIZE_LOCATIONS);
 		}
 	}
 	
@@ -281,21 +347,24 @@ public class MainActivity extends AppCompatActivity {
 	 */
 	private void setSearchView() {
 		boolean is1Checked = switchQueryOpts1.isChecked();
-		boolean is2Checked = switchQueryOpts2.isChecked();
+		boolean is2Checked = switchQueryOptsRev.isChecked();
 		String switch1Text;
 		if (is1Checked) {
 			switch1Text = getString(R.string.search_jyut_sheet);
-			switchQueryOpts2.setVisibility(View.VISIBLE);
-			int spinnerVisibility = is2Checked ? View.INVISIBLE : View.VISIBLE;
+			switchQueryOptsRev.setVisibility(View.VISIBLE);
+			int spinnerVisibility = is2Checked ? View.GONE : View.VISIBLE;
 			spinnerQueryLocation.setVisibility(spinnerVisibility);
-			
+			btnFilterArea.setVisibility(View.GONE);
+			btnColoringJppPartial.setVisibility(View.GONE);
 		} else {
 			switch1Text = getString(R.string.search_common_sheet);
-			switchQueryOpts2.setVisibility(View.INVISIBLE);
-			spinnerQueryLocation.setVisibility(View.INVISIBLE);
+			switchQueryOptsRev.setVisibility(View.GONE);
+			spinnerQueryLocation.setVisibility(View.GONE);
+			btnFilterArea.setVisibility(View.VISIBLE);
+			btnColoringJppPartial.setVisibility(View.VISIBLE);
 		}
 		switchQueryOpts1.setText(switch1Text);
-		switchQueryOpts3.setEnabled(is1Checked);
+		switchQueryOptsRegex.setEnabled(is1Checked);
 	}
 	
 	/**
@@ -312,14 +381,13 @@ public class MainActivity extends AppCompatActivity {
 	 *
 	 * REQUESTING_SETTING 表示打開設置界面的 request code
 	 */
-	
 	@Override
 	public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 		Intent intent;
 		int itemId = item.getItemId();
 		if (itemId == R.id.menu_setting) {
 			intent = new Intent(MainActivity.this, SettingsActivity.class);
-			startActivityForResult(intent, EnumConst.ACTIVITY_REQUESTING_SETTING);
+			startActivityForResult(intent, ACTIVITY_REQUESTING_SETTING);
 		} else if (itemId == R.id.menu_info) {
 			intent = new Intent(MainActivity.this, InfoActivity.class);
 			startActivity(intent);
@@ -336,9 +404,11 @@ public class MainActivity extends AppCompatActivity {
 	private void saveLayoutStatus() {
 		SharedPreferences.Editor editor = sp.edit();
 		editor.putBoolean("switch_1_is_checked", switchQueryOpts1.isChecked());
-		editor.putBoolean("switch_2_is_checked", switchQueryOpts2.isChecked());
-		editor.putBoolean("switch_3_is_checked", switchQueryOpts3.isChecked());
+		editor.putBoolean("switch_2_is_checked", switchQueryOptsRev.isChecked());
+		editor.putBoolean("switch_3_is_checked", switchQueryOptsRegex.isChecked());
 		editor.putInt("spinner_selected_position", spinnerQueryLocation.getSelectedItemPosition());
+		editor.putInt("querying_mode_config", queryingModeConfig);
+		editor.putStringSet("querying_filter_city", GeneralCharacterManager.cityFilter);
 		editor.apply();
 	}
 	
@@ -365,20 +435,20 @@ public class MainActivity extends AppCompatActivity {
 	 *
 	 * @param chara 包含查詢內容的字符串
 	 * @param mode 模式（通用表查字/查音/查泛粵表 等），可選值在 {@code EnumConst} 類定義
-	 * @see EnumConst
+	 * @see cc.ecisr.jyutdict.utils.EnumConst
 	 */
 	void search(String chara, int mode) {
 		inputEditText.setText(chara);
-		switch (mode) { // 爲了方便以後增加不同的查詢模式，這裏 switch 不能化簡
-			case EnumConst.QUERYING_CHARA:
-			case EnumConst.QUERYING_PRON:
+		switch (mode & QUERYING_MODE_MASK) { // 爲了方便以後增加不同的查詢模式，這裏 switch 不能化簡
+			case QUERYING_CHARA:
+			case QUERYING_PRON:
 				switchQueryOpts1.setChecked(false);
 				break;
-			case EnumConst.QUERYING_SHEET:
+			case QUERYING_SHEET:
 				switchQueryOpts1.setChecked(true);
 				break;
 		}
-		switchQueryOpts2.setChecked(false);
+		switchQueryOptsRev.setChecked(false);
 		search();
 	}
 	
@@ -390,82 +460,83 @@ public class MainActivity extends AppCompatActivity {
 	 *
 	 */
 	private void search() {
-		if (inputEditText.getText() != null) {
-			setInputString(inputEditText.getText().toString()); // 必须放在最前面
-		} else {
-			return;
-		}
-		
-		if (isPrepared && "".equals(inputString) && !(switchQueryOpts1.isChecked() && !switchQueryOpts2.isChecked())) {
+		if (inputEditText.getText() == null) { return; }
+		setInputString(inputEditText.getText().toString()); // 必须放在最前面
+		if (isPrepared && "".equals(inputString) && !(switchQueryOpts1.isChecked() && !switchQueryOptsRev.isChecked())) {
 			return;
 		} // 搜索欄爲空時不檢索
 		
 		ResultItemAdapter.ResultInfo.clearItem();
 		loadingProgressBar.setVisibility(View.VISIBLE);
+		btnColoringJppPartial.setEnabled(false);
 		StringBuilder url = new StringBuilder(URL_API_ROOT);
 		if (switchQueryOpts1.isChecked()) { // 檢索泛粵字表
-			queryObjectWhat = EnumConst.QUERYING_SHEET;
-			if (inputString.equals("") && !switchQueryOpts2.isChecked()) {
+			queryingMode = QUERYING_SHEET;
+			if (inputString.equals("") && !switchQueryOptsRev.isChecked()) {
 				url.append("sheet?query=!&limit=10");
 			} else {
-				if (StringUtil.isAlphaString(inputString) && !switchQueryOpts2.isChecked()) { // 音
+				if (StringUtil.isAlphaString(inputString) && !switchQueryOptsRev.isChecked()) { // 音
 					url.append(String.format("sheet?query=%s&trim", inputString));
 					
 				} else { // 字
 					url.append(String.format("sheet?query=%s&fuzzy", inputString));
 				}
-				if (switchQueryOpts2.isChecked()) { // 反查
+				if (switchQueryOptsRev.isChecked()) { // 反查
 					url.append("&b");
 				}
 				int selectedColumn = spinnerQueryLocation.getSelectedItemPosition();
 				
-				if (selectedColumn != 0) {
-					String col = HeaderInfo.getCityNameByNumber(selectedColumn - 1);
+				if (selectedColumn >= 2) {
+					String col = FjbHeaderInfo.getCityNameByNumber(selectedColumn - 2);
 					url.append("&col=").append(col);
+				} else if (selectedColumn == 1) {
+					if (StringUtil.isAlphaString(inputString)) { url.append("&col=").append("檢"); }
 				}
 				
-				if (switchQueryOpts3.isChecked()) {
+				if (switchQueryOptsRegex.isChecked()) {
 					url.append("&regex");
 				}
 			}
 		} else { // 檢索通用字表
 			if (StringUtil.isAlphaString(inputString)) { // 音
-				queryObjectWhat = EnumConst.QUERYING_PRON;
+				queryingMode = QUERYING_PRON;
 				url.append("detail?pron=").append(inputString);
 			} else { // 字
-				queryObjectWhat = EnumConst.QUERYING_CHARA;
+				queryingMode = QUERYING_CHARA;
 				url.append("detail?chara=").append(inputString);
 			}
 		}
-		
+		//query.setUrl("http://www.baidu.com/").start();
 		query.setUrl(url.toString()).start(); // GET請求服務器API
 		btnQueryConfirm.setEnabled(false);
-		btnQueryConfirm.setTextColor(getResources().getColor(R.color.colorUnavailable));
 		saveLayoutStatus();
 	}
 	
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
-		if (requestCode == EnumConst.ACTIVITY_REQUESTING_SETTING) {
+		if (requestCode == ACTIVITY_REQUESTING_SETTING) {
 			boolean isEnableAdvancedSearch = (resultCode&0b1) != 0;
 			lyAdvancedSearch.setVisibility(isEnableAdvancedSearch ? View.VISIBLE : View.GONE);
-			if (!isEnableAdvancedSearch) switchQueryOpts3.setChecked(false);
+			if (!isEnableAdvancedSearch) switchQueryOptsRegex.setChecked(false);
 			
 			boolean isToggleNightMode = (resultCode&0b10) != 0;
 			if (isToggleNightMode) {
 				applyLightDarkTheme();
 				recreate();
+			} else {
+				resultFragment.refreshResult();
 			}
-		} else if (requestCode == EnumConst.ACTIVITY_CHECKING_INFO_PRIVACY) {
+		} else if (requestCode == ACTIVITY_CHECKING_INFO_PRIVACY) {
 			query.start();
 		}
 	}
-	
+
+	/****************************************************************************************/
 	
 	private void setInputEditTextHint() {
 		if (switchQueryOpts1.isChecked()) {
-			if (switchQueryOpts2.isChecked()) {
+			if (switchQueryOptsRev.isChecked()) {
 				inputEditText.setHint(R.string.search_tips_backward);
 			} else {
 				inputEditText.setHint(R.string.search_tips_expend);
@@ -486,7 +557,7 @@ public class MainActivity extends AppCompatActivity {
 						(dialogInterface, i) -> {
 							startActivityForResult(
 									new Intent(MainActivity.this, InfoActivity.class),
-									EnumConst.ACTIVITY_CHECKING_INFO_PRIVACY
+									ACTIVITY_CHECKING_INFO_PRIVACY
 							);
 							sp.edit().putBoolean("had_checked_info_activity_2", true).apply();
 						})

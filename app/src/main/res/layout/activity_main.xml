@@ -80,7 +80,7 @@
                 android:background="#00000000"
                 android:foreground="?selectableItemBackground"
                 android:text="@string/search_button"
-                android:textColor="@color/colorPrimary"
+                style="@style/ButtonTextColor"
                 android:textSize="18sp"/>
 
         </LinearLayout>
@@ -107,15 +107,36 @@
                 app:layout_constraintStart_toStartOf="@+id/input_line"
                 app:layout_constraintTop_toBottomOf="@+id/input_line" />
 
+            <Button
+                android:id="@+id/btn_filter_area"
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:background="#00000000"
+                android:foreground="?selectableItemBackground"
+                style="@style/ButtonTextColor"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:text="@string/search_filtering_area" />
+            <Button
+                android:id="@+id/btn_coloring_jpp_partial"
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:background="#00000000"
+                android:foreground="?selectableItemBackground"
+                style="@style/ButtonTextColor"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:text="@string/search_coloring_jpp_partial" />
+
             <cc.ecisr.jyutdict.widget.SwitchCustomized
                 android:id="@+id/switch_reverse_search"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_marginHorizontal="10dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:text="@string/search_reversal"
                 android:textColor="?attr/clockTextColor"
                 android:theme="@style/SwitchStyle"
-                android:visibility="invisible"
                 app:layout_constraintStart_toEndOf="@+id/switch_select_sheet"
                 app:layout_constraintTop_toTopOf="@+id/switch_select_sheet" />
 
@@ -125,9 +146,10 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:textColor="?attr/clockTextColor"
-                android:visibility="visible"
                 app:layout_constraintEnd_toEndOf="@+id/input_line"
-                app:layout_constraintTop_toTopOf="@+id/switch_select_sheet" />
+                app:layout_constraintTop_toTopOf="@+id/switch_select_sheet"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp" />
         </LinearLayout>
 
         <LinearLayout
@@ -142,6 +164,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/input_switch">
 
+
             <cc.ecisr.jyutdict.widget.SwitchCustomized
                 android:id="@+id/switch_use_regex"
                 android:layout_width="wrap_content"
@@ -149,8 +172,9 @@
                 android:text="@string/search_enable_regex"
                 android:textColor="?attr/clockTextColor"
                 android:theme="@style/SwitchStyle"
-                app:layout_constraintStart_toStartOf="@+id/input_line"
+                app:layout_constraintStart_toStartOf="@+id/button_filter_area"
                 app:layout_constraintTop_toBottomOf="@+id/input_line" />
+
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

@@ -21,6 +21,7 @@ public class ToastUtil {
 	
 	private static Snackbar mSnackbar;
 	public static void tips(View view, String msg, String button) {
+		if (view == null) { return; }
 		if (mSnackbar != null) {
 			mSnackbar.dismiss();
 		}

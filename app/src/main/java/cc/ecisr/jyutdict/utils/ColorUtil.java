@@ -31,7 +31,9 @@ public class ColorUtil {
 	 * @return 以整形數字表示的顏色代碼
 	 */
 	public static int darken(String colorString, double ratio) {
-		int color = Color.parseColor(colorString);
+		return darken(Color.parseColor(colorString), ratio);
+	}
+	public static int darken(int color, double ratio) {
 		float[] hsv = new float[3];
 		Color.colorToHSV(color, hsv);
 		hsv[2] *= ratio;
@@ -58,6 +60,17 @@ public class ColorUtil {
 		
 		hsv[2] *= ratio;
 		hsv[1] /= ratio*ratio;
+		return Color.HSVToColor(hsv);
+	}
+
+	/**
+	 * 將色相空間分為 max 份，返回第 i 份顏色，i 從 1 開始計
+	 */
+	public static int ithColorInHsv(int i, int max) {
+		float[] hsv = new float[3];
+		hsv[0] = (float)((int)(i/2f+1) + ((i%2==0)?(int)(max/2f-0.5):0) - 1) * 360 / max;
+		hsv[1] = 0.4f;
+		hsv[2] = 0.8f;
 		return Color.HSVToColor(hsv);
 	}
 }

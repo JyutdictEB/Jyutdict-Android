@@ -1,8 +1,8 @@
 package cc.ecisr.jyutdict.struct;
 
 /**
- * EntrySetting 類，用於控制 Character 類輸出顯示內容的格式
- * 僅供 Character 類使用
+ * EntrySetting 類，用於控制 FjbCharacter 類輸出顯示內容的格式
+ * 僅供 FjbCharacter 類使用
  */
 public class EntrySetting {
 	// 未使用
@@ -21,6 +21,8 @@ public class EntrySetting {
 	boolean isDisplayEcdemic = true;
 	
 	boolean isUsingNightMode = false;
+
+	boolean isPresentIpa = true;
 	
 	public EntrySetting(int type) {
 		this.type = type;
@@ -45,6 +47,10 @@ public class EntrySetting {
 	
 	public EntrySetting setUsingNightMode(boolean isUsingNightMode) {
 		this.isUsingNightMode = isUsingNightMode;
+		return this;
+	}
+	public EntrySetting setPresentIpa(boolean isPresentIpa) {
+		this.isPresentIpa = isPresentIpa;
 		return this;
 	}
 }

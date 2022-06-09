@@ -48,7 +48,7 @@
 
                 <cc.ecisr.jyutdict.widget.EditTextWithClear
                     android:id="@+id/edit_text_input"
-                    android:layout_width="wrap_content"
+                    android:layout_width="180dp"
                     android:layout_height="match_parent"
                     android:backgroundTint="@color/colorPrimary"
                     android:ems="10"
@@ -113,11 +113,10 @@
                     android:id="@+id/switch_reverse_search"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
-                    android:layout_marginVertical="5dp"
+                    android:layout_marginTop="5dp"
                     android:text="@string/search_reversal"
                     android:textColor="?attr/clockTextColor"
                     android:theme="@style/SwitchStyle"
-                    android:visibility="invisible"
                     app:layout_constraintStart_toEndOf="@+id/switch_select_sheet"
                     app:layout_constraintTop_toTopOf="@+id/switch_select_sheet" />
 
@@ -125,10 +124,28 @@
                     android:id="@+id/locate_spinner"
                     android:layout_width="wrap_content"
                     android:layout_height="0dp"
+                    android:layout_marginTop="5dp"
                     android:layout_weight="1"
-                    android:visibility="invisible"
                     app:layout_constraintEnd_toEndOf="@+id/input_line"
                     app:layout_constraintTop_toTopOf="@+id/switch_select_sheet" />
+
+                <Button
+                    android:id="@+id/btn_filter_area"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:background="#00000000"
+                    android:foreground="?selectableItemBackground"
+                    style="@style/ButtonTextColor"
+                    android:text="@string/search_filtering_area" />
+                <Button
+                    android:id="@+id/btn_coloring_jpp_partial"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:background="#00000000"
+                    android:foreground="?selectableItemBackground"
+                    style="@style/ButtonTextColor"
+                    android:text="@string/search_coloring_jpp_partial" />
             </LinearLayout>
 
             <LinearLayout

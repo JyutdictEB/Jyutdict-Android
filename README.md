@@ -8,6 +8,14 @@ Using APIs provided by [API List](https://www.jyutdict.org/api/)
 各資料來源見應用內的說明頁，或"./app/src/main/assets/info/info.html"  
   
 ## 版本歷史 ##  
+### v0.6.2/220608  
++ 修復：橫屏、切換主題時保留原結果  
++ 自由複製字項內容  
++ 允許使用檢索音  
+優化通表的顯示：  
++ 對地區和字音著色  
++ 篩選地點  
+  
 ### v0.5.0/211007  
 修復幾個崩潰 bugs  
 + 橫屏顯示  

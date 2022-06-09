@@ -41,7 +41,7 @@
                 android:foregroundGravity="center"
                 android:layout_gravity="center"
                 android:paddingHorizontal="12dp"
-                android:textSize="46sp"
+                android:textSize="44sp"
                 android:text="@string/result_list_chara"
                 android:textColor="?attr/clockTextColor"
                 />
@@ -93,9 +93,9 @@
                 android:textSize="14sp"
                 android:text="@string/result_list_bottom"
                 android:textColor="?attr/clockTextColor"
-                android:textIsSelectable="true"
-                android:descendantFocusability="afterDescendants"
                 />
+<!--            android:textIsSelectable="true"-->
+<!--            android:descendantFocusability="afterDescendants"-->
 
         </LinearLayout>
     </LinearLayout>
