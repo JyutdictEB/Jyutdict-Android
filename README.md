@@ -8,6 +8,10 @@ Using APIs provided by [API List](https://www.jyutdict.org/api/)
 各資料來源見應用內的說明頁，或"./app/src/main/assets/info/info.html"  
   
 ## 版本歷史 ##  
+### v0.6.6/220811  
++ 修復：查音崩潰  
++ 改進數處顯示  
+  
 ### v0.6.5/220609  
 + 修復：橫屏、切換主題時保留原結果  
 + 自由複製字項內容  
