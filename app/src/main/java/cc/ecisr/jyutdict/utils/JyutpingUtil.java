@@ -17,9 +17,12 @@ public class JyutpingUtil {
     final static private Pattern reTone    = Pattern.compile("[0-9]?[0-9*][0-9']?$");
     final static private Pattern reFinal   = Pattern.compile("(^ng?$|^m$)|(i[rwi]?|u[rwu]?|[aeo][aeo]?|yu$|y)+");
 
+    static public boolean isValidJpp(String jyutping)  {
+        return Pattern.matches(rePronStr, jyutping);
+    }
+
     static public String[] splitJyutping(String jyutping) {
-        boolean isValid = Pattern.matches(rePronStr, jyutping);
-        if (!isValid) return new String[]{"", jyutping, ""};
+        if (!isValidJpp(jyutping)) return new String[]{"", jyutping, ""};
         String ini="", ton="", cod="", fin="";
         Matcher a = reInitial.matcher(jyutping);
         if (a.find()) { ini = a.group(); }
@@ -45,6 +48,6 @@ public class JyutpingUtil {
         while (prons.find()) {
             result.add(prons.group());
         }
-        return result.toArray(new String[result.size()]);
+        return result.toArray(new String[0]);
     }
 }

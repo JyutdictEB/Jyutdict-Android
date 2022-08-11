@@ -41,7 +41,7 @@
                 android:foregroundGravity="center"
                 android:layout_gravity="center"
                 android:paddingHorizontal="12dp"
-                android:textSize="44sp"
+                android:textSize="40sp"
                 android:text="@string/result_list_chara"
                 android:textColor="?attr/clockTextColor"
                 />
@@ -62,7 +62,7 @@
                 android:gravity="center"
                 android:paddingVertical="2dp"
                 android:paddingHorizontal="5dp"
-                android:textSize="14sp"
+                android:textSize="12sp"
                 android:text="@string/result_list_extra"
                 android:textColor="?attr/clockTextColor"
                 />
@@ -74,8 +74,7 @@
             android:orientation="vertical"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            android:layout_weight="1"
-            android:paddingHorizontal="5dp">
+            android:layout_weight="1">
             <TextView
                 android:id="@+id/content_wanshyu"
                 android:layout_width="match_parent"

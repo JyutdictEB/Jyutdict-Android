@@ -56,12 +56,12 @@
     <!-- SettingActivity -->
     <string name="title_activity_settings">設置</string>
     <string name="search_header">檢索</string>
-    <string name="search_title_advanced_options">進階檢索選項(beta)</string>
+    <string name="search_title_advanced_options">進階檢索選項 (beta)</string>
     <string name="display_header">顯示</string>
     <string name="display_title_area_coloring">啟用地區著色</string>
-    <string name="display_title_area_coloring_ratio">著色明度係數(默認0.92)</string>
+    <string name="display_title_area_coloring_ratio">著色明度係數 (默認 0.92)</string>
     <string name="display_title_phrase_meaning_domain">[粵表] 顯示詞場</string>
     <string name="display_title_night_mode">啟用黑暗主題</string>
-    <string name="display_title_ipa_present">[通表] 顯示IPA</string>
+    <string name="display_title_ipa_present">[通表] 顯示 IPA</string>
 
 </resources>

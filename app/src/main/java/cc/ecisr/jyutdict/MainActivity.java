@@ -47,6 +47,7 @@ import java.util.HashSet;
 
 import cc.ecisr.jyutdict.struct.FjbHeaderInfo;
 import cc.ecisr.jyutdict.struct.GeneralCharacterManager;
+import cc.ecisr.jyutdict.utils.JyutpingUtil;
 import cc.ecisr.jyutdict.utils.StringUtil;
 import cc.ecisr.jyutdict.utils.HttpUtil;
 import cc.ecisr.jyutdict.utils.ToastUtil;
@@ -216,7 +217,9 @@ public class MainActivity extends AppCompatActivity {
 			}
 			@Override
 			public void afterTextChanged(Editable s) {
-				int presentColor = (StringUtil.isAlphaString(s.toString())) ?
+				boolean isJpp = JyutpingUtil.isValidJpp(s.toString());
+
+				int presentColor = isJpp ?
 						getResources().getColor(R.color.colorSecondary) :
 						getResources().getColor(R.color.colorPrimary);
 				if (previousColor == presentColor) return;
@@ -226,6 +229,7 @@ public class MainActivity extends AppCompatActivity {
 				objectAnimator.setEvaluator(new ArgbEvaluator());
 				objectAnimator.start();
 				previousColor = presentColor;
+				btnFilterArea.setEnabled(!isJpp);
 			}
 		});
 		previousColor = getResources().getColor(R.color.colorPrimary);

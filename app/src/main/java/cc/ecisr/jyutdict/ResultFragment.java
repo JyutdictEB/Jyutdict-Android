@@ -28,6 +28,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -243,19 +245,13 @@ public class ResultFragment extends Fragment {
 	private void parseJsonPron(JSONArray jsonArray, StringBuilder stringBuilder, int type) {
 		try {
 			String city = "", district = "", name = "";
-			String[] stringForSortTone = new String[15];
-			long stringForSortToneMask;
 			for (int i = 0; i < jsonArray.length(); i++) {
 				StringBuilder contentInOneLocation = new StringBuilder();
 				JSONObject syllablesInCity = jsonArray.getJSONObject(i);
-				JSONObject syllables;
 				Iterator<String> syllablesInCityIterator = syllablesInCity.keys();
-				Iterator<String> syllablesIterator;
-				String syllablesInCityKey;
-				String syllablesKey;
 				contentInOneLocation.delete(0, contentInOneLocation.length());
 				while (syllablesInCityIterator.hasNext()) {
-					syllablesInCityKey = syllablesInCityIterator.next();
+					String syllablesInCityKey = syllablesInCityIterator.next();
 					switch (syllablesInCityKey) {
 						case "__city":
 							city = syllablesInCity.getString(syllablesInCityKey);
@@ -267,23 +263,16 @@ public class ResultFragment extends Fragment {
 							name = syllablesInCity.getString(syllablesInCityKey);
 							break;
 						default:
-							syllables = syllablesInCity.getJSONObject(syllablesInCityKey);
-							syllablesIterator = syllables.keys();
-							stringForSortToneMask = 0L;
-							
-							// 對聲調排序，但對1'這種非數字調號會出問題
+							JSONObject syllables = syllablesInCity.getJSONObject(syllablesInCityKey);
+							Iterator<String> syllablesIterator = syllables.keys();
+							ArrayList<String> tones = new ArrayList<>();
 							while (syllablesIterator.hasNext()) {
-								// syllablesKey == "haa" "ki" "ge"...
-								syllablesKey = syllablesIterator.next();
-								int keyInt = ("".equals(syllablesKey)) ? 0 : Integer.parseInt(syllablesKey)-1;
-								stringForSortToneMask |= 1L << keyInt;
-								stringForSortTone[keyInt] = syllablesInCityKey + syllablesKey + ": " + syllables.getString(syllablesKey);
+								tones.add(syllablesIterator.next());
 							}
-							for (int j = 0; j <= 15 && stringForSortToneMask != 0L; j++) {
-								if ((stringForSortToneMask & (1L << j)) != 0L) {
-									contentInOneLocation.append("<br>").append(stringForSortTone[j]);
-									stringForSortToneMask ^= 1 << j;
-								}
+							String[] tones_ = tones.toArray(new String[0]);
+							Arrays.sort(tones_);
+							for (String tone: tones_) {
+								contentInOneLocation.append("<br>").append(syllablesInCityKey).append(tone).append(": ").append(syllables.getString(tone));
 							}
 							break;
 					}

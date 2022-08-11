@@ -192,7 +192,7 @@ public class FjbCharacter {
 		
 		for (String key: cityList) {
 			value = key2val.get(key);
-			if (value==null || "".equals(value.trim()) || !FjbHeaderInfo.isNameACity(key)) continue; // isNameACity(key)有甚麼用？我忘了
+			if ("".equals(value.trim()) || !FjbHeaderInfo.isNameACity(key)) continue; // isNameACity(key)有甚麼用？我忘了
 			
 			String[] fullName = FjbHeaderInfo.getFullName(key);
 			sb.delete(0, sb.length());
@@ -262,7 +262,7 @@ public class FjbCharacter {
 			
 			for (String key: foreignList) {
 				value = key2val.get(key);
-				if (value == null || "".equals(value)) continue;
+				if ("".equals(value)) continue;
 				
 				if (isForeignPronEnterExist) {
 					ssb.append(" \t");
@@ -362,8 +362,7 @@ public class FjbCharacter {
 		
 		// chara 爲「繁」一列的值，即錔字
 		String chara = key2val.get(FjbHeaderInfo.COLUMN_NAME_CHARACTER);
-		if (chara==null) return ssb;
-		
+
 		// 沒有錔字的一列以「□」作顯示，使用問號會導致字頭排版不居中
 		if ("".equals(chara) || "？".equals(chara)) ssb.append("□");
 		else ssb.append(chara.replaceAll("[?/!！？見歸 ]", ""));

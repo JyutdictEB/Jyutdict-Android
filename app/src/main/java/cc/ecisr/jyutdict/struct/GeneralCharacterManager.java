@@ -2,11 +2,13 @@ package cc.ecisr.jyutdict.struct;
 
 import static cc.ecisr.jyutdict.utils.EnumConst.*;
 
+import android.graphics.Color;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
+import android.text.style.ScaleXSpan;
 
 
 import org.json.JSONArray;
@@ -155,8 +157,10 @@ public class GeneralCharacterManager {
             if (i!=0) contentCharaInfo.append("\n");
             contentCharaInfo.append(chara.books.kwangun.get(i));
         }
-        contentCharaInfo.setSpan(new RelativeSizeSpan(0.8f),
-                0, contentCharaInfo.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if (contentCharaInfo.length()!=0) {
+            contentCharaInfo.setSpan(new RelativeSizeSpan(0.8f),
+                    0, contentCharaInfo.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
 
         SpannableStringBuilder contentWanshyu = new SpannableStringBuilder("");
         if (!cityFilter.contains("尺牘分韻")) { /// Why hardcode?! never mind
@@ -192,6 +196,10 @@ public class GeneralCharacterManager {
                 contentLoc.setSpan(new ForegroundColorSpan(textColor),
                         presentBeginPosition, presentEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             }
+            if (loc.city.length()==5) {
+                contentLoc.setSpan(new ScaleXSpan(0.8f),
+                        presentBeginPosition, presentEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
 
             for (int i=0; i<loc.prons.size(); i++) {
                 if (i>0) {
@@ -219,12 +227,23 @@ public class GeneralCharacterManager {
                     }
 
                 }
-                if (settings.isPresentIpa && !"".equals(loc.prons.get(i).get(0).ipa) && !loc.prons.get(i).get(0).ipa.contains("(")) {
-                    contentLoc.append(" /");
+
+                String ipaSample = loc.prons.get(i).get(0).ipa;
+                if (settings.isPresentIpa && !"".equals(ipaSample)) {
+                    presentBeginPosition = contentLoc.length();
+                    boolean isMarkNeeded =  !(ipaSample.startsWith("[") || ipaSample.startsWith("("));
+                    contentLoc.append(" ");
+                    if (isMarkNeeded) contentLoc.append("/");
                     for (int j = 0; j < loc.prons.get(i).size(); j++) {
                         contentLoc.append(j > 0 ? "=" : "").append(singleLoc.get(j).ipa);
                     }
-                    contentLoc.append("/ ");
+                    if (isMarkNeeded) contentLoc.append("/");
+                    presentEndPosition = contentLoc.length();
+
+                    if (settings.isAreaColoring) {
+                        contentLoc.setSpan(new ForegroundColorSpan(Color.parseColor("#777777")),
+                                presentBeginPosition, presentEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
                 }
 
                 if (!"".equals(loc.notes.get(i))) {
