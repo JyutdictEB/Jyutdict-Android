@@ -3,7 +3,7 @@
     <string name="app_version">當前版本：%1$d.%2$d.%3$d\n長按此處檢測新版本</string>
     <string name="app_version_0">0</string>
     <string name="app_version_1">6</string>
-    <string name="app_version_2">5</string>
+    <string name="app_version_2">7</string>
     <string name="app_about">泛粵大典附屬應用 by EcisRhetha\nwww.jyutdict.org</string>
 
     <string name="syllable_initial">聲母</string>

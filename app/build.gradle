@@ -7,8 +7,8 @@ android {
         applicationId "cc.ecisr.jyutdict"
         minSdkVersion 14
         targetSdkVersion 30
-        versionCode 66
-        versionName "0.6.6"
+        versionCode 67
+        versionName "0.6.7"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -28,7 +28,7 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'androidx.appcompat:appcompat:1.2.0'
+//    implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'androidx.preference:preference:1.1.1'
     testImplementation 'junit:junit:4.12'

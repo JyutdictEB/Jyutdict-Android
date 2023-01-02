@@ -94,7 +94,7 @@ public class SettingsActivity extends AppCompatActivity {
 		btnCheckVersion.setText(getResources().getString(R.string.app_version, v0This, v1This, v2This));
 		btnCheckVersion.setOnLongClickListener(v -> { // 獲取地名列表
 			new HttpUtil(HttpUtil.GET)
-					.setUrl("http://jyutdict.org/api/")
+					.setUrl("https://jyutdict.org/api/")
 					.setHandler(mHandler, EnumConst.CHECKING_VERSION)
 					.start();
 			ToastUtil.msg(SettingsActivity.this, getResources().getString(R.string.tips_version_checking));

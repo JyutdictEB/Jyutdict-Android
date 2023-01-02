@@ -341,7 +341,7 @@ public class MainActivity extends AppCompatActivity {
 			isPrepared = true;
 			query.setHandler(mainHandler);
 		} else {
-			query.setUrl("http://jyutdict.org/api/v0.9/sheet?query=&header")
+			query.setUrl(URL_API_ROOT + "sheet?query=&header")
 					.setHandler(mainHandler, INITIALIZE_LOCATIONS);
 		}
 	}

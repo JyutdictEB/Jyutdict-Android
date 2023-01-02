@@ -5,9 +5,13 @@ An android version of [Jyutdict](https://www.jyutdict.org)
 Using APIs provided by [API List](https://www.jyutdict.org/api/)  
   
 可檢索：通語字+音和泛粵字表中的錔字+綜合音+各地音（若有）+釋義，詳見 [關於泛粵大典](https://www.jyutdict.org/about)。  
-各資料來源見應用內的說明頁，或"./app/src/main/assets/info/info.html"  
+各資料來源見 [應用內的說明頁](https://github.com/JyutdictEB/Jyutdict-Android/blob/master/app/src/main/assets/info/info.html)  
   
 ## 版本歷史 ##  
+### v0.6.7/230102  
+全面使用 HTTPS（原使用 HTTP 部分與上行傳輸無關）  
+*舊版本不再可用*  
+  
 ### v0.6.6/220811  
 + 修復：查音崩潰  
 + 改進數處顯示  
