@@ -29,7 +29,6 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -69,7 +68,7 @@ public class ResultFragment extends Fragment {
 					selectionList.add(getString(R.string.entry_menu_search_special, mt.group(0)));
 				}
 
-				if (selectionList.size()!=0 && getActivity()!=null) {
+				if (!selectionList.isEmpty() && getActivity()!=null) {
 					final String[] selections = selectionList.toArray(new String[0]);
 					new AlertDialog.Builder(getContext())
 							.setItems(selections, (dialogInterface, i) -> {
@@ -94,7 +93,7 @@ public class ResultFragment extends Fragment {
 
 			@Override
 			public void onLongClick(@NonNull ResultItemAdapter.LinearViewHolder holder) {
-				if (holder.getChara().length()!=0 && getActivity()!=null) {
+				if (!holder.getChara().isEmpty() && getActivity()!=null) {
 					copy(holder.getChara());
 				}
 			}
@@ -127,7 +126,7 @@ public class ResultFragment extends Fragment {
 	}
 
 	public void refreshResult() {
-		if (rawReceivedData==null || "".equals(rawReceivedData)) return;
+		if (rawReceivedData==null || rawReceivedData.isEmpty()) return;
 		ResultItemAdapter.ResultInfo.clearItem();
 		parseJson(rawReceivedData, receivedMode);
 	}
@@ -148,11 +147,9 @@ public class ResultFragment extends Fragment {
 	
 	/**
 	 * 將服務器返回的 JSON 字符串處理成可閱讀的樣式，並顯示出來
-	 *
 	 * 在 {@code MainActivity} 成功收到查詢回應（JSON 字符串）時調用
 	 * 在本方法解析 JSON 字符串生成每個條目的五個 layout 的 spanned，再交由 {@code ResultItemAdapter} 顯示
 	 * 查詢通用字表的兩個模式（查字&查音）用的是內嵌的解析，且生成的是 HTML 格式。應棄用
-	 *
 	 * TODO 好像會發生內存洩露？
 	 *
 	 * @param jsonString 服務器返回的 JSON 字符串
@@ -216,11 +213,12 @@ public class ResultFragment extends Fragment {
 								character.printLocations()
 						);
 					}
+					mRvMain.getAdapter().notifyItemRangeInserted(1, jsonArray.length()-1);
 					break;
 				default:
 					break;
 			}
-			mRvMain.getAdapter().notifyDataSetChanged();
+//			mRvMain.getAdapter().notifyDataSetChanged();
 			
 		} catch (JSONException e) {
 			e.printStackTrace();

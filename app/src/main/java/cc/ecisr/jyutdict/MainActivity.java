@@ -208,7 +208,7 @@ public class MainActivity extends AppCompatActivity {
 			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 			@Override
 			public void onTextChanged(CharSequence s, int start, int before, int count) {
-				if ("".equals(s.toString())) {
+				if (s.toString().isEmpty()) {
 					btnQueryClear.setVisibility(View.GONE);
 				} else {
 					btnQueryClear.setVisibility(View.VISIBLE);
@@ -249,18 +249,7 @@ public class MainActivity extends AppCompatActivity {
 
 		queryingModeConfig = sp.getInt("querying_mode_config", 0);
 		btnColoringJppPartial.setOnClickListener(view -> {
-			AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
-			dialog.setTitle(R.string.search_coloring_jpp_partial_notice);
-			dialog.setNegativeButton(R.string.search_coloring_jpp_partial_inter, (dialogInter, which) -> {
-				queryingModeConfig = (queryingModeConfig & ~DISPLAY_CHECKING_IS_INNER);
-				resultFragment.refreshResult(queryingModeConfig);
-				saveLayoutStatus();
-			});
-			dialog.setPositiveButton(R.string.search_coloring_jpp_partial_inner, (dialogInner, which) -> {
-				queryingModeConfig = (queryingModeConfig & ~DISPLAY_CHECKING_IS_INNER) | DISPLAY_CHECKING_IS_INNER;
-				resultFragment.refreshResult(queryingModeConfig);
-				saveLayoutStatus();
-			});
+			AlertDialog.Builder dialog = getDialogForColoringJpp();
 			dialog.setMultiChoiceItems(
 					new String[]{
 							getString(R.string.syllable_initial),
@@ -286,20 +275,7 @@ public class MainActivity extends AppCompatActivity {
 			for (int index=0; index<cityList.size(); index++) {
 				values[index] = !cityFilter.contains(cityList.get(index));
 			}
-			AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
-			dialog.setTitle(R.string.search_filtering_area);
-			dialog.setPositiveButton(R.string.button_confirm, (dialogPos, which) -> {
-				resultFragment.refreshResult();
-				saveLayoutStatus();
-			});
-			dialog.setNeutralButton(R.string.button_all_uncheck, (dialogNeg, which) -> {
-				GeneralCharacterManager.cityFilter = new HashSet<>(GeneralCharacterManager.cityList);
-				resultFragment.refreshResult();
-			});
-			dialog.setNegativeButton(R.string.button_all_check, (dialogNeg, which) -> {
-				GeneralCharacterManager.cityFilter = new HashSet<>();
-				resultFragment.refreshResult();
-			});
+			AlertDialog.Builder dialog = getDialogForFilterArea();
 			dialog.setMultiChoiceItems(cityList.toArray(new String[0]), values, (dialog1, which, isChecked) -> {
 				if (isChecked) {
 					GeneralCharacterManager.cityFilter.remove(cityList.get(which));
@@ -322,7 +298,41 @@ public class MainActivity extends AppCompatActivity {
 			displayTipsMessageBox();
 		}
 	}
-	
+
+	private AlertDialog.Builder getDialogForFilterArea() {
+		AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
+		dialog.setTitle(R.string.search_filtering_area);
+		dialog.setPositiveButton(R.string.button_confirm, (dialogPos, which) -> {
+			resultFragment.refreshResult();
+			saveLayoutStatus();
+		});
+		dialog.setNeutralButton(R.string.button_all_uncheck, (dialogNeg, which) -> {
+			GeneralCharacterManager.cityFilter = new HashSet<>(GeneralCharacterManager.cityList);
+			resultFragment.refreshResult();
+		});
+		dialog.setNegativeButton(R.string.button_all_check, (dialogNeg, which) -> {
+			GeneralCharacterManager.cityFilter = new HashSet<>();
+			resultFragment.refreshResult();
+		});
+		return dialog;
+	}
+
+	private AlertDialog.Builder getDialogForColoringJpp() {
+		AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
+		dialog.setTitle(R.string.search_coloring_jpp_partial_notice);
+		dialog.setNegativeButton(R.string.search_coloring_jpp_partial_inter, (dialogInter, which) -> {
+			queryingModeConfig = (queryingModeConfig & ~DISPLAY_CHECKING_IS_INNER);
+			resultFragment.refreshResult(queryingModeConfig);
+			saveLayoutStatus();
+		});
+		dialog.setPositiveButton(R.string.search_coloring_jpp_partial_inner, (dialogInner, which) -> {
+			queryingModeConfig = (queryingModeConfig & ~DISPLAY_CHECKING_IS_INNER) | DISPLAY_CHECKING_IS_INNER;
+			resultFragment.refreshResult(queryingModeConfig);
+			saveLayoutStatus();
+		});
+		return dialog;
+	}
+
 	private void applyLightDarkTheme() {
 		boolean isNightMode = sp.getBoolean("night_mode", false);
 		if (isNightMode) {
@@ -382,7 +392,6 @@ public class MainActivity extends AppCompatActivity {
 	
 	/**
 	 * 響應標題欄右側按鈕的按下事件
-	 *
 	 * REQUESTING_SETTING 表示打開設置界面的 request code
 	 */
 	@Override
@@ -402,7 +411,6 @@ public class MainActivity extends AppCompatActivity {
 	
 	/**
 	 * saveLayoutStatus()
-	 *
 	 * 儲存主頁面幾個開關與下拉欄的的狀態
 	 */
 	private void saveLayoutStatus() {
@@ -419,7 +427,6 @@ public class MainActivity extends AppCompatActivity {
 	
 	/**
 	 * 更新輸入框中的字符串到 {@code this.inputString} 中
-	 *
 	 * 在將發起查詢時調用
 	 *
 	 * @param string 輸入框中的字符串
@@ -433,7 +440,6 @@ public class MainActivity extends AppCompatActivity {
 	
 	/**
 	 * 用指定字符串以指定模式發起查詢
-	 *
 	 * 該方法是對其它類開放的，可以在其它地方調用
 	 * 將會改動主界面的開關
 	 *
@@ -458,7 +464,6 @@ public class MainActivity extends AppCompatActivity {
 	
 	/**
 	 * 向服務器發起查詢
-	 *
 	 * 模式由主界面的開關指定，查詢內容由 {@code this.inputString} 指定
 	 * 在等待回應時會禁用查詢按鈕
 	 *
@@ -476,7 +481,7 @@ public class MainActivity extends AppCompatActivity {
 		StringBuilder url = new StringBuilder(URL_API_ROOT);
 		if (switchQueryOpts1.isChecked()) { // 檢索泛粵字表
 			queryingMode = QUERYING_SHEET;
-			if (inputString.equals("") && !switchQueryOptsRev.isChecked()) {
+			if (inputString.isEmpty() && !switchQueryOptsRev.isChecked()) {
 				url.append("sheet?query=!&limit=10");
 			} else {
 				if (StringUtil.isAlphaString(inputString) && !switchQueryOptsRev.isChecked()) { // 音
@@ -571,7 +576,6 @@ public class MainActivity extends AppCompatActivity {
 	
 	/**
 	 * 申請網絡等權限
-	 *
 	 * 在初始化 app 時調用
 	 */
 	private void initPermission() {
