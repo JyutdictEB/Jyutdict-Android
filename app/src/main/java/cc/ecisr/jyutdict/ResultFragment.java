@@ -68,7 +68,7 @@ public class ResultFragment extends Fragment {
 					selectionList.add(getString(R.string.entry_menu_search_special, mt.group(0)));
 				}
 
-				if (!selectionList.isEmpty() && getActivity()!=null) {
+				if (!selectionList.isEmpty() && null != getActivity()) {
 					final String[] selections = selectionList.toArray(new String[0]);
 					new AlertDialog.Builder(getContext())
 							.setItems(selections, (dialogInterface, i) -> {
@@ -128,7 +128,11 @@ public class ResultFragment extends Fragment {
 	public void refreshResult() {
 		if (rawReceivedData==null || rawReceivedData.isEmpty()) return;
 		ResultItemAdapter.ResultInfo.clearItem();
-		parseJson(rawReceivedData, receivedMode);
+		try {
+			parseJson(rawReceivedData, receivedMode);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
 	}
 	public void refreshResult(int receivedModeConfig) {
 		receivedMode = (receivedMode&QUERYING_MODE_MASK) | receivedModeConfig;
@@ -156,73 +160,68 @@ public class ResultFragment extends Fragment {
 	 * @param queryObjectWhat 查詢模式(通用表查字/查音/查泛粵表 等)，值在 {@code EnumConst} 類中定義
 	 * @see cc.ecisr.jyutdict.utils.EnumConst
 	 */
-	void parseJson(String jsonString, int queryObjectWhat) {
+	void parseJson(String jsonString, int queryObjectWhat) throws JSONException {
 		if (getActivity()==null) return;
-		try {
-			if (mRvMain.getAdapter() == null) return;
-			rawReceivedData = jsonString;
-			receivedMode = queryObjectWhat;
+		if (mRvMain.getAdapter() == null) return;
+		rawReceivedData = jsonString;
+		receivedMode = queryObjectWhat;
 
-			SharedPreferences sp = getActivity().getSharedPreferences("settings", Context.MODE_PRIVATE);
-			EntrySetting entrySettings = new EntrySetting(QUERYING_SHEET)
-					.setAreaColoringInfo(
-							sp.getBoolean("area_coloring", true),
-							sp.getFloat("area_coloring_darken_ratio", 0.92f))
-					.setMeaningDomainPresence(
-							sp.getBoolean("phrase_meaning_domain", false))
-					.setUsingNightMode(sp.getBoolean("night_mode", false))
-					.setPresentIpa(sp.getBoolean("ipa_presence", true));
-			switch (queryObjectWhat & QUERYING_MODE_MASK) {
-				case QUERYING_CHARA:
-					GeneralCharacterManager gcm = new GeneralCharacterManager();
-					gcm.parse(jsonString, entrySettings); /// 為什麼要重新解析一次原始字符串？真傻
-					gcm.retrieveInfo();
-					gcm.coloring(queryObjectWhat & DISPLAY_CHECKING_MASK);
-					for (int i = 0; i<gcm.length(); i++) {
-						Spanned[] spanneds = gcm.printChara(i);
-						addItem(spanneds[0], spanneds[1], spanneds[2], spanneds[3], spanneds[4]);
-					}
-					break;
-				case QUERYING_PRON:  // 下面邏輯將棄用，改用 CharacterManager 類作輸出，類似 QUERYING_CHARA
-					StringBuilder contentLocation = new StringBuilder();
-					StringBuilder contentWanshyu = new StringBuilder();
-					JSONObject jsonObject = new JSONObject(jsonString);
-					JSONArray jsonLocationsArray = jsonObject.getJSONArray("各地");
-					JSONArray jsonWanshyusArray = jsonObject.getJSONArray("韻書");
-					parseJsonPron(jsonLocationsArray, contentLocation, GETTING_CONTENT_LOCATION);
-					parseJsonPron(jsonWanshyusArray, contentWanshyu, GETTING_CONTENT_WANSHYU);
-					addItem(Html.fromHtml(""), Html.fromHtml(""), Html.fromHtml(""),
-							Html.fromHtml(contentWanshyu.toString()),
-							Html.fromHtml(contentLocation.toString()));
-					break;
-				case QUERYING_SHEET:
-					FjbCharacter character; // TODO: Use ManagerClass like QUERYING_CHARA.
-					JSONArray jsonArray = new JSONArray(jsonString);
-					JSONObject entry;
-					if (jsonArray.length() <= 1) {
-						ToastUtil.msg(getContext(), getString(R.string.tips_no_result));
-					}
-					for (int i = 1; i<jsonArray.length(); i++) {
-						entry = jsonArray.getJSONObject(i);
-						character = new FjbCharacter(entry, entrySettings, getView());
-						
-						addItem(character.printCharacter(),
-								character.printUnicode(),
-								character.printPronunciation(),
-								character.printMeanings(),
-								character.printLocations()
-						);
-					}
-					mRvMain.getAdapter().notifyItemRangeInserted(1, jsonArray.length()-1);
-					break;
-				default:
-					break;
-			}
-//			mRvMain.getAdapter().notifyDataSetChanged();
-			
-		} catch (JSONException e) {
-			e.printStackTrace();
+		SharedPreferences sp = getActivity().getSharedPreferences("settings", Context.MODE_PRIVATE);
+		EntrySetting entrySettings = new EntrySetting(QUERYING_SHEET)
+				.setAreaColoringInfo(
+						sp.getBoolean("area_coloring", true),
+						sp.getFloat("area_coloring_darken_ratio", 0.92f))
+				.setMeaningDomainPresence(
+						sp.getBoolean("phrase_meaning_domain", false))
+				.setUsingNightMode(sp.getBoolean("night_mode", false))
+				.setPresentIpa(sp.getBoolean("ipa_presence", true));
+		switch (queryObjectWhat & QUERYING_MODE_MASK) {
+			case QUERYING_CHARA:
+				GeneralCharacterManager gcm = new GeneralCharacterManager();
+				gcm.parse(jsonString, entrySettings); /// 為什麼要重新解析一次原始字符串？真傻
+				gcm.retrieveInfo();
+				gcm.coloring(queryObjectWhat & DISPLAY_CHECKING_MASK);
+				for (int i = 0; i<gcm.length(); i++) {
+					Spanned[] spanneds = gcm.printChara(i);
+					addItem(spanneds[0], spanneds[1], spanneds[2], spanneds[3], spanneds[4]);
+				}
+				break;
+			case QUERYING_PRON:  // 下面邏輯將棄用，改用 CharacterManager 類作輸出，類似 QUERYING_CHARA
+				StringBuilder contentLocation = new StringBuilder();
+				StringBuilder contentWanshyu = new StringBuilder();
+				JSONObject jsonObject = new JSONObject(jsonString);
+				JSONArray jsonLocationsArray = jsonObject.getJSONArray("各地");
+				JSONArray jsonWanshyusArray = jsonObject.getJSONArray("韻書");
+				parseJsonPron(jsonLocationsArray, contentLocation, GETTING_CONTENT_LOCATION);
+				parseJsonPron(jsonWanshyusArray, contentWanshyu, GETTING_CONTENT_WANSHYU);
+				addItem(Html.fromHtml(""), Html.fromHtml(""), Html.fromHtml(""),
+						Html.fromHtml(contentWanshyu.toString()),
+						Html.fromHtml(contentLocation.toString()));
+				break;
+			case QUERYING_SHEET:
+				FjbCharacter character; // TODO: Use ManagerClass like QUERYING_CHARA.
+				JSONArray jsonArray = new JSONArray(jsonString);
+				JSONObject entry;
+				if (jsonArray.length() <= 1) {
+					ToastUtil.msg(getContext(), getString(R.string.tips_no_result));
+				}
+				for (int i = 1; i<jsonArray.length(); i++) {
+					entry = jsonArray.getJSONObject(i);
+					character = new FjbCharacter(entry, entrySettings, getView());
+
+					addItem(character.printCharacter(),
+							character.printUnicode(),
+							character.printPronunciation(),
+							character.printMeanings(),
+							character.printLocations()
+					);
+				}
+				mRvMain.getAdapter().notifyItemRangeChanged(0, jsonArray.length());
+				break;
+			default:
+				break;
 		}
+		mRvMain.getAdapter().notifyDataSetChanged();
 	}
 	
 	/**

@@ -30,9 +30,9 @@ public class ToastUtil {
 					//
 				});
 		
-		TextView snackTextView = mSnackbar.getView().findViewById(R.id.snackbar_text);
-		snackTextView.setMaxLines(5);
-		//snackTextView.setPadding(50,50,50,50);
+		// TextView snackTextView = mSnackbar.getView().findViewById(R.id.snackbar_text);
+		// snackTextView.setMaxLines(5);
+		// snackTextView.setPadding(50,50,50,50);
 		TextView snackButtonView = mSnackbar.getView().findViewById(R.id.snackbar_action);
 		snackButtonView.setTextSize(18);
 		snackButtonView.setTextColor(view.getResources().getColor(R.color.colorPrimary));

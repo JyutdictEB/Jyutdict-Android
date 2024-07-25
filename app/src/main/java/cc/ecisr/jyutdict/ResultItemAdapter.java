@@ -17,20 +17,20 @@ import java.util.ArrayList;
 public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.LinearViewHolder> {
 	private final Context mContext;
 	private final iOnItemClickListener mListener;
-	
+
 	ResultItemAdapter(Context context, iOnItemClickListener listener) {
 		this.mContext = context; // 主activity
 		this.mListener = listener; // 提供給fragment的監聽器
-		new ResultInfo(); // 初始化類內靜態列表
+//		new ResultInfo(); // 初始化類內靜態列表
 	}
-	
+
 	@NonNull
 	@Override
 	public ResultItemAdapter.LinearViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
 		return new LinearViewHolder(LayoutInflater.from(mContext).inflate(R.layout.layout_result_list_item, parent, false));
 	}
-	
-	
+
+
 	@Override
 	public void onBindViewHolder(@NonNull ResultItemAdapter.LinearViewHolder holder, final int position) {
 		ArrayList<Spanned> item = ResultInfo.list.get(position);
@@ -39,7 +39,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 		Spanned extra = item.get(ResultInfo.LEFT_BOTTOM);
 		Spanned wanshyu = item.get(ResultInfo.RIGHT_TOP);
 		Spanned location = item.get(ResultInfo.RIGHT_BOTTOM);
-		
+
 		holder.tvCharaHeader.setText(header);
 		holder.tvCharaInfo.setText(info);
 		holder.tvCharaExtra.setText(extra);
@@ -56,7 +56,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 		holder.tvCharaExtra.setVisibility(tvContentExtraVisibility);
 		holder.tvRightTop.setVisibility(tvContentWanshyuVisibility);
 		holder.tvRightBottom.setVisibility(tvContentLocationVisibility);
-		
+
 		// 短按彈出操作菜單
 		holder.itemView.setOnClickListener(v -> mListener.onClick(holder));
 		// 長按複製
@@ -64,63 +64,60 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 //			mListener.onLongClick(holder);
 //			return true;
 //		});
-		
+
 		ViewGroup.LayoutParams layoutParams = holder.itemView.getLayoutParams();
 		layoutParams.height = LinearLayout.LayoutParams.WRAP_CONTENT;
 	}
-	
+
 	@Override
 	public int getItemViewType(int position) {
 		return super.getItemViewType(position);
 	}
-	
+
 	@Override
 	public int getItemCount() {
 		return ResultInfo.list.size();
 	}
-	
-	static class LinearViewHolder extends RecyclerView.ViewHolder {
+
+	public static class LinearViewHolder extends RecyclerView.ViewHolder {
 		LinearLayout lyChara;//, lyContent;
 		TextView tvCharaHeader, tvCharaInfo, tvCharaExtra, tvRightTop, tvRightBottom;
-		
+
 		LinearViewHolder(@NonNull View itemView) {
 			super(itemView);
 			lyChara = itemView.findViewById(R.id.item_chara);
 			//lyContent = itemView.findViewById(R.id.item_content);
-			
+
 			tvCharaHeader = itemView.findViewById(R.id.chara_header);
 			tvCharaInfo = itemView.findViewById(R.id.chara_info);
 			tvCharaExtra = itemView.findViewById(R.id.chara_extra);
 			tvRightTop = itemView.findViewById(R.id.content_wanshyu);
 			tvRightBottom = itemView.findViewById(R.id.content_location);
 		}
-		
+
 		String getChara() {
 			return tvCharaHeader.getText().toString();
 		}
 		String printContent() {
-		    StringBuilder sb = new StringBuilder();
-		    sb.append(tvCharaHeader.getText().toString()).append("\n");
-            sb.append(tvCharaInfo.getText().toString()).append("\n");
-            sb.append(tvCharaExtra.getText().toString()).append("\n");
-            sb.append(tvRightTop.getText().toString()).append("\n");
-            sb.append(tvRightBottom.getText().toString()).append("\n");
-            return sb.toString();
+            return tvCharaHeader.getText().toString() + "\n" +
+                    tvCharaInfo.getText().toString() + "\n" +
+                    tvCharaExtra.getText().toString() + "\n" +
+                    tvRightTop.getText().toString() + "\n" +
+                    tvRightBottom.getText().toString() + "\n";
         }
 	}
-	
+
 	public interface iOnItemClickListener {
 		void onClick(@NonNull ResultItemAdapter.LinearViewHolder holder);
 		void onLongClick(@NonNull ResultItemAdapter.LinearViewHolder holder);
 	}
-	
+
 	static class ResultInfo {
 		private static final int CHARA = 0, LEFT_MIDDLE = 1, LEFT_BOTTOM = 2, RIGHT_TOP = 3, RIGHT_BOTTOM = 4;
-		
-		static ArrayList<ArrayList<Spanned>> list;
-		
+
+		static ArrayList<ArrayList<Spanned>> list = new ArrayList<>(0);
+
 		ResultInfo() {
-			list = new ArrayList<>(0);
 		}
 
 		/**
@@ -135,10 +132,10 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 			item.add(rightBottom);
 			list.add(item);
 		}
-		
+
 		static void clearItem() {
 			list.clear();
-			
+
 		}
 	}
 }

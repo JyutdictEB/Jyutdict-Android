@@ -2,6 +2,8 @@ package cc.ecisr.jyutdict;
 
 import static cc.ecisr.jyutdict.utils.EnumConst.*;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,6 +14,7 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -42,6 +45,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -163,7 +167,11 @@ public class MainActivity extends AppCompatActivity {
 					} catch (JSONException ignored) {}
 					break;
 				case HttpUtil.REQUEST_CONTENT_SUCCESSFULLY:
-					resultFragment.parseJson(msg.obj.toString(), queryingMode | queryingModeConfig);
+					try {
+						resultFragment.parseJson(msg.obj.toString(), queryingMode | queryingModeConfig);
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
 					break;
 				case HttpUtil.REQUEST_CONTENT_FAIL:
 					String toastMessage = "0".equals(msg.obj.toString()) ?
@@ -399,8 +407,9 @@ public class MainActivity extends AppCompatActivity {
 		Intent intent;
 		int itemId = item.getItemId();
 		if (itemId == R.id.menu_setting) {
-			intent = new Intent(MainActivity.this, SettingsActivity.class);
-			startActivityForResult(intent, ACTIVITY_REQUESTING_SETTING);
+			startActivitySetting.launch(
+					new Intent(MainActivity.this, SettingsActivity.class)
+			);
 		} else if (itemId == R.id.menu_info) {
 			intent = new Intent(MainActivity.this, InfoActivity.class);
 			startActivity(intent);
@@ -432,11 +441,9 @@ public class MainActivity extends AppCompatActivity {
 	 * @param string 輸入框中的字符串
 	 */
 	private void setInputString(String string) {
-		try {
-			inputString = new String(string.getBytes("UTF-8"), "UTF-8")
-					.replace('&',' ');
-		} catch (UnsupportedEncodingException ignored) {}
-	}
+        inputString = new String(string.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8)
+                .replace('&',' ');
+    }
 	
 	/**
 	 * 用指定字符串以指定模式發起查詢
@@ -520,26 +527,27 @@ public class MainActivity extends AppCompatActivity {
 		btnQueryConfirm.setEnabled(false);
 		saveLayoutStatus();
 	}
-	
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
-		if (requestCode == ACTIVITY_REQUESTING_SETTING) {
-			boolean isEnableAdvancedSearch = (resultCode&0b1) != 0;
-			lyAdvancedSearch.setVisibility(isEnableAdvancedSearch ? View.VISIBLE : View.GONE);
-			if (!isEnableAdvancedSearch) switchQueryOptsRegex.setChecked(false);
-			
-			boolean isToggleNightMode = (resultCode&0b10) != 0;
-			if (isToggleNightMode) {
-				applyLightDarkTheme();
-				recreate();
-			} else {
-				resultFragment.refreshResult();
-			}
-		} else if (requestCode == ACTIVITY_CHECKING_INFO_PRIVACY) {
-			query.start();
-		}
-	}
+
+	private final ActivityResultLauncher<Intent> startActivityInfo = registerForActivityResult(
+			new ActivityResultContracts.StartActivityForResult(),
+			result -> query.start()
+	);
+	private final ActivityResultLauncher<Intent> startActivitySetting = registerForActivityResult(
+			new ActivityResultContracts.StartActivityForResult(),
+			result -> {
+				int resultCode = result.getResultCode();
+				boolean isEnableAdvancedSearch = (resultCode&0b1) != 0;
+				lyAdvancedSearch.setVisibility(isEnableAdvancedSearch ? View.VISIBLE : View.GONE);
+				if (!isEnableAdvancedSearch) switchQueryOptsRegex.setChecked(false);
+
+				boolean isToggleNightMode = (resultCode&0b10) != 0;
+				if (isToggleNightMode) {
+					applyLightDarkTheme();
+					recreate();
+				} else {
+					resultFragment.refreshResult();
+				}
+			});
 
 	/****************************************************************************************/
 	
@@ -564,9 +572,8 @@ public class MainActivity extends AppCompatActivity {
 				.setMessage("在使用之前，請務必閱覽本應用之說明。\n\n起碼把紅字看完！\n\n註意：內含隱私聲明，返回此界面則代表同意該聲明。")
 				.setPositiveButton("打開「幫助」頁面",
 						(dialogInterface, i) -> {
-							startActivityForResult(
-									new Intent(MainActivity.this, InfoActivity.class),
-									ACTIVITY_CHECKING_INFO_PRIVACY
+							startActivityInfo.launch(
+									new Intent(MainActivity.this, InfoActivity.class)
 							);
 							sp.edit().putBoolean("had_checked_info_activity_2", true).apply();
 						})

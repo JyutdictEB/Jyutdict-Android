@@ -73,7 +73,6 @@ public class FjbCharacter {
 	/**
 	 * 向屏幕打印釋義
 	 * 對應字項 Layout 右上部分
-	 *
 	 * 僅於查詢泛粵字表時調用
 	 *
 	 * @return spanned 格式的富文本，可直接調用 setText() 顯示
@@ -85,25 +84,25 @@ public class FjbCharacter {
 		String booksChara = key2val.get(FjbHeaderInfo.COLUMN_NAME_BOOKS_CHARA);
 		String booksPron = key2val.get(FjbHeaderInfo.COLUMN_NAME_BOOKS_PRON);
 		String booksMeaning = key2val.get(FjbHeaderInfo.COLUMN_NAME_BOOKS_MEANING);
-		if (!"".equals(booksChara) || !"".equals(booksPron) || !"".equals(booksMeaning)) {
+		if (!booksChara.isEmpty() || !booksPron.isEmpty() || !booksMeaning.isEmpty()) {
 			sb.append("—— <i>");
-			if (!"".equals(booksChara)) {
+			if (!booksChara.isEmpty()) {
 				sb.append(booksChara);
-				if (!"".equals(booksPron) || !"".equals(booksMeaning)) {
+				if (!booksPron.isEmpty() || !booksMeaning.isEmpty()) {
 					sb.append(": ").append(booksPron);
-					if (!"".equals(booksPron) && !"".equals(booksMeaning)) {
+					if (!booksPron.isEmpty() && !booksMeaning.isEmpty()) {
 						sb.append(" | ");
 					}
-					if (!"".equals(booksMeaning)) {
+					if (!booksMeaning.isEmpty()) {
 						sb.append("「").append(booksMeaning).append("」");
 					}
 				}
 			} else {
 				sb.append(booksPron);
-				if (!"".equals(booksPron) && !"".equals(booksMeaning)) {
+				if (!booksPron.isEmpty() && !booksMeaning.isEmpty()) {
 					sb.append(" | ");
 				}
-				if (!"".equals(booksMeaning)) {
+				if (!booksMeaning.isEmpty()) {
 					sb.append("「").append(booksMeaning).append("」");
 				}
 			}
@@ -130,7 +129,7 @@ public class FjbCharacter {
 		boolean grammarMarkerPresent = grammarMarker.length == oriString.split("；").length;
 		
 		int grammarMarkerOrder = 0;
-		for (String meaning : meanings) {
+		for (String meaning: meanings) {
 			if ("".equals(meaning)) continue;
 			
 			if (grammarMarkerPresent && !"".equals(grammarMarker[grammarMarkerOrder])) {
@@ -153,7 +152,7 @@ public class FjbCharacter {
 			sb.append(ENTER);
 		}
 		
-		if (oriString.length()!=0) sb.delete(sb.length()-ENTER.length(), sb.length());
+		if (!oriString.isEmpty()) sb.delete(sb.length()-ENTER.length(), sb.length());
 		
 		return Html.fromHtml(sb.toString());
 	}
@@ -161,7 +160,6 @@ public class FjbCharacter {
 	/**
 	 * 向屏幕打印地方音、註、詞場
 	 * 對應字項 Layout 右下部分
-	 *
 	 * 僅於查詢泛粵字表時調用
 	 *
 	 * @return Spanned 格式的富文本，可直接調用 setText() 顯示
@@ -192,7 +190,7 @@ public class FjbCharacter {
 		
 		for (String key: cityList) {
 			value = key2val.get(key);
-			if ("".equals(value.trim()) || !FjbHeaderInfo.isNameACity(key)) continue; // isNameACity(key)有甚麼用？我忘了
+			if (value.trim().isEmpty() || !FjbHeaderInfo.isNameACity(key)) continue; // isNameACity(key)有甚麼用？我忘了
 			
 			String[] fullName = FjbHeaderInfo.getFullName(key);
 			sb.delete(0, sb.length());
@@ -243,13 +241,13 @@ public class FjbCharacter {
 				ssb.setSpan(new StyleSpan(Typeface.ITALIC),
 						presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 			}
-			
-			if (cellNotes!=null && !cellNotes.optString(key).equals("")) {
+
+			// 構建備註按鈕的消息框
+			if (cellNotes!=null && !cellNotes.optString(key).isEmpty()) {
 				sb.delete(0, sb.length());
 				sb.append(">「").append(key2val.get(FjbHeaderInfo.COLUMN_NAME_CHARACTER));
 				sb.append("」(").append(key2val.get(FjbHeaderInfo.COLUMN_NAME_PRONUNCIATION)).append(")   [");
 				sb.append(key).append("] ").append(value).append(", \n");
-				sb.append(cellNotes.optString(key).replaceAll("\n\t-.+", "\t\t- by Anonymous").replaceAll("\n-{10,}", ""));
 				final String s = sb.toString();
 				ssb.setSpan(new CustomClickable(v -> ToastUtil.tips(view, s, "善")) {},
 						presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -262,7 +260,7 @@ public class FjbCharacter {
 			
 			for (String key: foreignList) {
 				value = key2val.get(key);
-				if ("".equals(value)) continue;
+				if (value.isEmpty()) continue;
 				
 				if (isForeignPronEnterExist) {
 					ssb.append(" \t");
@@ -299,7 +297,7 @@ public class FjbCharacter {
 							presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 				}
 				
-				if (cellNotes!=null && !cellNotes.optString(key).equals("")) {
+				if (cellNotes!=null && !cellNotes.optString(key).isEmpty()) {
 					sb.delete(0, sb.length());
 					sb.append(">「").append(key2val.get(FjbHeaderInfo.COLUMN_NAME_CHARACTER));
 					sb.append("」(").append(key2val.get(FjbHeaderInfo.COLUMN_NAME_PRONUNCIATION)).append(")   [");
@@ -318,7 +316,7 @@ public class FjbCharacter {
 		// classified 爲「大類」一列的值
 		String classified = key2val.get(FjbHeaderInfo.COLUMN_NAME_CLASS_MAJOR);
 //		if ((!"".equals(note) || !"".equals(classified)) && settings.isMeaningDomainPresence) {
-		if (!"".equals(classified) && settings.isMeaningDomainPresence) {
+		if (!classified.isEmpty() && settings.isMeaningDomainPresence) {
 			ssb.append("\n");
 			
 //			// 打印備註
@@ -337,8 +335,8 @@ public class FjbCharacter {
 			sb.delete(0, sb.length()).append(classified);
 			String class_secondary = key2val.get(FjbHeaderInfo.COLUMN_NAME_CLASS_SECONDARY);
 			String class_minor = key2val.get(FjbHeaderInfo.COLUMN_NAME_CLASS_MINOR);
-			if (!"".equals(class_secondary)) sb.append("\n").append(class_secondary);
-			if (!"".equals(class_minor)) sb.append("\n").append(class_minor);
+			if (!class_secondary.isEmpty()) sb.append("\n").append(class_secondary);
+			if (!class_minor.isEmpty()) sb.append("\n").append(class_minor);
 			presentStringBeginPosition = ssb.length();
 			ssb.append(sb);
 			presentStringEndPosition = ssb.length();
@@ -352,7 +350,6 @@ public class FjbCharacter {
 	/**
 	 * 向屏幕打印字頭
 	 * 對應字項 Layout 左上部分
-	 *
 	 * 原字頭存在各種標記，因此預處理需要刪除這些標記
 	 *
 	 * @return Spanned 格式的富文本，可直接調用 setText() 顯示
@@ -364,7 +361,7 @@ public class FjbCharacter {
 		String chara = key2val.get(FjbHeaderInfo.COLUMN_NAME_CHARACTER);
 
 		// 沒有錔字的一列以「□」作顯示，使用問號會導致字頭排版不居中
-		if ("".equals(chara) || "？".equals(chara)) ssb.append("□");
+		if (chara.isEmpty() || "？".equals(chara)) ssb.append("□");
 		else ssb.append(chara.replaceAll("[?/!！？見歸 ]", ""));
 		
 		// 錔字未確認，著灰色
@@ -374,7 +371,7 @@ public class FjbCharacter {
 		}
 		
 		// 錔字被併到其它字，著灰色
-		if (chara.contains("見") || chara.contains("歸")) {
+		if (chara.contains("見 ") || chara.contains("歸")) {
 			ssb.setSpan(new ForegroundColorSpan(Color.parseColor("#3D3B4F")),
 					0, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 		}
@@ -406,8 +403,8 @@ public class FjbCharacter {
 		
 		// 顯示IDS
 		String ids = key2val.get(FjbHeaderInfo.COLUMN_NAME_IDS);
-		if (!"".equals(ids)) {
-			if (!"".equals(unicode)) ssb.append("\n");
+		if (!ids.isEmpty()) {
+			if (!unicode.isEmpty()) ssb.append("\n");
 			ssb.append("[").append(ids).append("]");
 		}
 		
@@ -417,7 +414,6 @@ public class FjbCharacter {
 	/**
 	 * 向屏幕打印讀音（綜合音）
 	 * 對應字項 Layout 左下部分
-	 *
 	 * 俗字的顯示位置可能需要調整
 	 *
 	 * @return Spanned 格式的富文本，可直接調用 setText() 顯示
@@ -438,8 +434,8 @@ public class FjbCharacter {
 		
 		// 顯示俗字
 		String adaptedChara = key2val.get(FjbHeaderInfo.COLUMN_NAME_CONVENTIONAL);
-		if (!"".equals(adaptedChara)) {
-			if (!"".equals(pron)) ssb.append("\n");
+		if (!adaptedChara.isEmpty()) {
+			if (!pron.isEmpty()) ssb.append("\n");
 			ssb.append("(").append(adaptedChara).append(")");
 		}
 		

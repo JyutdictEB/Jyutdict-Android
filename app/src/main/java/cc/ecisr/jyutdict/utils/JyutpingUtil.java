@@ -32,13 +32,6 @@ public class JyutpingUtil {
         if (b.find()) { ton = b.group(); }
         jyutping = jyutping.substring(0, jyutping.length()-ton.length());
 
-        //Matcher c = reCoda.matcher(jyutping);
-        //if (c.find()) { cod = c.group(); }
-        //jyutping = jyutping.substring(0, jyutping.length()-cod.length());
-
-        //Matcher d = reFinal.matcher(jyutping);
-        //if (d.find()) { fin = d.group(); }
-        //if (fin.length() < jyutping.length()) return new String[]{"", fin, "", ""};
         return new String[]{ini, jyutping, ton};
     }
 
