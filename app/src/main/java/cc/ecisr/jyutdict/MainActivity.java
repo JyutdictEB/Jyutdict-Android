@@ -14,7 +14,6 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -38,19 +37,17 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 
-import com.github.zackratos.ultimatebar.UltimateBar;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 
 import cc.ecisr.jyutdict.struct.FjbHeaderInfo;
 import cc.ecisr.jyutdict.struct.GeneralCharacterManager;
+import cc.ecisr.jyutdict.utils.ImmersiveBarUtil;
 import cc.ecisr.jyutdict.utils.JyutpingUtil;
 import cc.ecisr.jyutdict.utils.StringUtil;
 import cc.ecisr.jyutdict.utils.HttpUtil;
@@ -138,11 +135,7 @@ public class MainActivity extends AppCompatActivity {
 		sp = getSharedPreferences("settings", MODE_PRIVATE); // 要讀取夜間模式設置，所以 sp 放前面
 		applyLightDarkTheme();
 		setContentView(R.layout.activity_main);
-		UltimateBar.Companion.with(this)
-				.statusDark(true)           // 状态栏灰色模式(Android 6.0+)
-				.applyNavigation(true)      // 应用到导航栏
-				.navigationDark(false)      // 不导航栏灰色模式(Android 8.0+)
-				.create().immersionBar();
+		ImmersiveBarUtil.setImmersiveBar(this, true, false);
 		getView();
 		if (savedInstanceState == null) {
 			resultFragment = new ResultFragment();
