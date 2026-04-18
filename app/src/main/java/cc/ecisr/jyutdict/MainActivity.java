@@ -51,6 +51,7 @@ import cc.ecisr.jyutdict.utils.ImmersiveBarUtil;
 import cc.ecisr.jyutdict.utils.JyutpingUtil;
 import cc.ecisr.jyutdict.utils.StringUtil;
 import cc.ecisr.jyutdict.utils.HttpUtil;
+import cc.ecisr.jyutdict.utils.ThemeUtil;
 import cc.ecisr.jyutdict.utils.ToastUtil;
 import cc.ecisr.jyutdict.widget.EditTextWithClear;
 import cc.ecisr.jyutdict.widget.SwitchCustomized;
@@ -334,9 +335,11 @@ public class MainActivity extends AppCompatActivity {
 		return dialog;
 	}
 
+	/**
+	 * 根據設置應用主題
+	 */
 	private void applyLightDarkTheme() {
-		boolean isNightMode = sp.getBoolean("night_mode", false);
-		if (isNightMode) {
+		if (ThemeUtil.isNightMode(this)) {
 			setTheme(R.style.DarkTheme);
 		} else {
 			setTheme(R.style.AppTheme);

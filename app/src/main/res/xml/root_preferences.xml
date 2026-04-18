@@ -55,10 +55,13 @@
             app:key="ipa_presence"
             app:title="@string/display_title_ipa_present"
             app:defaultValue="true"/>
-        <SwitchPreference
-            app:key="night_mode"
-            app:title="@string/display_title_night_mode"
-            app:defaultValue="false"/>
+        <ListPreference
+            app:key="theme_mode"
+            app:title="@string/display_title_theme_mode"
+            app:entries="@array/theme_mode_entries"
+            app:entryValues="@array/theme_mode_values"
+            app:defaultValue="follow_system"
+            app:useSimpleSummaryProvider="true"/>
 
     </PreferenceCategory>
 </PreferenceScreen>

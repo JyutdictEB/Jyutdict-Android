@@ -17,6 +17,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.EditTextPreference;
+import androidx.preference.ListPreference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SwitchPreference;
 
@@ -119,7 +120,7 @@ public class SettingsActivity extends AppCompatActivity {
 		SwitchPreference switchAreaColoring;
 		SwitchPreference switchPhraseMeaningDomain;
 		EditTextPreference editAreaColoringDarkenRatio;
-		SwitchPreference switchNightMode;
+		ListPreference listThemeMode;
 		SwitchPreference switchIpaPresent;
 		@Override
 		public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
@@ -128,29 +129,31 @@ public class SettingsActivity extends AppCompatActivity {
 			switchAreaColoring = findPreference("area_coloring");
 			switchPhraseMeaningDomain = findPreference("phrase_meaning_domain");
 			editAreaColoringDarkenRatio = findPreference("area_coloring_darken_ratio");
-			switchNightMode = findPreference("night_mode");
+			listThemeMode = findPreference("theme_mode");
 			switchIpaPresent = findPreference("ipa_presence");
-			
+
 			if (editAreaColoringDarkenRatio != null) {
 				editAreaColoringDarkenRatio.setOnBindEditTextListener(editText ->
 						editText.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL)
 				);
 			}
 		}
-		
+
 		int saveSettings() {
 			int settings = 0;
-			settings |= switchNightMode.isChecked()^sp.getBoolean("night_mode", false) ? 1 << 1 : 0;
-			
+			String newThemeMode = listThemeMode.getValue();
+			String oldThemeMode = sp.getString("theme_mode", "follow_system");
+			settings |= !newThemeMode.equals(oldThemeMode) ? 1 << 1 : 0;
+
 			editor.putBoolean("advanced_search", switchAdvancedSearch.isChecked());
 			editor.putBoolean("area_coloring", switchAreaColoring.isChecked());
 			editor.putBoolean("phrase_meaning_domain", switchPhraseMeaningDomain.isChecked());
-			editor.putBoolean("night_mode", switchNightMode.isChecked());
+			editor.putString("theme_mode", newThemeMode);
 			editor.putBoolean("ipa_presence", switchIpaPresent.isChecked());
 			editor.putFloat("area_coloring_darken_ratio", Float.parseFloat(editAreaColoringDarkenRatio.getText()));
 			editor.apply();
 			settings |= switchAdvancedSearch.isChecked() ? 1 : 0;
-			
+
 			return settings;
 		}
 	}

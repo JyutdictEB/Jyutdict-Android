@@ -36,6 +36,7 @@ import java.util.regex.Pattern;
 import cc.ecisr.jyutdict.struct.FjbCharacter;
 import cc.ecisr.jyutdict.struct.EntrySetting;
 import cc.ecisr.jyutdict.struct.GeneralCharacterManager;
+import cc.ecisr.jyutdict.utils.ThemeUtil;
 import cc.ecisr.jyutdict.utils.ToastUtil;
 
 public class ResultFragment extends Fragment {
@@ -173,7 +174,7 @@ public class ResultFragment extends Fragment {
 						sp.getFloat("area_coloring_darken_ratio", 0.92f))
 				.setMeaningDomainPresence(
 						sp.getBoolean("phrase_meaning_domain", false))
-				.setUsingNightMode(sp.getBoolean("night_mode", false))
+				.setUsingNightMode(ThemeUtil.isNightMode(getActivity()))
 				.setPresentIpa(sp.getBoolean("ipa_presence", true));
 		switch (queryObjectWhat & QUERYING_MODE_MASK) {
 			case QUERYING_CHARA:

@@ -1,12 +1,13 @@
 <resources>
-    <!-- Reply Preference -->
-    <string-array name="reply_entries">
-        <item>Reply</item>
-        <item>Reply to all</item>
+    <string-array name="theme_mode_entries">
+        <item>跟隨系統</item>
+        <item>白天模式</item>
+        <item>夜間模式</item>
     </string-array>
 
-    <string-array name="reply_values">
-        <item>reply</item>
-        <item>reply_all</item>
+    <string-array name="theme_mode_values">
+        <item>follow_system</item>
+        <item>light</item>
+        <item>dark</item>
     </string-array>
 </resources>
