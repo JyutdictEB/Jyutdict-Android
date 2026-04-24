@@ -7,7 +7,6 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import cc.ecisr.jyutdict.utils.JyutpingUtil;
 
@@ -43,42 +42,6 @@ public class GeneralCharacter {
         public ArrayList<String> fanwan = new ArrayList<>(1);
         public ArrayList<String> jingwaa = new ArrayList<>(1);
     }
-
-
-//    public GeneralCharacter(GeneralCharacterBean gcg) {
-//        head = gcg.字;
-//        for (List<GeneralCharacterBean.各地DTO> i: gcg.各地) {
-//            SingleLoc loc = new SingleLoc();
-//            loc.division = i.get(0).片區;
-//            loc.city = i.get(0).市 + "'" + i.get(0).管區;
-//            loc.color = i.get(0).色;
-//            for (GeneralCharacterBean.各地DTO j: i) {
-//                String[] jpps = (j.聲母+j.韻核+j.韻尾+j.聲調).split("=");
-//                String[] ipas = j.ipa.split("=");
-//                ArrayList<SingleLoc.SinglePron> prons = new ArrayList<>(jpps.length);
-//                for (int k=0; k<jpps.length; k++ ) {
-//                    prons.add(new SingleLoc.SinglePron(JyutpingUtil.splitJyutping(jpps[k]), ipas[k]));
-//                }
-//                loc.prons.add(prons);
-//                loc.notes.add(j.註);
-//            }
-//            areas.add(loc);
-//        }
-//
-//        for (List<GeneralCharacterBean.韻書DTO> i: gcg.韻書) { // 甚麼垃圾 API
-//            for (GeneralCharacterBean.韻書DTO j: i) {
-//                switch (j.書名) {
-//                    case "廣韻":
-//                        books.kwangun.add(j.聲母+j.攝+j.韻+j.等+j.呼+j.聲調+j.轉寫);
-//                        break;
-//                    case "分韻":
-//                    case "英華":
-//                    default:
-//                        break;
-//                }
-//            }
-//        }
-//    }
 
     public GeneralCharacter(JSONObject charaJson) {
         head = charaJson.optString("字");

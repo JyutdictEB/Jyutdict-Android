@@ -54,7 +54,7 @@ import cc.ecisr.jyutdict.utils.StringUtil;
 import cc.ecisr.jyutdict.utils.HttpUtil;
 import cc.ecisr.jyutdict.utils.ThemeUtil;
 import cc.ecisr.jyutdict.utils.ToastUtil;
-import cc.ecisr.jyutdict.widget.EditTextWithClear;
+import androidx.appcompat.widget.AppCompatEditText;
 import cc.ecisr.jyutdict.widget.SwitchCustomized;
 
 /**
@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "`MainActivity";
     private static final String URL_API_ROOT = "https://jyutdict.org/api/v1.0/";
 
-    EditTextWithClear inputEditText;
+    AppCompatEditText inputEditText;
     Button btnQueryConfirm, btnQueryClear, btnFilterArea, btnColoringJppPartial;
     Spinner spinnerQueryLocation;
     SwitchCustomized switchQueryOpts1, switchQueryOptsRev, switchQueryOptsRegex;

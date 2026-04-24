@@ -29,7 +29,6 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-//    implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.preference:preference:1.2.1'
     testImplementation 'junit:junit:4.13.2'
@@ -39,11 +38,4 @@ dependencies {
 
     // ViewPager2
     implementation 'androidx.viewpager2:viewpager2:1.0.0'
-
-    // Markdown 渲染 - Markwon
-    implementation 'io.noties.markwon:core:4.6.2'
-    implementation 'io.noties.markwon:image:4.6.2'
-
-//    implementation 'com.alibaba:fastjson:1.1.71.android' // FastJSON
-//    implementation files('libs/mysql-connector-java-5.1.46.jar')
 }

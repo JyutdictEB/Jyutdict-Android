@@ -20,8 +20,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 
     ResultItemAdapter(Context context, iOnItemClickListener listener) {
         this.mContext = context; // 主activity
-        this.mListener = listener; // 提供給fragment的監聽器
-//		new ResultInfo(); // 初始化類內靜態列表
+        this.mListener = listener; // 提供給fragment的監聯器
     }
 
     @NonNull
@@ -59,11 +58,6 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 
         // 短按彈出操作菜單
         holder.itemView.setOnClickListener(v -> mListener.onClick(holder));
-        // 長按複製
-//		holder.itemView.setOnLongClickListener(v -> {
-//			mListener.onLongClick(holder);
-//			return true;
-//		});
 
         ViewGroup.LayoutParams layoutParams = holder.itemView.getLayoutParams();
         layoutParams.height = LinearLayout.LayoutParams.WRAP_CONTENT;
@@ -86,7 +80,6 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         LinearViewHolder(@NonNull View itemView) {
             super(itemView);
             lyChara = itemView.findViewById(R.id.item_chara);
-            //lyContent = itemView.findViewById(R.id.item_content);
 
             tvCharaHeader = itemView.findViewById(R.id.chara_header);
             tvCharaInfo = itemView.findViewById(R.id.chara_info);

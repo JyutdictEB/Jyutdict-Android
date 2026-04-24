@@ -46,7 +46,7 @@
                 app:layout_constraintTop_toTopOf="parent"
                 >
 
-                <cc.ecisr.jyutdict.widget.EditTextWithClear
+                <androidx.appcompat.widget.AppCompatEditText
                     android:id="@+id/edit_text_input"
                     android:layout_width="180dp"
                     android:layout_height="match_parent"
@@ -191,7 +191,6 @@
 
         <RelativeLayout
             android:id="@+id/result_fragment"
-            android:name="cc.ecisr.jyutdict.ResultFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1"

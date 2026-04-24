@@ -40,9 +40,6 @@ public class GeneralCharacterManager {
         try {
             charasJSON = new JSONArray(raw);
         } catch (JSONException e) { return; }
-        //Gson gson = new Gson();
-        //Type type = new TypeToken<GeneralCharacterBean[]>(){}.getType();
-        //GeneralCharacterBean[] charasDuplicated = gson.fromJson(raw, type);
         for (int i=0; i<charasJSON.length(); i++) {
             JSONObject chara = charasJSON.optJSONObject(i);
             if (charaHead.contains(chara.optString("字"))) { continue; }
