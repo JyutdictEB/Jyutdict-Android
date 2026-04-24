@@ -1,3 +1,9 @@
 .gradle/
 .idea/
 local.properties
+
+
+build/
+.claude/
+.vscode/
+/*.md
