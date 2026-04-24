@@ -30,7 +30,7 @@ public class GeneralCharacterManager {
     ArrayList<String> charaHead = new ArrayList<>();
     HashMap<String, ArrayList<String>> div2city = new HashMap<>();
     HashMap<String, String> city2color = new HashMap<>();
-    public static ArrayList<String> cityList = new ArrayList<>(Arrays.asList("尺牘分韻", "英華"));
+    public static ArrayList<String> cityList = new ArrayList<>();
     public static HashSet<String> cityFilter = new HashSet<>(); // static 是因為 MainActivity 要調用
     EntrySetting settings;
     int colorCount = 0;
@@ -163,17 +163,17 @@ public class GeneralCharacterManager {
         }
 
         SpannableStringBuilder contentWanshyu = new SpannableStringBuilder("");
-        if (!cityFilter.contains("尺牘分韻")) { /// Why hardcode?! never mind
+        if (!cityFilter.contains("韻書") && !chara.books.fanwan.isEmpty()) {
             for (int i = 0; i<chara.books.fanwan.size(); i++) {
-                if (i==0) { contentWanshyu.append("[尺牘分韻] "); }
+                if (i==0) { contentWanshyu.append("[韻書] "); }
                 if (i>0) { contentWanshyu.append(" | "); }
                 contentWanshyu.append(chara.books.fanwan.get(i));
             }
         }
-        if (!cityFilter.contains("英華")) {
+        if (!cityFilter.contains("韻書") && !chara.books.jingwaa.isEmpty()) {
             if (contentWanshyu.length()>0) { contentWanshyu.append("\n"); }
             for (int i = 0; i<chara.books.jingwaa.size(); i++) {
-                if (i==0) { contentWanshyu.append("[英華] "); }
+                if (i==0) { contentWanshyu.append("[韻書] "); }
                 if (i>0) { contentWanshyu.append(" | "); }
                 contentWanshyu.append(chara.books.jingwaa.get(i));
             }

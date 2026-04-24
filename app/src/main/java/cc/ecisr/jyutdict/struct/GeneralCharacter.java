@@ -82,59 +82,119 @@ public class GeneralCharacter {
 
     public GeneralCharacter(JSONObject charaJson) {
         head = charaJson.optString("字");
-        JSONArray areasJson;
-        if ((areasJson = charaJson.optJSONArray("各地"))==null) return;
-        for (int ii=0; ii<areasJson.length(); ii++) {
-            JSONArray i =  areasJson.optJSONArray(ii);
-            SingleLoc loc = new SingleLoc();
-            JSONObject j = i.optJSONObject(0);
-            loc.division = j.optString("片區");
-            loc.city = j.optString("市") + j.optString("管區");
-            String rawColor = j.optString("色", "#888888");
-            loc.color = !"#000000".equals(rawColor) ? rawColor : "#888888";
 
-            for (int jj=0; jj<i.length(); jj++) {
-                j = i.optJSONObject(jj);
-                String[] jpps = (j.optString("聲母") + j.optString("韻核") +
-                        j.optString("韻尾") + j.optString("聲調")
-                ).split("=");
-                String[] ipas = j.optString("IPA").split("=");
-                ArrayList<SingleLoc.SinglePron> prons = new ArrayList<>(jpps.length);
-                for (int k=0; k<jpps.length; k++ ) {
-                    prons.add(new SingleLoc.SinglePron(JyutpingUtil.splitJyutping(jpps[k]), ipas[k]));
+        // ===== 解析各地讀音（v1.0 格式）=====
+        JSONArray areasJson = charaJson.optJSONArray("各地");
+        if (areasJson != null) {
+            for (int ii = 0; ii < areasJson.length(); ii++) {
+                JSONObject locJson = areasJson.optJSONObject(ii);
+                if (locJson == null) continue;
+
+                int locId = locJson.optInt("id", -1);
+                LocationInfo.Location locInfo = LocationInfo.get(locId);
+
+                SingleLoc loc = new SingleLoc();
+                if (locInfo != null) {
+                    loc.division = locInfo.first;
+                    loc.city = locInfo.displayName();
+                    loc.color = locInfo.color;
+                } else {
+                    loc.division = "";
+                    loc.city = "id=" + locId;
+                    loc.color = "#888888";
                 }
-                loc.prons.add(prons);
-                loc.notes.add(j.optString("註"));
+
+                // 解析讀音數組
+                JSONArray jppArray = locJson.optJSONArray("粵拼");
+                JSONArray ipaArray = locJson.optJSONArray("IPA");
+                JSONArray noteArray = locJson.optJSONArray("注釋");
+                JSONArray altGroupArray = locJson.optJSONArray("又音組");
+
+                if (jppArray == null || jppArray.length() == 0) continue;
+
+                // 按又音組分組：null 表示獨立讀音，相同數字表示同一組又音
+                // 每個讀音是一個 SinglePron，每組又音合併為一個 prons 條目
+                HashMap<Integer, Integer> groupIndexMap = new HashMap<>();
+
+                for (int j = 0; j < jppArray.length(); j++) {
+                    String jpp = jppArray.optString(j, "");
+                    String ipa = ipaArray != null ? ipaArray.optString(j, "") : "";
+                    String note = noteArray != null ? noteArray.optString(j, "") : "";
+                    // 注意：注釋字段在 v1.0 中鍵名是 "注釋" 不是 "註"
+                    if ("null".equals(note)) note = "";
+
+                    SingleLoc.SinglePron pron = new SingleLoc.SinglePron(
+                            JyutpingUtil.splitJyutping(jpp), ipa
+                    );
+
+                    // 又音組處理
+                    boolean isAltGroup = altGroupArray != null
+                            && !altGroupArray.isNull(j)
+                            && altGroupArray.optInt(j, -1) >= 0;
+
+                    if (isAltGroup) {
+                        int groupId = altGroupArray.optInt(j);
+                        if (groupIndexMap.containsKey(groupId)) {
+                            // 已有此組，追加讀音
+                            int existingIndex = groupIndexMap.get(groupId);
+                            loc.prons.get(existingIndex).add(pron);
+                        } else {
+                            // 新的又音組
+                            ArrayList<SingleLoc.SinglePron> group = new ArrayList<>();
+                            group.add(pron);
+                            groupIndexMap.put(groupId, loc.prons.size());
+                            loc.prons.add(group);
+                            loc.notes.add(note);
+                        }
+                    } else {
+                        // 非又音組：每個讀音獨立成一組
+                        ArrayList<SingleLoc.SinglePron> group = new ArrayList<>();
+                        group.add(pron);
+                        loc.prons.add(group);
+                        loc.notes.add(note);
+                    }
+                }
+
+                areas.add(loc);
+                city2index.put(loc.city, areas.size() - 1);
             }
-            areas.add(loc);
-            city2index.put(loc.city, ii);
         }
 
-        if ((areasJson = charaJson.optJSONArray("韻書"))==null) return;
-        for (int ii=0; ii<areasJson.length(); ii++) { // 甚麼垃圾 API
-            JSONArray i =  areasJson.optJSONArray(ii);
-            for (int jj=0; jj<i.length(); jj++) {
-                JSONObject j = i.optJSONObject(jj);
-                switch (j.optString("書名")) {
-                    case "廣韻":
-                        books.kwangun.add(
-                                j.optString("聲母")+j.optString("攝")
-                                +j.optString("韻")+j.optString("等")
-                                +j.optString("呼")+j.optString("聲調")+j.optString("轉寫"));
-                        break;
-                    case "分韻":
-                        books.fanwan.add(j.optString("韻部") + "-" + j.optString("小韻") + ", "
-                                + j.optString("聲字") + j.optString("韻字") + j.optString("調類") + "("
-                                + j.optString("聲母") + j.optString("韻核") + j.optString("韻尾")
-                                + j.optString("聲調") + "), " + j.optString("義"));
-                        break;
-                    case "英華":
-                        books.jingwaa.add(j.optString("音") + "(" + j.optString("聲母")
-                                + j.optString("韻核") + j.optString("韻尾") + j.optString("聲調") + ")");
-                        break;
-                    default:
-                        Log.w(TAG, "未知韻書");
-                        break;
+        // ===== 解析韻書（格式不變）=====
+        areasJson = charaJson.optJSONArray("韻書");
+        if (areasJson != null) {
+            for (int ii = 0; ii < areasJson.length(); ii++) {
+                JSONArray i =  areasJson.optJSONArray(ii);
+                if (i == null) continue;
+                for (int jj = 0; jj < i.length(); jj++) {
+                    JSONObject j = i.optJSONObject(jj);
+                    if (j == null) continue;
+                    switch (j.optString("書名")) {
+                        case "廣韻":
+                            books.kwangun.add(
+                                    j.optString("聲母") + j.optString("攝")
+                                    + j.optString("韻") + j.optString("等")
+                                    + j.optString("呼") + j.optString("聲調")
+                                    + j.optString("轉寫"));
+                            break;
+                        case "分韻":
+                            books.fanwan.add(
+                                    j.optString("韻部") + "-" + j.optString("小韻") + ", "
+                                    + j.optString("聲字") + j.optString("韻字")
+                                    + j.optString("調類") + "("
+                                    + j.optString("聲母") + j.optString("韻核")
+                                    + j.optString("韻尾") + j.optString("聲調")
+                                    + "), " + j.optString("義"));
+                            break;
+                        case "英華":
+                            books.jingwaa.add(
+                                    j.optString("音") + "("
+                                    + j.optString("聲母") + j.optString("韻核")
+                                    + j.optString("韻尾") + j.optString("聲調") + ")");
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
         }

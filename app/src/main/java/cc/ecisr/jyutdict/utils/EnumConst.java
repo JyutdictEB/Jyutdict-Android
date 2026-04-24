@@ -16,6 +16,7 @@ public class EnumConst {
 
 
     public static final int INITIALIZE_LOCATIONS = 3286;
+    public static final int INITIALIZE_DETAIL_LOCATIONS = 3287;
     public static final int CHECKING_VERSION = 3453;
 
     public static final int GETTING_CONTENT_LOCATION = 0;

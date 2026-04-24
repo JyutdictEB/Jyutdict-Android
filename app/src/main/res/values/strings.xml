@@ -53,6 +53,10 @@
     <string name="tips_no_result">無結果</string>
     <string name="tips_chara_copied">已複製：%1$s</string>
 
+    <!-- InfoActivity -->
+    <string name="info_loading">加載中...</string>
+    <string name="info_load_error">加載失敗，請檢查網絡連接</string>
+
     <!-- SettingActivity -->
     <string name="title_activity_settings">設置</string>
     <string name="search_header">檢索</string>

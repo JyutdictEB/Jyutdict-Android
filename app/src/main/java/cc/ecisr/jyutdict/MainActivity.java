@@ -47,6 +47,7 @@ import java.util.HashSet;
 
 import cc.ecisr.jyutdict.struct.FjbHeaderInfo;
 import cc.ecisr.jyutdict.struct.GeneralCharacterManager;
+import cc.ecisr.jyutdict.struct.LocationInfo;
 import cc.ecisr.jyutdict.utils.ImmersiveBarUtil;
 import cc.ecisr.jyutdict.utils.JyutpingUtil;
 import cc.ecisr.jyutdict.utils.StringUtil;
@@ -61,7 +62,7 @@ import cc.ecisr.jyutdict.widget.SwitchCustomized;
  */
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "`MainActivity";
-    private static final String URL_API_ROOT = "https://www.jyutdict.org/api/v0.9/";
+    private static final String URL_API_ROOT = "https://jyutdict.org/api/v1.0/";
 
     EditTextWithClear inputEditText;
     Button btnQueryConfirm, btnQueryClear, btnFilterArea, btnColoringJppPartial;
@@ -94,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
     MainHandler mainHandler;
     // 用於向服務器發送請求，與接收回應
     HttpUtil query = new HttpUtil(HttpUtil.GET);
+    HttpUtil locationQuery = new HttpUtil(HttpUtil.GET);
 
     // 指示搜索模式，查通用表字/查通用表音/查泛粵表
     // 在按下查詢按鈕時更新
@@ -150,14 +152,26 @@ public class MainActivity extends AppCompatActivity {
             loadingProgressBar.setVisibility(View.GONE);
             btnColoringJppPartial.setEnabled(true);
             switch (msg.what) {
-                case INITIALIZE_LOCATIONS: // 初始化表頭
+                case INITIALIZE_LOCATIONS: // 初始化泛粵字表表頭
                     try {
-                        JSONArray headerArray = new JSONObject( // TODO 改用其它第三方JSON來解析
-                                msg.obj.toString()
-                        ).getJSONArray("__valid_options");
+                        // v1.0: 返回 {"columns": [...]}，v0.9 返回 {"__valid_options": [...]}
+                        JSONObject headerObj = new JSONObject(msg.obj.toString());
+                        JSONArray headerArray = headerObj.getJSONArray("columns");
                         FjbHeaderInfo.load(headerArray);
                         setLocationsAdapter();
                         if (!isJustInitialized  && inputEditText.getText()!=null && inputEditText.getText().length() != 0) search();
+                    } catch (JSONException ignored) {}
+                    break;
+                case INITIALIZE_DETAIL_LOCATIONS: // 初始化通用字表地點列表
+                    try {
+                        JSONArray locationArray = new JSONArray(msg.obj.toString());
+                        LocationInfo.load(locationArray);
+                        // 用地點列表構建篩選城市列表（替代原來從結果動態構建的方式）
+                        GeneralCharacterManager.cityList = new ArrayList<>();
+                        GeneralCharacterManager.cityList.add("韻書");  // 保留韻書作為可篩選項
+                        for (LocationInfo.Location loc : LocationInfo.getAll()) {
+                            GeneralCharacterManager.cityList.add(loc.displayName());
+                        }
                     } catch (JSONException ignored) {}
                     break;
                 case HttpUtil.REQUEST_CONTENT_SUCCESSFULLY:
@@ -219,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
             }
             @Override
             public void afterTextChanged(Editable s) {
-                boolean isJpp = JyutpingUtil.isValidJpp(s.toString());
+                boolean isJpp = StringUtil.isJyutpingInput(s.toString());
 
                 int presentColor = isJpp ?
                         getResources().getColor(R.color.colorSecondary) :
@@ -354,8 +368,14 @@ public class MainActivity extends AppCompatActivity {
                     sp.getInt("spinner_selected_position", 0));
             isPrepared = true;
             query.setHandler(mainHandler);
+            // 在泛粵字表表頭初始化完成後，啟動地點列表請求（如果尚未加載）
+            if (!LocationInfo.isLoaded) {
+                locationQuery.setUrl(URL_API_ROOT + "detail?chara=")
+                        .setHandler(mainHandler, INITIALIZE_DETAIL_LOCATIONS)
+                        .start();
+            }
         } else {
-            query.setUrl(URL_API_ROOT + "sheet?query=&header")
+            query.setUrl(URL_API_ROOT + "sheet")
                     .setHandler(mainHandler, INITIALIZE_LOCATIONS);
         }
     }
@@ -485,16 +505,15 @@ public class MainActivity extends AppCompatActivity {
         if (switchQueryOpts1.isChecked()) { // 檢索泛粵字表
             queryingMode = QUERYING_SHEET;
             if (inputString.isEmpty() && !switchQueryOptsRev.isChecked()) {
-                url.append("sheet?query=!&limit=10");
+                url.append("sheet?random=10");
             } else {
-                if (StringUtil.isAlphaString(inputString) && !switchQueryOptsRev.isChecked()) { // 音
-                    url.append(String.format("sheet?query=%s&trim", inputString));
-
-                } else { // 字
-                    url.append(String.format("sheet?query=%s&fuzzy", inputString));
-                }
-                if (switchQueryOptsRev.isChecked()) { // 反查
-                    url.append("&b");
+                url.append("sheet?q=").append(inputString);
+                if (StringUtil.isAlphaString(inputString) && !switchQueryOptsRev.isChecked()) {
+                    url.append("&mode=trim");
+                } else if (switchQueryOptsRev.isChecked()) {
+                    url.append("&mode=meaning");
+                } else {
+                    url.append("&mode=fuzzy");
                 }
                 int selectedColumn = spinnerQueryLocation.getSelectedItemPosition();
 
@@ -506,13 +525,23 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 if (switchQueryOptsRegex.isChecked()) {
-                    url.append("&regex");
+                    url.append("&mode=regex");
                 }
             }
         } else { // 檢索通用字表
-            if (StringUtil.isAlphaString(inputString)) { // 音
-                queryingMode = QUERYING_PRON;
-                url.append("detail?pron=").append(inputString);
+            if (StringUtil.isJyutpingInput(inputString)) { // 音（允許空格作模糊佔位）
+                String[] parts = JyutpingUtil.parseJyutpingQuery(inputString);
+                if (parts != null) {
+                    queryingMode = QUERYING_PRON;
+                    url.append("detail?in=").append(parts[0])
+                       .append("&nu=").append(parts[1])
+                       .append("&co=").append(parts[2])
+                       .append("&to=").append(parts[3]);
+                } else {
+                    // 解析失敗，回退為查字模式
+                    queryingMode = QUERYING_CHARA;
+                    url.append("detail?chara=").append(inputString);
+                }
             } else { // 字
                 queryingMode = QUERYING_CHARA;
                 url.append("detail?chara=").append(inputString);

@@ -36,6 +36,7 @@ import java.util.regex.Pattern;
 import cc.ecisr.jyutdict.struct.FjbCharacter;
 import cc.ecisr.jyutdict.struct.EntrySetting;
 import cc.ecisr.jyutdict.struct.GeneralCharacterManager;
+import cc.ecisr.jyutdict.struct.LocationInfo;
 import cc.ecisr.jyutdict.utils.ThemeUtil;
 import cc.ecisr.jyutdict.utils.ToastUtil;
 
@@ -203,10 +204,10 @@ public class ResultFragment extends Fragment {
                 FjbCharacter character; // TODO: Use ManagerClass like QUERYING_CHARA.
                 JSONArray jsonArray = new JSONArray(jsonString);
                 JSONObject entry;
-                if (jsonArray.length() <= 1) {
+                if (jsonArray.length() == 0) {
                     ToastUtil.msg(getContext(), getString(R.string.tips_no_result));
                 }
-                for (int i = 1; i<jsonArray.length(); i++) {
+                for (int i = 0; i < jsonArray.length(); i++) {  // v1.0 沒有表頭行，從 0 開始
                     entry = jsonArray.getJSONObject(i);
                     character = new FjbCharacter(entry, entrySettings, getView());
 
@@ -251,10 +252,24 @@ public class ResultFragment extends Fragment {
                 while (syllablesInCityIterator.hasNext()) {
                     String syllablesInCityKey = syllablesInCityIterator.next();
                     switch (syllablesInCityKey) {
+                        case "__id":
+                            // v1.0: 使用 __id 映射地點信息
+                            int locId = syllablesInCity.getInt(syllablesInCityKey);
+                            LocationInfo.Location loc = LocationInfo.get(locId);
+                            if (loc != null) {
+                                city = loc.second;
+                                district = loc.third;
+                            } else {
+                                city = "id=" + locId;
+                                district = "";
+                            }
+                            break;
                         case "__city":
+                            // 兼容 v0.9
                             city = syllablesInCity.getString(syllablesInCityKey);
                             break;
                         case "__district":
+                            // 兼容 v0.9
                             district = syllablesInCity.getString(syllablesInCityKey);
                             break;
                         case "__name":

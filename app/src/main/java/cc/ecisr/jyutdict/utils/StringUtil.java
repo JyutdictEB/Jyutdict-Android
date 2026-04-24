@@ -18,6 +18,15 @@ public class StringUtil {
     }
 
     /**
+     * 判斷字符串是否為粵拼輸入（字母、數字、空格的組合）
+     * 空格用作模糊佔位符
+     */
+    public static boolean isJyutpingInput(final String s) {
+        Pattern pattern = Pattern.compile("^[0-9a-zA-Z ]+$");
+        return pattern.matcher(s).matches();
+    }
+
+    /**
      * 生成漢字的統一碼
      * 支持擴展B區及以後的漢字
      * 允許以多個漢字作輸入

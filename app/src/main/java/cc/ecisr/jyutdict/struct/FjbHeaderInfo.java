@@ -60,9 +60,8 @@ public final class FjbHeaderInfo {
 	 * 在服務器返回表頭到手機時調用
 	 *
 	 * @param headerInfo JSONArray 類，儲存的是整個表頭及與之相關的詳細信息
-	 *                   如：[{"id":0,"col":"繁","is_city":0,"fullname":"錔字"},
-	 *                   {"id":1,"col":"穗","is_city":1,"city":"廣州","sub":"","color":"#FD9521"},
-	 *                   {"id":2,"col":"客","is_city":2,"fullname":"客家話","color":"#79BFE4"} ...]
+	 *                   v1.0 格式：[{"index":1,"col":"綜","kind":0,"fullname":"綜合音","color":"#F1C232"},
+	 *                   {"index":7,"col":"台大江","kind":1,"fullname":"台山","sub":"大江","color":"#873279"}, ...]
 	 */
 	public static void load(JSONArray headerInfo) {
 		if (!isLoaded) {
@@ -70,8 +69,8 @@ public final class FjbHeaderInfo {
 			for (int i = 0; i < infoLength; i++) {
 				try {
 					JSONObject headerEntry = headerInfo.getJSONObject(i);
-					int id = headerEntry.getInt("id");
-					int isCity = headerEntry.getInt("is_city");
+					int id = headerEntry.getInt("index");
+					int isCity = headerEntry.getInt("kind");
 					String colName = headerEntry.getString("col");
 					String color;
 					colNumber.put(colName, id);
@@ -87,8 +86,8 @@ public final class FjbHeaderInfo {
 						case 1: // 地方音
 							cityList.add(colName);
 							FjbHeaderInfo.isCity.put(colName, true);
-							String city = headerEntry.getString("city");
-							String subCity = headerEntry.getString("sub");
+							String city = headerEntry.getString("fullname");
+							String subCity = headerEntry.optString("sub", "");
 							fullName.put(colName, new String[]{city, subCity});
 							color = headerEntry.getString("color");
 							cityColor.put(colName, color);
@@ -100,7 +99,7 @@ public final class FjbHeaderInfo {
 							FjbHeaderInfo.fullName.put(colName, new String[]{fullname, ""});
 							break;
 					}
-					
+
 					switch (colName) {
 						case COLUMN_NAME_CHARACTER:
 							authorizedCharaColNum = id; break;
