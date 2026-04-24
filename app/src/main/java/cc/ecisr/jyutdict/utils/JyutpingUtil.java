@@ -53,7 +53,10 @@ public class JyutpingUtil {
      *   "j 3"  → ["j", "%", "", "3"]   (任意韻核)
      *   " aa3" → ["%", "aa", "", "3"]   (任意聲母)
      *   "aa3"  → ["", "aa", "", "3"]    (無聲母，精確匹配)
-     *   "ji"   → ["j", "i", "", "%"]    (任意聲調)
+     *   "dak"  → ["d", "a", "k", ""]    (任意聲調，不發 to)
+     *   "dak1" → ["d", "a", "k", "1"]
+     *   "jyut6"→ ["j", "yu", "t", "6"]
+     *   "saam1"→ ["s", "aa", "m", "1"]
      *
      * @param input 用戶輸入的粵拼字符串
      * @return 長度為 4 的字符串數組 [initial, nucleus, coda, tone]，
@@ -63,33 +66,39 @@ public class JyutpingUtil {
         if (input == null || input.isEmpty()) return null;
         input = input.toLowerCase().trim();
 
-        // 正則定義
-        String initialFormat = "^( ?)(mb?|n[jrd]?|ngg?|[bdg]{1,2}|g[hn]?|r[bdgzscrh]|[zcs][hrjl]?|[ptkvw]h?|[hqfjlr])([jwv]?)([ aeiouymn])?";
-        String codaFormat = "(?<=[aeiouymn])([ngmptkh]?)([ \\d]*)$";
-        String toneFormat = "[ \\d]*([1-6]?[\\*']?)$";
+        // 正則定義（與 Vue 前端 PronunciationView.vue 保持一致）
+        // 聲母：用 lookahead (?=...) 確保後面是元音/鼻音/空格，但不消費該字符
+        Pattern reQueryInitial = Pattern.compile(
+                "^( ?)(mb?|n[jrd]?|ngg?|[bdg]{1,2}|g[hn]?|r[bdgzscrh]|[zcs][hrjl]?|[ptkvw]h?|[hqfjlrx0])([jwv]?)(?=[aeoiuymn ])");
+        // 韻尾：lookbehind 確保前面是元音
+        Pattern reQueryCoda = Pattern.compile(
+                "(?<=[aoreiwuy])(n[ng]?|[mptkh])$");
+        // 聲調：末尾數字
+        Pattern reQueryTone = Pattern.compile(
+                "[0-9]?[0-9*][0-9']?$");
 
-        String initial = "", nucleus = "", coda = "", tone = "";
+        String initial = "", nucleus, coda = "", tone = "";
 
         // Step 1: 提取聲調（末尾數字部分）
-        java.util.regex.Matcher toneMatcher = Pattern.compile(toneFormat).matcher(input);
+        Matcher toneMatcher = reQueryTone.matcher(input);
         if (toneMatcher.find()) {
-            tone = toneMatcher.group(1);
+            tone = toneMatcher.group();
             input = input.substring(0, toneMatcher.start());
         }
 
-        // Step 2: 提取聲母（開頭輔音部分）
-        java.util.regex.Matcher initialMatcher = Pattern.compile(initialFormat).matcher(input);
+        // Step 2: 提取聲母（開頭輔音部分，lookahead 不消費後續字符）
+        Matcher initialMatcher = reQueryInitial.matcher(input);
         if (initialMatcher.find()) {
             String leadingSpace = initialMatcher.group(1);
             initial = leadingSpace + initialMatcher.group(2) + initialMatcher.group(3);
             input = input.substring(initialMatcher.end());
         }
 
-        // Step 3: 提取韻尾（元音後的輔音部分）
-        java.util.regex.Matcher codaMatcher = Pattern.compile(codaFormat).matcher(input);
+        // Step 3: 提取韻尾（元音後的輔音）
+        Matcher codaMatcher = reQueryCoda.matcher(input);
         if (codaMatcher.find()) {
             coda = codaMatcher.group(1);
-            input = input.substring(0, codaMatcher.start());
+            input = input.substring(0, input.length() - coda.length());
         }
 
         // Step 4: 剩餘部分為韻核
@@ -99,13 +108,8 @@ public class JyutpingUtil {
         initial = initial.contains(" ") ? "%" : initial;
         nucleus = nucleus.contains(" ") ? "%" : nucleus;
         coda = coda.contains(" ") ? "%" : coda;
-        tone = tone.contains(" ") ? "%" : tone;
 
-        // 如果沒有聲調，默認模糊匹配所有聲調
-        if (tone.isEmpty()) {
-            tone = "%";
-        }
-
+        // 聲調為空時返回空字符串，由調用方決定是否發送 to 參數
         return new String[]{initial, nucleus, coda, tone};
     }
 }

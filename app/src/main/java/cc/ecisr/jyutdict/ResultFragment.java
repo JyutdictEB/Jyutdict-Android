@@ -27,8 +27,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import cc.ecisr.jyutdict.struct.LocationInfo;
+import android.text.SpannableStringBuilder;
 
 import cc.ecisr.jyutdict.struct.FjbCharacter;
 import cc.ecisr.jyutdict.struct.EntrySetting;
@@ -43,6 +48,7 @@ public class ResultFragment extends Fragment {
 
     private String rawReceivedData;
     int receivedMode = QUERYING_CHARA;
+    public static HashSet<String> pronCityFilter = new HashSet<>();
 
     // TODO 不 parse JSON in Fragment
 
@@ -183,7 +189,7 @@ public class ResultFragment extends Fragment {
                 }
                 break;
             case QUERYING_PRON:
-                // 已弃用：改用 CharacterManager 類作輸出
+                parseJsonPron(jsonString);
                 break;
             case QUERYING_SHEET:
                 FjbCharacter character; // TODO: Use ManagerClass like QUERYING_CHARA.
@@ -236,6 +242,101 @@ public class ResultFragment extends Fragment {
                     rightTop,
                     rightBottom
             );
+        }
+    }
+
+    /**
+     * 解析並顯示 v1.0 檢音 API 返回的結果
+     *
+     * @param jsonString 服務器返回的 JSON 字符串
+     */
+    private void parseJsonPron(String jsonString) throws JSONException {
+        JSONObject root = new JSONObject(jsonString);
+        JSONArray wanshyuArray = root.optJSONArray("韻書");
+        JSONArray areasArray = root.optJSONArray("各地");
+
+        // 解析韻書
+        if (wanshyuArray != null) {
+            for (int i = 0; i < wanshyuArray.length(); i++) {
+                JSONObject obj = wanshyuArray.optJSONObject(i);
+                if (obj == null) continue;
+                String bookName = obj.optString("__name", "韻書");
+                SpannableStringBuilder bookNameSsb = new SpannableStringBuilder(bookName);
+                SpannableStringBuilder pronListSsb = new SpannableStringBuilder();
+
+                Iterator<String> keys = obj.keys();
+                while (keys.hasNext()) {
+                    String syllable = keys.next();
+                    if ("__name".equals(syllable)) continue;
+                    JSONObject tones = obj.optJSONObject(syllable);
+                    if (tones == null) continue;
+
+                    Iterator<String> toneKeys = tones.keys();
+                    while (toneKeys.hasNext()) {
+                        String tone = toneKeys.next();
+                        String chars = tones.optString(tone, "");
+                        if (!chars.isEmpty()) {
+                            if (pronListSsb.length() > 0) pronListSsb.append("\n");
+                            pronListSsb.append(syllable).append(tone).append(": ").append(chars);
+                        }
+                    }
+                }
+                if (pronListSsb.length() > 0) {
+                    addItem(new SpannableStringBuilder(), new SpannableStringBuilder(), new SpannableStringBuilder(), bookNameSsb, pronListSsb);
+                }
+            }
+        }
+
+        // 解析各地
+        if (areasArray != null) {
+            for (int i = 0; i < areasArray.length(); i++) {
+                JSONObject obj = areasArray.optJSONObject(i);
+                if (obj == null) continue;
+
+                int locId = obj.optInt("__id", -1);
+                if (locId != -1 && pronCityFilter.contains(String.valueOf(locId))) {
+                    continue; // 被篩選掉
+                }
+
+                LocationInfo.Location loc = LocationInfo.get(locId);
+                String cityName;
+                if (loc != null) {
+                    cityName = loc.displayName();
+                } else {
+                    cityName = "id=" + locId;
+                }
+
+                SpannableStringBuilder cityNameSsb = new SpannableStringBuilder(cityName);
+                SpannableStringBuilder pronListSsb = new SpannableStringBuilder();
+
+                Iterator<String> keys = obj.keys();
+                boolean hasData = false;
+                while (keys.hasNext()) {
+                    String syllable = keys.next();
+                    if ("__id".equals(syllable)) continue;
+                    JSONObject tones = obj.optJSONObject(syllable);
+                    if (tones == null) continue;
+
+                    Iterator<String> toneKeys = tones.keys();
+                    while (toneKeys.hasNext()) {
+                        String tone = toneKeys.next();
+                        String chars = tones.optString(tone, "");
+                        if (!chars.isEmpty()) {
+                            if (pronListSsb.length() > 0) pronListSsb.append("\n");
+                            pronListSsb.append(syllable).append(tone).append(": ").append(chars);
+                            hasData = true;
+                        }
+                    }
+                }
+                
+                if (hasData) {
+                    addItem(new SpannableStringBuilder(), new SpannableStringBuilder(), new SpannableStringBuilder(), cityNameSsb, pronListSsb);
+                }
+            }
+        }
+        
+        if (wanshyuArray == null && areasArray == null) {
+            ToastUtil.msg(getContext(), getString(R.string.tips_no_result));
         }
     }
 

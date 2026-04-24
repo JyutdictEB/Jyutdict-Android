@@ -11,7 +11,7 @@
     <string name="syllable_tone">聲調</string>
     <string name="button_confirm">確定</string>
     <string name="button_all_check">全選</string>
-    <string name="button_all_uncheck">全消</string>
+    <string name="button_all_uncheck">反選</string>
 
     <!-- MainActivity -->
     <string name="menu_options">選項</string>
@@ -31,6 +31,7 @@
     <string name="search_reversal">反查釋義</string>
     <string name="search_enable_regex">使用正則</string>
     <string name="search_filtering_area">篩選地點</string>
+    <string name="search_filtering_area_pron">篩選查音地點</string>
     <string name="search_coloring_jpp_partial">音節高亮</string>
     <string name="search_coloring_jpp_partial_notice">選擇所需對比的音節部分\n不選則無高亮</string>
     <string name="search_coloring_jpp_partial_inner">單字內部對比</string>

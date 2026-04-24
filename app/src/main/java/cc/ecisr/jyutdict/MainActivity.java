@@ -44,6 +44,7 @@ import org.json.JSONObject;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Set;
 
 import cc.ecisr.jyutdict.struct.FjbHeaderInfo;
 import cc.ecisr.jyutdict.struct.GeneralCharacterManager;
@@ -65,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String URL_API_ROOT = "https://jyutdict.org/api/v1.0/";
 
     AppCompatEditText inputEditText;
-    Button btnQueryConfirm, btnQueryClear, btnFilterArea, btnColoringJppPartial;
+    Button btnQueryConfirm, btnQueryClear, btnFilterArea, btnFilterAreaPron, btnColoringJppPartial;
     Spinner spinnerQueryLocation;
     SwitchCustomized switchQueryOpts1, switchQueryOptsRev, switchQueryOptsRegex;
     ResultFragment resultFragment;
@@ -115,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
         btnQueryConfirm = findViewById(R.id.btn_query);
         btnQueryClear = findViewById(R.id.btn_clear);
         btnFilterArea = findViewById(R.id.btn_filter_area);
+        btnFilterAreaPron = findViewById(R.id.btn_filter_area_pron);
         btnColoringJppPartial = findViewById(R.id.btn_coloring_jpp_partial);
         spinnerQueryLocation = findViewById(R.id.locate_spinner);
         lyAdvancedSearch = findViewById(R.id.input_advanced_switch);
@@ -245,7 +247,10 @@ public class MainActivity extends AppCompatActivity {
                 objectAnimator.setEvaluator(new ArgbEvaluator());
                 objectAnimator.start();
                 previousColor = presentColor;
-                btnFilterArea.setEnabled(!isJpp);
+                if (!switchQueryOpts1.isChecked()) {
+                    btnFilterArea.setVisibility(isJpp ? View.GONE : View.VISIBLE);
+                    btnFilterAreaPron.setVisibility(isJpp ? View.VISIBLE : View.GONE);
+                }
             }
         });
         previousColor = getResources().getColor(R.color.colorPrimary);
@@ -262,6 +267,7 @@ public class MainActivity extends AppCompatActivity {
         switchQueryOptsRev.setOnCheckedChangeListener((buttonView, isChecked) -> setSearchView());
         //inputEditText.setOnClickListener(v -> toggleNightTheme());
         GeneralCharacterManager.cityFilter = (HashSet<String>) sp.getStringSet("querying_filter_city", new HashSet<>());
+        ResultFragment.pronCityFilter = (HashSet<String>) sp.getStringSet("querying_filter_city_pron", new HashSet<>());
 
         queryingModeConfig = sp.getInt("querying_mode_config", 0);
         btnColoringJppPartial.setOnClickListener(view -> {
@@ -284,23 +290,50 @@ public class MainActivity extends AppCompatActivity {
                     }).create();
             dialog.show();
         });
-        btnFilterArea.setOnClickListener(v -> {
-            ArrayList<String> cityList = GeneralCharacterManager.cityList;
-            HashSet<String> cityFilter = GeneralCharacterManager.cityFilter;
-            boolean[] values = new boolean[cityList.size()];
-            for (int index=0; index<cityList.size(); index++) {
-                values[index] = !cityFilter.contains(cityList.get(index));
-            }
-            AlertDialog.Builder dialog = getDialogForFilterArea();
-            dialog.setMultiChoiceItems(cityList.toArray(new String[0]), values, (dialog1, which, isChecked) -> {
-                if (isChecked) {
-                    GeneralCharacterManager.cityFilter.remove(cityList.get(which));
-                } else {
-                    GeneralCharacterManager.cityFilter.add(cityList.get(which));
+        btnFilterArea.setOnClickListener(v -> showFilterDialog(
+                R.string.search_filtering_area,
+                GeneralCharacterManager.cityList,
+                GeneralCharacterManager.cityFilter,
+                newFilter -> {
+                    GeneralCharacterManager.cityFilter = newFilter;
+                    resultFragment.refreshResult();
+                    saveLayoutStatus();
                 }
-            });
-            dialog.create();
-            dialog.show();
+        ));
+        btnFilterAreaPron.setOnClickListener(v -> {
+            ArrayList<LocationInfo.Location> locList = LocationInfo.getAll();
+            if (locList.isEmpty()) {
+                ToastUtil.msg(this, "正在獲取地方信息，請稍候");
+                return;
+            }
+            ArrayList<String> names = new ArrayList<>();
+            for (LocationInfo.Location loc : locList) {
+                names.add(loc.displayName());
+            }
+            // pronCityFilter 存的是 id 字符串，轉為名稱 filter
+            HashSet<String> nameFilter = new HashSet<>();
+            for (LocationInfo.Location loc : locList) {
+                if (ResultFragment.pronCityFilter.contains(String.valueOf(loc.id))) {
+                    nameFilter.add(loc.displayName());
+                }
+            }
+            showFilterDialog(
+                    R.string.search_filtering_area_pron,
+                    names,
+                    nameFilter,
+                    newFilter -> {
+                        // 從名稱 filter 轉回 id filter
+                        HashSet<String> idFilter = new HashSet<>();
+                        for (LocationInfo.Location loc : locList) {
+                            if (newFilter.contains(loc.displayName())) {
+                                idFilter.add(String.valueOf(loc.id));
+                            }
+                        }
+                        ResultFragment.pronCityFilter = idFilter;
+                        resultFragment.refreshResult();
+                        saveLayoutStatus();
+                    }
+            );
         });
         setSearchView();
 
@@ -315,22 +348,60 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private AlertDialog.Builder getDialogForFilterArea() {
-        AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
-        dialog.setTitle(R.string.search_filtering_area);
-        dialog.setPositiveButton(R.string.button_confirm, (dialogPos, which) -> {
-            resultFragment.refreshResult();
-            saveLayoutStatus();
+    /**
+     * 通用的篩選對話框：自定義佈局，全選/反選按鈕在對話框內部，不會關閉對話框
+     *
+     * @param titleRes   對話框標題資源 ID
+     * @param itemNames  可選項列表
+     * @param filter     當前被過濾掉（不顯示）的項目名稱集合
+     * @param onConfirm  確定時回調，傳入最終的 filter 集合
+     */
+    private void showFilterDialog(int titleRes, ArrayList<String> itemNames,
+                                  HashSet<String> filter, java.util.function.Consumer<HashSet<String>> onConfirm) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle(titleRes);
+
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_filter_pron, null);
+        LinearLayout container = dialogView.findViewById(R.id.checkbox_container);
+
+        // 臨時 filter，在確定前不直接修改原始 filter
+        HashSet<String> tempFilter = new HashSet<>(filter);
+
+        ArrayList<android.widget.CheckBox> checkBoxes = new ArrayList<>();
+        for (int index = 0; index < itemNames.size(); index++) {
+            String name = itemNames.get(index);
+            android.widget.CheckBox cb = new android.widget.CheckBox(builder.getContext());
+            cb.setText(name);
+            cb.setChecked(!tempFilter.contains(name));
+            cb.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    tempFilter.remove(name);
+                } else {
+                    tempFilter.add(name);
+                }
+            });
+            container.addView(cb);
+            checkBoxes.add(cb);
+        }
+
+        // 全選按鈕
+        dialogView.findViewById(R.id.btn_dialog_select_all).setOnClickListener(btn -> {
+            tempFilter.clear();
+            for (android.widget.CheckBox cb : checkBoxes) {
+                cb.setChecked(true);
+            }
         });
-        dialog.setNeutralButton(R.string.button_all_uncheck, (dialogNeg, which) -> {
-            GeneralCharacterManager.cityFilter = new HashSet<>(GeneralCharacterManager.cityList);
-            resultFragment.refreshResult();
+
+        // 反選按鈕
+        dialogView.findViewById(R.id.btn_dialog_invert).setOnClickListener(btn -> {
+            for (android.widget.CheckBox cb : checkBoxes) {
+                cb.setChecked(!cb.isChecked());
+            }
         });
-        dialog.setNegativeButton(R.string.button_all_check, (dialogNeg, which) -> {
-            GeneralCharacterManager.cityFilter = new HashSet<>();
-            resultFragment.refreshResult();
-        });
-        return dialog;
+
+        builder.setView(dialogView);
+        builder.setPositiveButton(R.string.button_confirm, (dialog, which) -> onConfirm.accept(tempFilter));
+        builder.create().show();
     }
 
     private AlertDialog.Builder getDialogForColoringJpp() {
@@ -393,12 +464,15 @@ public class MainActivity extends AppCompatActivity {
             int spinnerVisibility = is2Checked ? View.GONE : View.VISIBLE;
             spinnerQueryLocation.setVisibility(spinnerVisibility);
             btnFilterArea.setVisibility(View.GONE);
+            btnFilterAreaPron.setVisibility(View.GONE);
             btnColoringJppPartial.setVisibility(View.GONE);
         } else {
             switch1Text = getString(R.string.search_common_sheet);
             switchQueryOptsRev.setVisibility(View.GONE);
             spinnerQueryLocation.setVisibility(View.GONE);
-            btnFilterArea.setVisibility(View.VISIBLE);
+            boolean isJpp = inputEditText.getText() != null && StringUtil.isJyutpingInput(inputEditText.getText().toString());
+            btnFilterArea.setVisibility(isJpp ? View.GONE : View.VISIBLE);
+            btnFilterAreaPron.setVisibility(isJpp ? View.VISIBLE : View.GONE);
             btnColoringJppPartial.setVisibility(View.VISIBLE);
         }
         switchQueryOpts1.setText(switch1Text);
@@ -446,6 +520,7 @@ public class MainActivity extends AppCompatActivity {
         editor.putInt("spinner_selected_position", spinnerQueryLocation.getSelectedItemPosition());
         editor.putInt("querying_mode_config", queryingModeConfig);
         editor.putStringSet("querying_filter_city", GeneralCharacterManager.cityFilter);
+        editor.putStringSet("querying_filter_city_pron", ResultFragment.pronCityFilter);
         editor.apply();
     }
 
@@ -535,8 +610,10 @@ public class MainActivity extends AppCompatActivity {
                     queryingMode = QUERYING_PRON;
                     url.append("detail?in=").append(parts[0])
                        .append("&nu=").append(parts[1])
-                       .append("&co=").append(parts[2])
-                       .append("&to=").append(parts[3]);
+                       .append("&co=").append(parts[2]);
+                    if (parts[3] != null && !parts[3].isEmpty()) {
+                        url.append("&to=").append(parts[3]);
+                    }
                 } else {
                     // 解析失敗，回退為查字模式
                     queryingMode = QUERYING_CHARA;

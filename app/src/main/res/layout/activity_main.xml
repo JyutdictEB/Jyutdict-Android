@@ -118,6 +118,17 @@
                 android:layout_marginStart="10dp"
                 android:text="@string/search_filtering_area" />
             <Button
+                android:id="@+id/btn_filter_area_pron"
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:background="#00000000"
+                android:foreground="?selectableItemBackground"
+                style="@style/ButtonTextColor"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:visibility="gone"
+                android:text="@string/search_filtering_area_pron" />
+            <Button
                 android:id="@+id/btn_coloring_jpp_partial"
                 android:layout_width="60dp"
                 android:layout_height="wrap_content"

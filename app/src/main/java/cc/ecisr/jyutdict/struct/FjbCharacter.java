@@ -376,9 +376,15 @@ public class FjbCharacter {
         // chara 爲「繁」一列的值，即錔字
         String chara = key2val.get(FjbHeaderInfo.COLUMN_NAME_CHARACTER);
 
+        String replacedChara;
         // 沒有錔字的一列以「□」作顯示，使用問號會導致字頭排版不居中
-        if (chara.isEmpty() || "？".equals(chara)) ssb.append("□");
-        else ssb.append(chara.replaceAll("[?/!！？見歸 ]", ""));
+        if (chara.isEmpty() || "？".equals(chara))
+            replacedChara = "□";
+        else
+            replacedChara = chara.replaceAll("[?/!！？ ]", "");
+        if (replacedChara != "見") replacedChara.replace("見", "");
+        if (replacedChara != "歸") replacedChara.replace("歸", "");
+        ssb.append(replacedChara);
 
         // 錔字未確認，著灰色
         if (chara.contains("？") || chara.contains("?")) { // 該狀態下 大多以全角問號標記

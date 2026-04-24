@@ -139,6 +139,16 @@
                     style="@style/ButtonTextColor"
                     android:text="@string/search_filtering_area" />
                 <Button
+                    android:id="@+id/btn_filter_area_pron"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:background="#00000000"
+                    android:foreground="?selectableItemBackground"
+                    style="@style/ButtonTextColor"
+                    android:visibility="gone"
+                    android:text="@string/search_filtering_area_pron" />
+                <Button
                     android:id="@+id/btn_coloring_jpp_partial"
                     android:layout_width="60dp"
                     android:layout_height="wrap_content"
