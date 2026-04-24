@@ -84,7 +84,7 @@
                 android:text="@string/result_list_upper"
                 android:textColor="?attr/clockTextColor"
                 />
-            <TextView
+            <cc.ecisr.jyutdict.widget.SelectableTextView
                 android:id="@+id/content_location"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

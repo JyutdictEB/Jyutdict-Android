@@ -194,7 +194,7 @@ public class ResultFragment extends Fragment {
                 }
                 for (int i = 0; i < jsonArray.length(); i++) {  // v1.0 沒有表頭行，從 0 開始
                     entry = jsonArray.getJSONObject(i);
-                    character = new FjbCharacter(entry, entrySettings, getView());
+                    character = new FjbCharacter(entry, entrySettings, mRvMain);
 
                     addItem(character.printCharacter(),
                             character.printUnicode(),

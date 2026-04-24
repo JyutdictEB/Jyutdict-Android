@@ -211,6 +211,8 @@ public class FjbCharacter {
                 presentStringBeginPosition = ssb.length();
             }
 
+            int pronStartPos = ssb.length();
+
             // 加上刪除線
             if (!value.contains("^")) {
                 ssb.append(value);
@@ -226,6 +228,8 @@ public class FjbCharacter {
                     }
                 }
             }
+
+            int pronEndPos = ssb.length();
 
             ssb.append(" \t");
             presentStringEndPosition = ssb.length();
@@ -248,9 +252,21 @@ public class FjbCharacter {
                 sb.append(">「").append(key2val.get(FjbHeaderInfo.COLUMN_NAME_CHARACTER));
                 sb.append("」(").append(key2val.get(FjbHeaderInfo.COLUMN_NAME_PRONUNCIATION)).append(")   [");
                 sb.append(key).append("] ").append(value).append(", \n");
+                sb.append(cellNotes.optString(key).replaceAll("\n\t-.+", "\t\t- by Anonymous").replaceAll("\n-{10,}", ""));
                 final String s = sb.toString();
                 ssb.setSpan(new CustomClickable(v -> ToastUtil.tips(view, s, "善")) {},
-                        presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        pronStartPos, pronEndPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                
+                int underlineColor = Color.parseColor("#999999");
+                if (settings.isAreaColoring) {
+                    underlineColor = ColorUtil.darken(FjbHeaderInfo.getCityColor(key),
+                            settings.isUsingNightMode ?
+                                    2 - settings.areaColoringDarkenRatio : 
+                                    settings.areaColoringDarkenRatio
+                    );
+                }
+                ssb.setSpan(new cc.ecisr.jyutdict.widget.DashedUnderlineSpan(underlineColor),
+                        pronStartPos, pronEndPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             }
         }
         ssb.delete(ssb.length()-" \t".length(), ssb.length());
@@ -288,7 +304,9 @@ public class FjbCharacter {
                     presentStringBeginPosition = ssb.length();
                 }
 
+                int pronStartPos = ssb.length();
                 ssb.append(value.replace('\n', ','));
+                int pronEndPos = ssb.length();
                 presentStringEndPosition = ssb.length();
 
                 // 若讀音存在「?」，使用斜體標註
@@ -305,7 +323,18 @@ public class FjbCharacter {
                     sb.append(cellNotes.optString(key).replaceAll("\n\t-.+", "\t\t- by Anonymous").replaceAll("\n-{10,}", ""));
                     final String s = sb.toString();
                     ssb.setSpan(new CustomClickable(v -> ToastUtil.tips(view, s, "善")) {},
-                            presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            pronStartPos, pronEndPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            
+                    int underlineColor = Color.parseColor("#999999");
+                    if (settings.isAreaColoring) {
+                        underlineColor = ColorUtil.darken(FjbHeaderInfo.getForeignColor(key),
+                                settings.isUsingNightMode ?
+                                        2 - settings.areaColoringDarkenRatio : 
+                                        settings.areaColoringDarkenRatio
+                        );
+                    }
+                    ssb.setSpan(new cc.ecisr.jyutdict.widget.DashedUnderlineSpan(underlineColor),
+                            pronStartPos, pronEndPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 }
             }
         }
@@ -435,8 +464,7 @@ public class FjbCharacter {
 
         @Override
         public void updateDrawState(@NonNull TextPaint ds) {
-            ds.setUnderlineText(true);
-
+            ds.setUnderlineText(false);
         }
     }
 

@@ -2,12 +2,13 @@ package cc.ecisr.jyutdict;
 
 import android.content.Context;
 import android.text.Spanned;
-import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import cc.ecisr.jyutdict.widget.SelectableTextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -44,7 +45,8 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         holder.tvCharaExtra.setText(extra);
         holder.tvRightTop.setText(wanshyu);
         holder.tvRightBottom.setText(location);
-        holder.tvRightBottom.setMovementMethod(LinkMovementMethod.getInstance());
+        holder.tvRightTop.setTextIsSelectable(true);
+
         int lyCharaVisibility = (header.length()!=0 || info.length()!=0) ? View.VISIBLE : View.GONE;
         int tvContentInfoVisibility = (info.length()!=0) ? View.VISIBLE : View.GONE;
         int tvContentExtraVisibility = (extra.length()!=0) ? View.VISIBLE : View.GONE;
@@ -74,8 +76,9 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
     }
 
     public static class LinearViewHolder extends RecyclerView.ViewHolder {
-        LinearLayout lyChara;//, lyContent;
-        TextView tvCharaHeader, tvCharaInfo, tvCharaExtra, tvRightTop, tvRightBottom;
+        LinearLayout lyChara;
+        TextView tvCharaHeader, tvCharaInfo, tvCharaExtra, tvRightTop;
+        SelectableTextView tvRightBottom;
 
         LinearViewHolder(@NonNull View itemView) {
             super(itemView);
