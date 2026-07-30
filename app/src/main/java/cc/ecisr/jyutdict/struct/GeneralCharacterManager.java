@@ -2,13 +2,15 @@ package cc.ecisr.jyutdict.struct;
 
 import static cc.ecisr.jyutdict.utils.EnumConst.*;
 
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
+import android.text.style.LeadingMarginSpan;
 import android.text.style.RelativeSizeSpan;
-import android.text.style.ScaleXSpan;
+import android.util.TypedValue;
 
 
 import org.json.JSONArray;
@@ -23,6 +25,9 @@ import java.util.HashSet;
 import java.util.TreeMap;
 
 import cc.ecisr.jyutdict.utils.ColorUtil;
+import cc.ecisr.jyutdict.widget.FixedWidthSpan;
+import cc.ecisr.jyutdict.widget.LocationClickSpan;
+import cc.ecisr.jyutdict.widget.LocationLabelSpan;
 
 public class GeneralCharacterManager {
     public enum ColoringMode { NoColoring, InnerColoring, InterColoring}
@@ -162,7 +167,7 @@ public class GeneralCharacterManager {
         SpannableStringBuilder contentWanshyu = new SpannableStringBuilder("");
         if (!cityFilter.contains("韻書") && !chara.books.fanwan.isEmpty()) {
             for (int i = 0; i<chara.books.fanwan.size(); i++) {
-                if (i==0) { contentWanshyu.append("[韻書] "); }
+                if (i==0) { contentWanshyu.append("[分韻] "); }
                 if (i>0) { contentWanshyu.append(" | "); }
                 contentWanshyu.append(chara.books.fanwan.get(i));
             }
@@ -170,13 +175,16 @@ public class GeneralCharacterManager {
         if (!cityFilter.contains("韻書") && !chara.books.jingwaa.isEmpty()) {
             if (contentWanshyu.length()>0) { contentWanshyu.append("\n"); }
             for (int i = 0; i<chara.books.jingwaa.size(); i++) {
-                if (i==0) { contentWanshyu.append("[韻書] "); }
+                if (i==0) { contentWanshyu.append("[英華] "); }
                 if (i>0) { contentWanshyu.append(" | "); }
                 contentWanshyu.append(chara.books.jingwaa.get(i));
             }
         }
 
         SpannableStringBuilder contentLoc = new SpannableStringBuilder();
+        ArrayList<Integer> locationParagraphStarts = new ArrayList<>();
+        ArrayList<Integer> locationParagraphEnds = new ArrayList<>();
+        ArrayList<Integer> locationParagraphIndents = new ArrayList<>();
         int presentBeginPosition, presentEndPosition, textColor;
         double areaColoringDarkenRatio = settings.isUsingNightMode ?
                 2 - settings.areaColoringDarkenRatio : // 將顏色調亮
@@ -185,28 +193,49 @@ public class GeneralCharacterManager {
             if (cityFilter.contains(loc.city)) continue;
             if (contentLoc.length()>0) contentLoc.append("\n");
 
+            String displayName = loc.city.replace("'", "");
+            int paragraphStart = contentLoc.length();
             presentBeginPosition = contentLoc.length();
-            contentLoc.append(loc.city.replace("'", "")).append("　");
+            contentLoc.append(displayName).append("\t");
             presentEndPosition = contentLoc.length();
-            if (settings.isAreaColoring) {
-                textColor = ColorUtil.darken(loc.color, areaColoringDarkenRatio);
-                contentLoc.setSpan(new ForegroundColorSpan(textColor),
-                        presentBeginPosition, presentEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            int[] labelColors = new int[settings.isAreaColoring ? loc.colors.size() : 0];
+            for (int colorIndex = 0; colorIndex < labelColors.length; colorIndex++) {
+                labelColors[colorIndex] = ColorUtil.darken(
+                        loc.colors.get(colorIndex),
+                        areaColoringDarkenRatio
+                );
             }
-            if (loc.city.length()==5) {
-                contentLoc.setSpan(new ScaleXSpan(0.8f),
-                        presentBeginPosition, presentEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            contentLoc.setSpan(
+                    new LocationLabelSpan(displayName, labelColors),
+                    presentBeginPosition,
+                    presentEndPosition,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+            if (loc.id >= 0) {
+                contentLoc.setSpan(
+                        new LocationClickSpan(loc.id),
+                        presentBeginPosition,
+                        presentEndPosition,
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                );
             }
 
             for (int i=0; i<loc.prons.size(); i++) {
                 if (i>0) {
                     if (!"".equals(loc.notes.get(i-1))) {
-                        contentLoc.append("\n　　　　　");
+                        contentLoc.append("\n");
+                        int indentStart = contentLoc.length();
+                        contentLoc.append("\t");
+                        contentLoc.setSpan(
+                                new FixedWidthSpan(LocationLabelSpan.widthEm(displayName)),
+                                indentStart,
+                                contentLoc.length(),
+                                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                        );
                     } else {
                         contentLoc.append(" · ");
                     }
-                } else if (loc.city.length()==2) {
-                    contentLoc.append("　　");
                 }
 
                 ArrayList<GeneralCharacter.SingleLoc.SinglePron> singleLoc = loc.prons.get(i);
@@ -251,6 +280,30 @@ public class GeneralCharacterManager {
                             presentBeginPosition, presentEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 }
             }
+
+            float locationTextSize = TypedValue.applyDimension(
+                    TypedValue.COMPLEX_UNIT_SP,
+                    14,
+                    Resources.getSystem().getDisplayMetrics()
+            );
+            locationParagraphStarts.add(paragraphStart);
+            locationParagraphEnds.add(contentLoc.length());
+            locationParagraphIndents.add(Math.round(
+                    locationTextSize * LocationLabelSpan.widthEm(displayName)
+            ));
+        }
+
+        for (int i = 0; i < locationParagraphStarts.size(); i++) {
+            int end = locationParagraphEnds.get(i);
+            if (end < contentLoc.length() && contentLoc.charAt(end) == '\n') {
+                end++;
+            }
+            contentLoc.setSpan(
+                    new LeadingMarginSpan.Standard(0, locationParagraphIndents.get(i)),
+                    locationParagraphStarts.get(i),
+                    end,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
         }
         return new Spanned[]{
                 new SpannableString(charaHead),

@@ -1,101 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/list_item"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="10dp"
     android:layout_marginTop="7dp"
     android:layout_marginBottom="3dp"
-    android:layout_marginHorizontal="10dp"
     android:background="?attr/clockBackground"
-    android:elevation="2dp">
+    android:elevation="2dp"
+    android:orientation="vertical"
+    android:paddingHorizontal="5dp"
+    android:paddingVertical="5dp">
 
+    <!-- 上部：左側字頭，右側韻書／釋義 -->
     <LinearLayout
-        android:id="@+id/list_item"
+        android:id="@+id/item_top"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:paddingHorizontal="5dp"
-        android:background="?android:attr/selectableItemBackground"
-        android:paddingVertical="5dp"
-        android:baselineAligned="false">
+        android:baselineAligned="false"
+        android:orientation="horizontal">
 
         <LinearLayout
             android:id="@+id/item_chara"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:paddingHorizontal="0dp"
             android:gravity="center"
-            >
+            android:orientation="vertical">
+
             <TextView
                 android:id="@+id/chara_header"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:foregroundGravity="center"
                 android:layout_gravity="center"
+                android:gravity="center"
                 android:paddingHorizontal="12dp"
-                android:textSize="40sp"
                 android:text="@string/result_list_chara"
                 android:textColor="?attr/clockTextColor"
-                />
+                android:textSize="40sp" />
+
             <TextView
                 android:id="@+id/chara_info"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:paddingHorizontal="5dp"
-                android:textSize="12sp"
                 android:text="@string/result_list_info"
                 android:textColor="?attr/clockTextColor"
-                />
+                android:textSize="12sp" />
+
             <TextView
                 android:id="@+id/chara_extra"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingVertical="2dp"
                 android:paddingHorizontal="5dp"
-                android:textSize="12sp"
+                android:paddingVertical="2dp"
                 android:text="@string/result_list_extra"
                 android:textColor="?attr/clockTextColor"
-                />
-        </LinearLayout>
-        <LinearLayout
-            android:id="@+id/item_content"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:layout_weight="1">
-            <TextView
-                android:id="@+id/content_wanshyu"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingVertical="4dp"
-                android:textSize="14sp"
-                android:text="@string/result_list_upper"
-                android:textColor="?attr/clockTextColor"
-                />
-            <cc.ecisr.jyutdict.widget.SelectableTextView
-                android:id="@+id/content_location"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingVertical="4dp"
-                android:textSize="14sp"
-                android:text="@string/result_list_bottom"
-                android:textColor="?attr/clockTextColor"
-                />
-<!--            android:textIsSelectable="true"-->
-<!--            android:descendantFocusability="afterDescendants"-->
+                android:textSize="12sp" />
 
         </LinearLayout>
+
+        <cc.ecisr.jyutdict.widget.SelectableTextView
+            android:id="@+id/content_wanshyu"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:layout_weight="1"
+            android:paddingVertical="4dp"
+            android:text="@string/result_list_upper"
+            android:textColor="?attr/clockTextColor"
+            android:textSize="14sp"
+            tools:ignore="NestedWeights" />
+
     </LinearLayout>
-</androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- 下部：各地讀音使用完整卡片寬度 -->
+    <cc.ecisr.jyutdict.widget.SelectableTextView
+        android:id="@+id/content_location"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="4dp"
+        android:paddingVertical="4dp"
+        android:text="@string/result_list_bottom"
+        android:textColor="?attr/clockTextColor"
+        android:textSize="14sp" />
+
+</LinearLayout>

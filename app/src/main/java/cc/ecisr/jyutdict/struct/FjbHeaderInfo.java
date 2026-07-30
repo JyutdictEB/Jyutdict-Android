@@ -1,12 +1,14 @@
 package cc.ecisr.jyutdict.struct;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
+
+import cc.ecisr.jyutdict.utils.ColorUtil;
 
 /**
  * FjbHeaderInfo 類，用於儲存泛粵字表的表頭
@@ -38,10 +40,10 @@ public final class FjbHeaderInfo {
 	
 	private static final Map<String, Boolean> isCity = new HashMap<>();
 	private static final Map<String, Integer> colNumber = new HashMap<>();  // colNumber.get("穗")=>0 etc
-	private static final Map<String, String> cityColor = new HashMap<>(); // cityColor.get("穗")=>"#FFFFFF" etc
+	private static final Map<String, ArrayList<String>> cityColors = new HashMap<>();
 	private static final Map<String, String[]> fullName = new HashMap<>(); // fullName.get("穗")=>["广州",""] etc
 	
-	private static final Map<String, String> foreignColor = new HashMap<>(); // foreignColor.get("官")=>"#FFFFFF" etc
+	private static final Map<String, ArrayList<String>> foreignColors = new HashMap<>();
 	
 	private static int meaningsColNum = 0; // 釋義所在列序號
 	private static final int[] classificationColNum = new int[3]; // 詞場所在列序號
@@ -64,75 +66,101 @@ public final class FjbHeaderInfo {
 	 *                   {"index":7,"col":"台大江","kind":1,"fullname":"台山","sub":"大江","color":"#873279"}, ...]
 	 */
 	public static void load(JSONArray headerInfo) {
-		if (!isLoaded) {
-			infoLength = headerInfo.length();
-			for (int i = 0; i < infoLength; i++) {
-				try {
-					JSONObject headerEntry = headerInfo.getJSONObject(i);
-					int id = headerEntry.getInt("index");
-					int isCity = headerEntry.getInt("kind");
-					String colName = headerEntry.getString("col");
-					String color;
-					colNumber.put(colName, id);
-					fullList.add(colName);
-					switch (isCity) {
-						case 2: // 域外音
-							foreignList.add(colName);
-							String foreignName = headerEntry.getString("fullname");
-							FjbHeaderInfo.fullName.put(colName, new String[]{foreignName, ""});
-							color = headerEntry.getString("color");
-							foreignColor.put(colName, color);
-							break;
-						case 1: // 地方音
-							cityList.add(colName);
-							FjbHeaderInfo.isCity.put(colName, true);
-							String city = headerEntry.getString("fullname");
-							String subCity = headerEntry.optString("sub", "");
-							fullName.put(colName, new String[]{city, subCity});
-							color = headerEntry.getString("color");
-							cityColor.put(colName, color);
-							break;
-						case 0: // 其它表頭信息
-						default:
-							FjbHeaderInfo.isCity.put(colName, false);
-							String fullname = headerEntry.getString("fullname");
-							FjbHeaderInfo.fullName.put(colName, new String[]{fullname, ""});
-							break;
-					}
+		reset();
+		infoLength = headerInfo.length();
+		for (int i = 0; i < infoLength; i++) {
+			JSONObject headerEntry = headerInfo.optJSONObject(i);
+			if (headerEntry == null) continue;
 
-					switch (colName) {
-						case COLUMN_NAME_CHARACTER:
-							authorizedCharaColNum = id; break;
-						case COLUMN_NAME_PRONUNCIATION:
-							authorizedPronColNum = id; break;
-						case COLUMN_NAME_MEANING:
-							meaningsColNum = id; break;
-						case COLUMN_NAME_CLASS_MAJOR:
-							classificationColNum[0] = id; break;
-						case COLUMN_NAME_CLASS_SECONDARY:
-							classificationColNum[1] = id; break;
-						case COLUMN_NAME_CLASS_MINOR:
-							classificationColNum[2] = id; break;
-						case COLUMN_NAME_CONVENTIONAL:
-							commonlyUsedCharaColNum = id; break;
-						case COLUMN_NAME_NOTE:
-							noteColNum = id; break;
-						case COLUMN_NAME_EXAMPLE:
-							exampleColNum = id; break;
-						case COLUMN_NAME_IDS:
-							idsColNum = id; break;
-						case COLUMN_NAME_GRAMMAR_MARKER:
-							grammarMarkerColNum = id; break;
-						case COLUMN_NAME_CELL_NOTE:
-							cellNoteColNum = id; break;
-						default: break;
-					}
-				} catch (JSONException e) {
-					e.printStackTrace(); // 理应不会进入此处
-				}
+			int id = headerEntry.optInt("index", -1);
+			int cityKind = headerEntry.optInt("kind", 0);
+			String colName = headerEntry.optString("col", "");
+			String resolvedFullName = headerEntry.optString("fullname", colName);
+			String subCity = headerEntry.optString("sub", "");
+			if (id < 0 || colName.isEmpty()) continue;
+
+			ArrayList<String> colors = ColorUtil.parseLocationColors(
+					headerEntry.opt("colors"),
+					headerEntry.opt("color")
+			);
+			if (colors.isEmpty()) colors.add(ColorUtil.DEFAULT_LOCATION_COLOR);
+
+			// 完成單條資料的容錯解析後才寫入靜態表，避免半初始化。
+			colNumber.put(colName, id);
+			fullList.add(colName);
+			switch (cityKind) {
+				case 2: // 域外音
+					foreignList.add(colName);
+					fullName.put(colName, new String[]{resolvedFullName, ""});
+					foreignColors.put(colName, colors);
+					break;
+				case 1: // 地方音
+					cityList.add(colName);
+					isCity.put(colName, true);
+					fullName.put(colName, new String[]{resolvedFullName, subCity});
+					cityColors.put(colName, colors);
+					break;
+				case 0: // 其它表頭信息
+				default:
+					isCity.put(colName, false);
+					fullName.put(colName, new String[]{resolvedFullName, ""});
+					break;
 			}
-			isLoaded = true;
+
+			switch (colName) {
+				case COLUMN_NAME_CHARACTER:
+					authorizedCharaColNum = id; break;
+				case COLUMN_NAME_PRONUNCIATION:
+					authorizedPronColNum = id; break;
+				case COLUMN_NAME_MEANING:
+					meaningsColNum = id; break;
+				case COLUMN_NAME_CLASS_MAJOR:
+					classificationColNum[0] = id; break;
+				case COLUMN_NAME_CLASS_SECONDARY:
+					classificationColNum[1] = id; break;
+				case COLUMN_NAME_CLASS_MINOR:
+					classificationColNum[2] = id; break;
+				case COLUMN_NAME_CONVENTIONAL:
+					commonlyUsedCharaColNum = id; break;
+				case COLUMN_NAME_NOTE:
+					noteColNum = id; break;
+				case COLUMN_NAME_EXAMPLE:
+					exampleColNum = id; break;
+				case COLUMN_NAME_IDS:
+					idsColNum = id; break;
+				case COLUMN_NAME_GRAMMAR_MARKER:
+					grammarMarkerColNum = id; break;
+				case COLUMN_NAME_CELL_NOTE:
+					cellNoteColNum = id; break;
+				default: break;
+			}
 		}
+		isLoaded = true;
+	}
+
+	public static void reset() {
+		isLoaded = false;
+		infoLength = 0;
+		cityList.clear();
+		foreignList.clear();
+		fullList.clear();
+		isCity.clear();
+		colNumber.clear();
+		cityColors.clear();
+		foreignColors.clear();
+		fullName.clear();
+		meaningsColNum = 0;
+		classificationColNum[0] = 0;
+		classificationColNum[1] = 0;
+		classificationColNum[2] = 0;
+		commonlyUsedCharaColNum = 0;
+		noteColNum = 0;
+		authorizedCharaColNum = 0;
+		authorizedPronColNum = 0;
+		exampleColNum = 0;
+		idsColNum = 0;
+		grammarMarkerColNum = 0;
+		cellNoteColNum = 0;
 	}
 	
 	static int getInfoLength() {
@@ -168,10 +196,10 @@ public final class FjbHeaderInfo {
 		return cityList.get(index);
 	}
 	static String getCityColor(String colName) {
-		return cityColor.get(colName);
+		return ColorUtil.primaryLocationColor(cityColors.get(colName));
 	}
 	static String getForeignColor(String colName) {
-		return foreignColor.get(colName);
+		return ColorUtil.primaryLocationColor(foreignColors.get(colName));
 	}
 	static String[] getFullName(String colName) {
 		return fullName.get(colName);

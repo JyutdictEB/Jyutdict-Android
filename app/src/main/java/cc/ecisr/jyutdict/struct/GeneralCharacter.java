@@ -19,10 +19,12 @@ public class GeneralCharacter {
     public Books books = new Books();
 
     public static class SingleLoc {
+        public int id = -1;
         public String division = "";
         public String city = "";
 
         public String color = "";
+        public ArrayList<String> colors = new ArrayList<>();
         public ArrayList<ArrayList<SinglePron>> prons = new ArrayList<>();
         public ArrayList<String> notes = new ArrayList<>();
 
@@ -57,14 +59,17 @@ public class GeneralCharacter {
                 LocationInfo.Location locInfo = LocationInfo.get(locId);
 
                 SingleLoc loc = new SingleLoc();
+                loc.id = locId;
                 if (locInfo != null) {
                     loc.division = locInfo.first;
                     loc.city = locInfo.displayName();
-                    loc.color = locInfo.color;
+                    loc.color = locInfo.primaryColor();
+                    loc.colors.addAll(locInfo.colors);
                 } else {
                     loc.division = "";
                     loc.city = "id=" + locId;
                     loc.color = "#888888";
+                    loc.colors.add("#888888");
                 }
 
                 // 解析讀音數組

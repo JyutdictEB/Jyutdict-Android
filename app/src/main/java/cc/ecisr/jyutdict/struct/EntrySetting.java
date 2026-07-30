@@ -53,4 +53,16 @@ public class EntrySetting {
 		this.isPresentIpa = isPresentIpa;
 		return this;
 	}
+
+	public boolean isAreaColoring() {
+		return isAreaColoring;
+	}
+
+	public float getAreaColoringDarkenRatio() {
+		return areaColoringDarkenRatio;
+	}
+
+	public boolean isUsingNightMode() {
+		return isUsingNightMode;
+	}
 }

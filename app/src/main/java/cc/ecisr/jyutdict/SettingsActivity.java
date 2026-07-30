@@ -33,6 +33,7 @@ import cc.ecisr.jyutdict.utils.ToastUtil;
 public class SettingsActivity extends AppCompatActivity {
     Button btnCheckVersion;
     SettingHandler mHandler;
+    final HttpUtil versionQuery = new HttpUtil(HttpUtil.GET);
 
     static SharedPreferences sp;
     static SharedPreferences.Editor editor;
@@ -74,7 +75,7 @@ public class SettingsActivity extends AppCompatActivity {
                         if (v0>v0This || v1>v1This || v2>v2This) { // 如果有更新
                             ToastUtil.msg(SettingsActivity.this, getResources().getString(R.string.tips_version_detected));
                             String downloadUrl = String.format(Locale.CHINA,
-                                    "http://jyutdict.org/release/%d-%d-%d.apk", v0, v1, v2);
+                                    "https://jyutdict.org/release/%d-%d-%d.apk", v0, v1, v2);
                             ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
                             ClipData mClipData = ClipData.newPlainText("泛粤典下载", downloadUrl);
                             if (cm != null) {
@@ -84,6 +85,12 @@ public class SettingsActivity extends AppCompatActivity {
                             ToastUtil.msg(SettingsActivity.this, getResources().getString(R.string.tips_version_checked));
                         }
                     } catch (Exception ignored) {}
+                    btnCheckVersion.setEnabled(true);
+                    break;
+                case HttpUtil.REQUEST_CONTENT_FAIL:
+                    ToastUtil.msg(SettingsActivity.this,
+                            getString(R.string.error_tips_network, msg.obj.toString()));
+                    btnCheckVersion.setEnabled(true);
                     break;
                 default:
                     break;
@@ -94,8 +101,7 @@ public class SettingsActivity extends AppCompatActivity {
         btnCheckVersion = findViewById(R.id.btn_check_version);
         btnCheckVersion.setText(getResources().getString(R.string.app_version, v0This, v1This, v2This));
         btnCheckVersion.setOnLongClickListener(v -> { // 獲取地名列表
-            new HttpUtil(HttpUtil.GET)
-                    .setUrl("https://jyutdict.org/api/")
+            versionQuery.setUrl("https://jyutdict.org/api/")
                     .setHandler(mHandler, EnumConst.CHECKING_VERSION)
                     .start();
             ToastUtil.msg(SettingsActivity.this, getResources().getString(R.string.tips_version_checking));
@@ -112,6 +118,8 @@ public class SettingsActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        versionQuery.cancel();
+        if (mHandler != null) mHandler.removeCallbacksAndMessages(null);
         super.onDestroy();
     }
 
@@ -150,7 +158,12 @@ public class SettingsActivity extends AppCompatActivity {
             editor.putBoolean("phrase_meaning_domain", switchPhraseMeaningDomain.isChecked());
             editor.putString("theme_mode", newThemeMode);
             editor.putBoolean("ipa_presence", switchIpaPresent.isChecked());
-            editor.putFloat("area_coloring_darken_ratio", Float.parseFloat(editAreaColoringDarkenRatio.getText()));
+            float darkenRatio = 0.92f;
+            try {
+                darkenRatio = Float.parseFloat(editAreaColoringDarkenRatio.getText());
+            } catch (NumberFormatException ignored) {}
+            darkenRatio = Math.max(0.2f, Math.min(2.0f, darkenRatio));
+            editor.putFloat("area_coloring_darken_ratio", darkenRatio);
             editor.apply();
             settings |= switchAdvancedSearch.isChecked() ? 1 : 0;
 

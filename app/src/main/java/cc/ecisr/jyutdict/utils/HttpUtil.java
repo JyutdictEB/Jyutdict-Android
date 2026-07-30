@@ -9,106 +9,237 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
+import java.util.zip.GZIPInputStream;
 
+/**
+ * 輕量只讀 HTTP 客戶端。
+ *
+ * 每次 start() 都會快照 URL、Handler 和成功消息代碼，並取消同一實例的舊請求。
+ * 只有最新一代請求可以向 Handler 投遞結果。
+ */
 public class HttpUtil {
-    private static final String TAG = "`HttpUtil";
+    private static final String TAG = "HttpUtil";
 
-    //public static final Boolean POST = true;
     public static final Boolean GET = false;
 
-    // 未設置請求的 url
     public static final int EMPTY_URL_OR_HANDLER = 9100;
-
-    // 正確接收到回應
     public static final int REQUEST_CONTENT_SUCCESSFULLY = 9200;
-
-    // 請求失敗
     public static final int REQUEST_CONTENT_FAIL = 9201;
 
+    public enum ErrorKind {
+        INVALID_REQUEST,
+        TIMEOUT,
+        NETWORK,
+        HTTP
+    }
+
+    public static final class RequestError {
+        public final ErrorKind kind;
+        public final int statusCode;
+        public final String detail;
+
+        RequestError(ErrorKind kind, int statusCode, String detail) {
+            this.kind = kind;
+            this.statusCode = statusCode;
+            this.detail = detail == null ? "" : detail;
+        }
+
+        @Override
+        public String toString() {
+            if (kind == ErrorKind.HTTP && statusCode > 0) {
+                return String.valueOf(statusCode);
+            }
+            return kind.name().toLowerCase(Locale.ROOT);
+        }
+    }
 
     private String urlStr = "";
     private Handler handler;
-    private GetThread getThread;
-    private final Boolean mode; // False For GET, True For POST
+    private final Boolean mode;
+    private int messageWhat = REQUEST_CONTENT_SUCCESSFULLY;
+    private int failureWhat = REQUEST_CONTENT_FAIL;
 
-    private int messageWhat;
+    private int generation = 0;
+    private volatile GetThread getThread;
+    private volatile HttpURLConnection activeConnection;
 
     public HttpUtil(Boolean mode) {
         this.mode = mode;
     }
 
-    public HttpUtil setUrl(String urlStr) {
+    public synchronized HttpUtil setUrl(String urlStr) {
         this.urlStr = urlStr;
         return this;
     }
-    public HttpUtil setHandler(Handler handler) {
+
+    public synchronized HttpUtil setHandler(Handler handler) {
         this.handler = handler;
-        messageWhat = REQUEST_CONTENT_SUCCESSFULLY;
+        this.messageWhat = REQUEST_CONTENT_SUCCESSFULLY;
+        this.failureWhat = REQUEST_CONTENT_FAIL;
         return this;
     }
-    public HttpUtil setHandler(Handler handler, int what) {
+
+    public synchronized HttpUtil setHandler(Handler handler, int what) {
         this.handler = handler;
         this.messageWhat = what;
+        this.failureWhat = REQUEST_CONTENT_FAIL;
         return this;
     }
 
+    public synchronized HttpUtil setHandler(Handler handler, int successWhat, int failureWhat) {
+        this.handler = handler;
+        this.messageWhat = successWhat;
+        this.failureWhat = failureWhat;
+        return this;
+    }
 
-    public void start() {
-        if (mode == GET) {
-            if (getThread==null || !getThread.isAlive()){
-                getThread = new GetThread();
-                getThread.start();
+    public synchronized void start() {
+        cancelActiveLocked();
+        final int requestGeneration = ++generation;
+        final String requestUrl = urlStr;
+        final Handler requestHandler = handler;
+        final int successWhat = messageWhat;
+        final int requestFailureWhat = failureWhat;
+
+        if (mode != GET || requestUrl == null || requestUrl.isEmpty() || requestHandler == null) {
+            if (requestHandler != null) {
+                deliver(requestHandler, requestGeneration, requestFailureWhat,
+                        new RequestError(ErrorKind.INVALID_REQUEST, 0, "Missing URL or handler"));
             }
+            return;
+        }
+
+        GetThread thread = new GetThread(
+                requestGeneration,
+                requestUrl,
+                requestHandler,
+                successWhat,
+                requestFailureWhat
+        );
+        getThread = thread;
+        thread.start();
+    }
+
+    public synchronized void cancel() {
+        generation++;
+        cancelActiveLocked();
+    }
+
+    private void cancelActiveLocked() {
+        HttpURLConnection connection = activeConnection;
+        activeConnection = null;
+        if (connection != null) {
+            connection.disconnect();
+        }
+
+        GetThread thread = getThread;
+        getThread = null;
+        if (thread != null) {
+            thread.interrupt();
         }
     }
 
-    public class GetThread extends Thread{
-        public void run(){
-            Message m = new Message();
-            HttpURLConnection conn;
-            InputStream is;
-            StringBuilder resultData = new StringBuilder();
-            if (null!=urlStr && !"".equals(urlStr) && handler!=null) {
-                try {
-                    URL url = new URL(urlStr);
-                    Log.i(TAG, "request: " + urlStr);
-                    conn = (HttpURLConnection) url.openConnection();
-                    conn.setRequestMethod("GET"); // GETリクエストを設定
-                    conn.setConnectTimeout(5000);
-                    conn.setReadTimeout(5000);
+    private synchronized boolean isCurrent(int requestGeneration) {
+        return requestGeneration == generation;
+    }
 
-                    if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) { // 成功した
-                        is = conn.getInputStream();
-                        InputStreamReader isr = new InputStreamReader(is);
-                        BufferedReader bufferReader = new BufferedReader(isr);
-                        String inputLine;
-                        while ((inputLine = bufferReader.readLine()) != null) {
-                            resultData.append(inputLine).append("\n");
-                        }
+    private void deliver(Handler target, int requestGeneration, int what, Object payload) {
+        target.post(() -> {
+            if (!isCurrent(requestGeneration)) return;
+            Message message = Message.obtain();
+            message.what = what;
+            message.obj = payload;
+            target.dispatchMessage(message);
+        });
+    }
 
-                        m.what = messageWhat;
-                        m.obj = resultData.toString();
-                        Log.i(TAG, "received, LEN = " + resultData.length() + ", WHAT = " + messageWhat);
-                        Log.v(TAG, "received content: \n" + resultData.toString());
-                    } else {
-                        m.what = REQUEST_CONTENT_FAIL;
-                        m.obj = String.valueOf(conn.getResponseCode());
+    private final class GetThread extends Thread {
+        private final int requestGeneration;
+        private final String requestUrl;
+        private final Handler requestHandler;
+        private final int successWhat;
+        private final int failureWhat;
+
+        GetThread(int requestGeneration, String requestUrl, Handler requestHandler,
+                  int successWhat, int failureWhat) {
+            this.requestGeneration = requestGeneration;
+            this.requestUrl = requestUrl;
+            this.requestHandler = requestHandler;
+            this.successWhat = successWhat;
+            this.failureWhat = failureWhat;
+        }
+
+        @Override
+        public void run() {
+            HttpURLConnection connection = null;
+            try {
+                URL url = new URL(requestUrl);
+                Log.i(TAG, "request: " + url.getPath());
+                connection = (HttpURLConnection) url.openConnection();
+
+                synchronized (HttpUtil.this) {
+                    if (!isCurrent(requestGeneration)) return;
+                    activeConnection = connection;
+                }
+
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(5000);
+                connection.setReadTimeout(5000);
+                connection.setUseCaches(false);
+                connection.setRequestProperty("Accept", "application/json");
+
+                int statusCode = connection.getResponseCode();
+                if (statusCode >= 200 && statusCode < 300) {
+                    InputStream responseStream = connection.getInputStream();
+                    String contentEncoding = connection.getContentEncoding();
+                    if (contentEncoding != null
+                            && contentEncoding.toLowerCase(Locale.ROOT).contains("gzip")) {
+                        responseStream = new GZIPInputStream(responseStream);
                     }
-                    handler.sendMessage(m);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    handler.sendMessage(handler.obtainMessage(REQUEST_CONTENT_FAIL, 0));
-                }
-            } else {
-                if (handler != null) {
-                    handler.sendMessage(handler.obtainMessage(EMPTY_URL_OR_HANDLER, ""));
+                    String body = readBody(responseStream);
+                    Log.i(TAG, "received, LEN = " + body.length() + ", WHAT = " + successWhat);
+                    deliver(requestHandler, requestGeneration, successWhat, body);
                 } else {
-                    Log.e(TAG, "空線程Handler！" + urlStr);
+                    deliver(requestHandler, requestGeneration, failureWhat,
+                            new RequestError(ErrorKind.HTTP, statusCode, "HTTP " + statusCode));
+                }
+            } catch (SocketTimeoutException e) {
+                if (isCurrent(requestGeneration)) {
+                    deliver(requestHandler, requestGeneration, failureWhat,
+                            new RequestError(ErrorKind.TIMEOUT, 0, e.getMessage()));
+                }
+            } catch (IOException e) {
+                if (isCurrent(requestGeneration) && !isInterrupted()) {
+                    Log.w(TAG, "request failed: " + e.getClass().getSimpleName());
+                    deliver(requestHandler, requestGeneration, failureWhat,
+                            new RequestError(ErrorKind.NETWORK, 0, e.getMessage()));
+                }
+            } finally {
+                if (connection != null) {
+                    connection.disconnect();
+                }
+                synchronized (HttpUtil.this) {
+                    if (activeConnection == connection) activeConnection = null;
+                    if (getThread == this) getThread = null;
                 }
             }
         }
-    }
 
-    //class PostThread extends Thread {}
+        private String readBody(InputStream inputStream) throws IOException {
+            StringBuilder result = new StringBuilder();
+            try (InputStream is = inputStream;
+                 InputStreamReader reader = new InputStreamReader(is, StandardCharsets.UTF_8);
+                 BufferedReader bufferedReader = new BufferedReader(reader)) {
+                String line;
+                while ((line = bufferedReader.readLine()) != null) {
+                    result.append(line).append('\n');
+                }
+            }
+            return result.toString();
+        }
+    }
 }

@@ -1,39 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".InfoActivity">
+    android:orientation="vertical">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="25dp"
         android:background="@color/colorPrimary"
-        app:titleTextColor="@color/colorWhite"
         android:elevation="4dp"
-        app:title="@string/menu_info" />
-
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/tab_layout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?attr/clockBackground"
-        app:tabTextColor="?attr/clockTextColorDim"
-        app:tabSelectedTextColor="@color/colorPrimary"
-        app:tabIndicatorColor="@color/colorPrimary"
-        app:tabMode="scrollable" />
+        android:paddingTop="25dp"
+        app:titleTextColor="@color/colorWhite" />
 
     <ProgressBar
-        android:id="@+id/progress_bar"
+        android:id="@+id/reader_progress"
+        style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
         android:layout_height="4dp"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:indeterminate="true"
-        android:visibility="gone" />
+        android:indeterminate="true" />
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -41,20 +27,20 @@
         android:layout_weight="1"
         android:background="?attr/clockBackground">
 
-        <androidx.viewpager2.widget.ViewPager2
-            android:id="@+id/view_pager"
+        <WebView
+            android:id="@+id/reader_web_view"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:visibility="gone" />
 
         <TextView
-            android:id="@+id/error_text"
+            android:id="@+id/reader_error"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
             android:minHeight="48dp"
             android:padding="16dp"
-            android:text="@string/info_load_error_retry"
             android:textColor="?attr/clockTextColorDim"
             android:visibility="gone" />
 

@@ -2,10 +2,90 @@ package cc.ecisr.jyutdict.utils;
 
 import android.graphics.Color;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * ColorUtil 類，用於存放處理顏色相關的函數
  */
 public class ColorUtil {
+    public static final String DEFAULT_LOCATION_COLOR = "#888888";
+
+    private static float clamp(float value, float min, float max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    /**
+     * 解析 API 中的地點顏色。兼容：
+     * 1. 單個顏色字符串
+     * 2. color / colors 字段中的顏色數組
+     * 3. 以逗號、分號或豎線分隔的兼容字符串
+     *
+     * 非法值會被忽略；歷史音使用的純黑色會轉為中性灰色。
+     */
+    public static ArrayList<String> parseLocationColors(Object... rawValues) {
+        ArrayList<String> colors = new ArrayList<>();
+        if (rawValues == null) return colors;
+
+        for (Object rawValue : rawValues) {
+            appendLocationColors(colors, rawValue);
+        }
+        return colors;
+    }
+
+    private static void appendLocationColors(ArrayList<String> colors, Object rawValue) {
+        if (rawValue == null || rawValue == JSONObject.NULL) return;
+
+        if (rawValue instanceof JSONArray) {
+            JSONArray array = (JSONArray) rawValue;
+            for (int i = 0; i < array.length(); i++) {
+                appendLocationColors(colors, array.opt(i));
+            }
+            return;
+        }
+
+        String value = String.valueOf(rawValue).trim();
+        if (value.isEmpty()) return;
+
+        String[] candidates = value.split("[,;|]");
+        for (String candidate : candidates) {
+            String normalized = normalizeLocationColor(candidate);
+            if (normalized != null && !colors.contains(normalized)) {
+                colors.add(normalized);
+            }
+        }
+    }
+
+    public static String primaryLocationColor(List<String> colors) {
+        if (colors != null) {
+            for (String color : colors) {
+                String normalized = normalizeLocationColor(color);
+                if (normalized != null) return normalized;
+            }
+        }
+        return DEFAULT_LOCATION_COLOR;
+    }
+
+    public static String normalizeLocationColor(String colorString) {
+        if (colorString == null) return null;
+        String candidate = colorString.trim();
+        if (candidate.isEmpty()) return null;
+
+        try {
+            int parsed = Color.parseColor(candidate);
+            return parsed == Color.BLACK ? DEFAULT_LOCATION_COLOR : candidate;
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
+    }
+
+    public static int parseColorOrDefault(String colorString) {
+        String normalized = normalizeLocationColor(colorString);
+        return Color.parseColor(normalized != null ? normalized : DEFAULT_LOCATION_COLOR);
+    }
 
     /**
      * 獲取顏色亮度
@@ -13,7 +93,7 @@ public class ColorUtil {
      * @return double 格式，表示顏色的亮度，範圍從 0~252.705
      */
     public static double getLightness(String colorString) {
-        int color = Color.parseColor(colorString);
+        int color = parseColorOrDefault(colorString);
         double r = Color.red(color);
         double g = Color.green(color);
         double b = Color.blue(color);
@@ -31,13 +111,14 @@ public class ColorUtil {
      * @return 以整形數字表示的顏色代碼
      */
     public static int darken(String colorString, double ratio) {
-        return darken(Color.parseColor(colorString), ratio);
+        return darken(parseColorOrDefault(colorString), ratio);
     }
     public static int darken(int color, double ratio) {
+        float safeRatio = clamp((float) ratio, 0.2f, 2.0f);
         float[] hsv = new float[3];
         Color.colorToHSV(color, hsv);
-        hsv[2] *= ratio;
-        hsv[1] /= ratio*ratio;
+        hsv[2] = clamp(hsv[2] * safeRatio, 0f, 1f);
+        hsv[1] = clamp(hsv[1] / (safeRatio * safeRatio), 0f, 1f);
         return Color.HSVToColor(hsv);
     }
 
@@ -53,13 +134,14 @@ public class ColorUtil {
      * @return 以整形數字表示的顏色代碼
      */
     public static int remapValue(String colorString, double a, double b) {
-        int color = Color.parseColor(colorString);
+        int color = parseColorOrDefault(colorString);
         float[] hsv = new float[3];
         Color.colorToHSV(color, hsv);
         double ratio = hsv[2] * (b - a) + a;
 
-        hsv[2] *= ratio;
-        hsv[1] /= ratio*ratio;
+        float safeRatio = clamp((float) ratio, 0.2f, 2.0f);
+        hsv[2] = clamp(hsv[2] * safeRatio, 0f, 1f);
+        hsv[1] = clamp(hsv[1] / (safeRatio * safeRatio), 0f, 1f);
         return Color.HSVToColor(hsv);
     }
 
@@ -67,6 +149,9 @@ public class ColorUtil {
      * 將色相空間分為 max 份，返回第 i 份顏色，i 從 1 開始計
      */
     public static int ithColorInHsv(int i, int max) {
+        if (max <= 0) {
+            return Color.parseColor(DEFAULT_LOCATION_COLOR);
+        }
         float[] hsv = new float[3];
         hsv[0] = (float)((int)(i/2f+1) + ((i%2==0)?(int)(max/2f-0.5):0) - 1) * 360 / max;
         hsv[1] = 0.4f;

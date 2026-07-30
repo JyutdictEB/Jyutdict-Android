@@ -45,8 +45,6 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         holder.tvCharaExtra.setText(extra);
         holder.tvRightTop.setText(wanshyu);
         holder.tvRightBottom.setText(location);
-        holder.tvRightTop.setTextIsSelectable(true);
-
         int lyCharaVisibility = (header.length()!=0 || info.length()!=0) ? View.VISIBLE : View.GONE;
         int tvContentInfoVisibility = (info.length()!=0) ? View.VISIBLE : View.GONE;
         int tvContentExtraVisibility = (extra.length()!=0) ? View.VISIBLE : View.GONE;
@@ -77,8 +75,8 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 
     public static class LinearViewHolder extends RecyclerView.ViewHolder {
         LinearLayout lyChara;
-        TextView tvCharaHeader, tvCharaInfo, tvCharaExtra, tvRightTop;
-        SelectableTextView tvRightBottom;
+        TextView tvCharaHeader, tvCharaInfo, tvCharaExtra;
+        SelectableTextView tvRightTop, tvRightBottom;
 
         LinearViewHolder(@NonNull View itemView) {
             super(itemView);

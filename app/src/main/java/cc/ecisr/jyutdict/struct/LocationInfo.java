@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import cc.ecisr.jyutdict.utils.ColorUtil;
+
 /**
  * 管理通用字表的地點列表（從 /api/v1.0/detail?chara= 獲取）
  * 用於：
@@ -28,13 +30,36 @@ public class LocationInfo {
         public String first;   // 片區，如 "四邑片"
         public String second;  // 市，如 "鶴山"
         public String third;   // 管區，如 "沙坪"
-        public String color;   // 顏色，如 "#e57d99"
+        public String detailedName;
+        public String sheetAuthor;
+        public String sheetStatistic;
+        public String sheetInfo;
+        public boolean hasPhonology;
+        public final ArrayList<String> colors = new ArrayList<>();
         public double longitude;
         public double latitude;
 
         /** 返回用於顯示的城市名（市+管區），如 "鶴山沙坪" */
         public String displayName() {
             return second + third;
+        }
+
+        public String displayTitle() {
+            return detailedName == null || detailedName.isEmpty()
+                    ? displayName()
+                    : detailedName;
+        }
+
+        public String hierarchy() {
+            ArrayList<String> levels = new ArrayList<>();
+            if (first != null && !first.isEmpty()) levels.add(first);
+            if (second != null && !second.isEmpty()) levels.add(second);
+            if (third != null && !third.isEmpty()) levels.add(third);
+            return android.text.TextUtils.join(" · ", levels);
+        }
+
+        public String primaryColor() {
+            return ColorUtil.primaryLocationColor(colors);
         }
     }
 
@@ -45,7 +70,7 @@ public class LocationInfo {
      *                  "first":"歷史音","second":"1884新甯","third":"甌城","color":"#000000"}, ...]
      */
     public static void load(JSONArray jsonArray) {
-        if (isLoaded) return;
+        isLoaded = false;
         locationMap.clear();
         locationList.clear();
         for (int i = 0; i < jsonArray.length(); i++) {
@@ -56,13 +81,21 @@ public class LocationInfo {
                 loc.first = obj.optString("first", "");
                 loc.second = obj.optString("second", "");
                 loc.third = obj.optString("third", "");
-                loc.color = obj.optString("color", "#888888");
+                loc.detailedName = nullableString(obj, "detailed_name");
+                loc.sheetAuthor = nullableString(obj, "sheet_author");
+                loc.sheetStatistic = nullableString(obj, "sheet_statistic");
+                loc.sheetInfo = nullableString(obj, "sheet_info");
+                loc.hasPhonology = obj.optInt("has_phonology", 0) != 0
+                        || obj.optBoolean("has_phonology", false);
+                loc.colors.addAll(ColorUtil.parseLocationColors(
+                        obj.opt("colors"),
+                        obj.opt("color")
+                ));
+                if (loc.colors.isEmpty()) {
+                    loc.colors.add(ColorUtil.DEFAULT_LOCATION_COLOR);
+                }
                 loc.longitude = obj.optDouble("longitude", 0);
                 loc.latitude = obj.optDouble("latitude", 0);
-                // 歷史音（色="#000000"）用灰色替代
-                if ("#000000".equals(loc.color)) {
-                    loc.color = "#888888";
-                }
                 locationMap.put(loc.id, loc);
                 locationList.add(loc);
             } catch (JSONException e) {
@@ -70,6 +103,10 @@ public class LocationInfo {
             }
         }
         isLoaded = true;
+    }
+
+    private static String nullableString(JSONObject object, String key) {
+        return object.isNull(key) ? "" : object.optString(key, "");
     }
 
     public static Location get(int id) {

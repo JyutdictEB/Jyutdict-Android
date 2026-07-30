@@ -38,8 +38,11 @@ import android.text.SpannableStringBuilder;
 import cc.ecisr.jyutdict.struct.FjbCharacter;
 import cc.ecisr.jyutdict.struct.EntrySetting;
 import cc.ecisr.jyutdict.struct.GeneralCharacterManager;
+import cc.ecisr.jyutdict.utils.ColorUtil;
 import cc.ecisr.jyutdict.utils.ThemeUtil;
 import cc.ecisr.jyutdict.utils.ToastUtil;
+import cc.ecisr.jyutdict.widget.LocationClickSpan;
+import cc.ecisr.jyutdict.widget.LocationLabelSpan;
 
 public class ResultFragment extends Fragment {
     private static final String TAG = "`ResultFragment";
@@ -49,6 +52,7 @@ public class ResultFragment extends Fragment {
     private String rawReceivedData;
     int receivedMode = QUERYING_CHARA;
     public static HashSet<String> pronCityFilter = new HashSet<>();
+    public static HashSet<String> pronBookFilter = new HashSet<>();
 
     // TODO 不 parse JSON in Fragment
 
@@ -129,7 +133,6 @@ public class ResultFragment extends Fragment {
 
     public void refreshResult() {
         if (rawReceivedData==null || rawReceivedData.isEmpty()) return;
-        ResultItemAdapter.ResultInfo.clearItem();
         try {
             parseJson(rawReceivedData, receivedMode);
         } catch (JSONException e) {
@@ -165,8 +168,31 @@ public class ResultFragment extends Fragment {
     void parseJson(String jsonString, int queryObjectWhat) throws JSONException {
         if (getActivity()==null) return;
         if (mRvMain.getAdapter() == null) return;
-        rawReceivedData = jsonString;
-        receivedMode = queryObjectWhat;
+
+        int mode = queryObjectWhat & QUERYING_MODE_MASK;
+        if (mode == QUERYING_PRON) {
+            new JSONObject(jsonString);
+        } else {
+            new JSONArray(jsonString);
+        }
+
+        ArrayList<ArrayList<Spanned>> previousItems =
+                new ArrayList<>(ResultItemAdapter.ResultInfo.list);
+        ResultItemAdapter.ResultInfo.clearItem();
+
+        try {
+            parseJsonValidated(jsonString, queryObjectWhat);
+            rawReceivedData = jsonString;
+            receivedMode = queryObjectWhat;
+        } catch (JSONException | RuntimeException e) {
+            ResultItemAdapter.ResultInfo.list.clear();
+            ResultItemAdapter.ResultInfo.list.addAll(previousItems);
+            mRvMain.getAdapter().notifyDataSetChanged();
+            throw e;
+        }
+    }
+
+    private void parseJsonValidated(String jsonString, int queryObjectWhat) throws JSONException {
 
         SharedPreferences sp = getActivity().getSharedPreferences("settings", Context.MODE_PRIVATE);
         EntrySetting entrySettings = new EntrySetting(QUERYING_SHEET)
@@ -189,7 +215,7 @@ public class ResultFragment extends Fragment {
                 }
                 break;
             case QUERYING_PRON:
-                parseJsonPron(jsonString);
+                parseJsonPron(jsonString, entrySettings);
                 break;
             case QUERYING_SHEET:
                 FjbCharacter character; // TODO: Use ManagerClass like QUERYING_CHARA.
@@ -250,7 +276,7 @@ public class ResultFragment extends Fragment {
      *
      * @param jsonString 服務器返回的 JSON 字符串
      */
-    private void parseJsonPron(String jsonString) throws JSONException {
+    private void parseJsonPron(String jsonString, EntrySetting entrySettings) throws JSONException {
         JSONObject root = new JSONObject(jsonString);
         JSONArray wanshyuArray = root.optJSONArray("韻書");
         JSONArray areasArray = root.optJSONArray("各地");
@@ -261,6 +287,7 @@ public class ResultFragment extends Fragment {
                 JSONObject obj = wanshyuArray.optJSONObject(i);
                 if (obj == null) continue;
                 String bookName = obj.optString("__name", "韻書");
+                if (pronBookFilter.contains(bookName)) continue;
                 SpannableStringBuilder bookNameSsb = new SpannableStringBuilder(bookName);
                 SpannableStringBuilder pronListSsb = new SpannableStringBuilder();
 
@@ -307,6 +334,32 @@ public class ResultFragment extends Fragment {
                 }
 
                 SpannableStringBuilder cityNameSsb = new SpannableStringBuilder(cityName);
+                if (loc != null && cityNameSsb.length() > 0) {
+                    int[] locationColors = new int[entrySettings.isAreaColoring()
+                            ? loc.colors.size()
+                            : 0];
+                    double ratio = entrySettings.isUsingNightMode()
+                            ? 2 - entrySettings.getAreaColoringDarkenRatio()
+                            : entrySettings.getAreaColoringDarkenRatio();
+                    for (int colorIndex = 0; colorIndex < locationColors.length; colorIndex++) {
+                        locationColors[colorIndex] = ColorUtil.darken(
+                                loc.colors.get(colorIndex),
+                                ratio
+                        );
+                    }
+                    cityNameSsb.setSpan(
+                            new LocationLabelSpan(cityName, locationColors),
+                            0,
+                            cityNameSsb.length(),
+                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    );
+                    cityNameSsb.setSpan(
+                            new LocationClickSpan(loc.id),
+                            0,
+                            cityNameSsb.length(),
+                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    );
+                }
                 SpannableStringBuilder pronListSsb = new SpannableStringBuilder();
 
                 Iterator<String> keys = obj.keys();

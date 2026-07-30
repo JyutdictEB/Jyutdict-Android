@@ -32,6 +32,7 @@
     <string name="search_enable_regex">使用正則</string>
     <string name="search_filtering_area">篩選地點</string>
     <string name="search_filtering_area_pron">篩選查音地點</string>
+    <string name="search_filter_book_item">韻書 · %1$s</string>
     <string name="search_coloring_jpp_partial">音節高亮</string>
     <string name="search_coloring_jpp_partial_notice">選擇所需對比的音節部分\n不選則無高亮</string>
     <string name="search_coloring_jpp_partial_inner">單字內部對比</string>
@@ -47,6 +48,7 @@
     <!-- Toast Message-->
     <string name="error_tips_network">網絡或服務器錯誤，錯誤碼：%1$s</string>
     <string name="error_tips_network_out_of_time">未能連接服務器</string>
+    <string name="error_tips_data">資料格式已更新，暫時無法顯示</string>
     <string name="tips_version_checking">正在檢測更新版本</string>
     <string name="tips_version_checked">已为最新</string>
     <string name="tips_version_detected">有新版本，請於「幫助」頁面底部進入下載地址</string>
@@ -57,6 +59,19 @@
     <!-- InfoActivity -->
     <string name="info_loading">加載中...</string>
     <string name="info_load_error">加載失敗，請檢查網絡連接</string>
+    <string name="info_load_error_retry">加載失敗，點按重試</string>
+    <string name="info_empty">暫時沒有可閱讀的文章</string>
+    <string name="info_bundled_title">說明</string>
+
+    <!-- Location details and read-only readers -->
+    <string name="location_no_metadata">暫無地點詳細信息</string>
+    <string name="location_article">地點介紹</string>
+    <string name="location_phonology">音系表</string>
+    <string name="location_phonology_unavailable">尚無音系表</string>
+    <string name="location_article_unavailable">此地點暫無介紹文章</string>
+    <string name="location_article_title">%1$s · 地點介紹</string>
+    <string name="location_phonology_title">%1$s · 音系表</string>
+    <string name="location_close">關閉</string>
 
     <!-- SettingActivity -->
     <string name="title_activity_settings">設置</string>

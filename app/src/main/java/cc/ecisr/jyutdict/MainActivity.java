@@ -41,7 +41,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -49,6 +48,7 @@ import java.util.Set;
 import cc.ecisr.jyutdict.struct.FjbHeaderInfo;
 import cc.ecisr.jyutdict.struct.GeneralCharacterManager;
 import cc.ecisr.jyutdict.struct.LocationInfo;
+import cc.ecisr.jyutdict.utils.ApiUrlBuilder;
 import cc.ecisr.jyutdict.utils.ImmersiveBarUtil;
 import cc.ecisr.jyutdict.utils.JyutpingUtil;
 import cc.ecisr.jyutdict.utils.StringUtil;
@@ -64,6 +64,12 @@ import cc.ecisr.jyutdict.widget.SwitchCustomized;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "`MainActivity";
     private static final String URL_API_ROOT = "https://jyutdict.org/api/v1.0/";
+    private static final int INITIALIZE_LOCATIONS_FAIL = 3288;
+    private static final int INITIALIZE_DETAIL_LOCATIONS_FAIL = 3289;
+    private static final int SEARCH_SUCCESS_BASE = 0x5000;
+    private static final int SEARCH_SUCCESS_MASK = 0xFF00;
+    private static final int SEARCH_MODE_MASK = 0x00FF;
+    private static final int SEARCH_FAIL = 0x5100;
 
     AppCompatEditText inputEditText;
     Button btnQueryConfirm, btnQueryClear, btnFilterArea, btnFilterAreaPron, btnColoringJppPartial;
@@ -95,8 +101,9 @@ public class MainActivity extends AppCompatActivity {
     // 用於網絡線程與主線程間的通信
     MainHandler mainHandler;
     // 用於向服務器發送請求，與接收回應
-    HttpUtil query = new HttpUtil(HttpUtil.GET);
-    HttpUtil locationQuery = new HttpUtil(HttpUtil.GET);
+    final HttpUtil headerQuery = new HttpUtil(HttpUtil.GET);
+    final HttpUtil searchQuery = new HttpUtil(HttpUtil.GET);
+    final HttpUtil locationQuery = new HttpUtil(HttpUtil.GET);
 
     // 指示搜索模式，查通用表字/查通用表音/查泛粵表
     // 在按下查詢按鈕時更新
@@ -151,8 +158,18 @@ public class MainActivity extends AppCompatActivity {
         initPermission();
 
         mainHandler = new MainHandler(Looper.getMainLooper(), msg -> {
-            loadingProgressBar.setVisibility(View.GONE);
-            btnColoringJppPartial.setEnabled(true);
+            if ((msg.what & SEARCH_SUCCESS_MASK) == SEARCH_SUCCESS_BASE) {
+                int responseMode = msg.what & SEARCH_MODE_MASK;
+                try {
+                    resultFragment.parseJson(msg.obj.toString(), responseMode);
+                } catch (JSONException | RuntimeException e) {
+                    Log.e(TAG, "Unable to parse search response", e);
+                    ToastUtil.msg(this, getString(R.string.error_tips_data));
+                }
+                finishSearchUi();
+                return;
+            }
+
             switch (msg.what) {
                 case INITIALIZE_LOCATIONS: // 初始化泛粵字表表頭
                     try {
@@ -162,7 +179,10 @@ public class MainActivity extends AppCompatActivity {
                         FjbHeaderInfo.load(headerArray);
                         setLocationsAdapter();
                         if (!isJustInitialized  && inputEditText.getText()!=null && inputEditText.getText().length() != 0) search();
-                    } catch (JSONException ignored) {}
+                    } catch (JSONException | RuntimeException e) {
+                        Log.e(TAG, "Unable to parse sheet header", e);
+                        ToastUtil.msg(this, getString(R.string.error_tips_data));
+                    }
                     break;
                 case INITIALIZE_DETAIL_LOCATIONS: // 初始化通用字表地點列表
                     try {
@@ -174,25 +194,26 @@ public class MainActivity extends AppCompatActivity {
                         for (LocationInfo.Location loc : LocationInfo.getAll()) {
                             GeneralCharacterManager.cityList.add(loc.displayName());
                         }
-                    } catch (JSONException ignored) {}
-                    break;
-                case HttpUtil.REQUEST_CONTENT_SUCCESSFULLY:
-                    try {
-                        resultFragment.parseJson(msg.obj.toString(), queryingMode | queryingModeConfig);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+                    } catch (JSONException | RuntimeException e) {
+                        Log.e(TAG, "Unable to parse location metadata", e);
+                        ToastUtil.msg(this, getString(R.string.error_tips_data));
                     }
                     break;
-                case HttpUtil.REQUEST_CONTENT_FAIL:
-                    String toastMessage = "0".equals(msg.obj.toString()) ?
-                            getString(R.string.error_tips_network_out_of_time) :
-                            getString(R.string.error_tips_network, msg.obj.toString());
-                    ToastUtil.msg(this, toastMessage);
+                case INITIALIZE_LOCATIONS_FAIL:
+                    isPrepared = false;
+                    showRequestError(msg.obj);
+                    btnQueryConfirm.setEnabled(true);
+                    break;
+                case INITIALIZE_DETAIL_LOCATIONS_FAIL:
+                    showRequestError(msg.obj);
+                    break;
+                case SEARCH_FAIL:
+                    showRequestError(msg.obj);
+                    finishSearchUi();
                     break;
                 default:
                     break;
             }
-            btnQueryConfirm.setEnabled(true);
         });
 
         // 查詢按鈕
@@ -200,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
             isJustInitialized = false;
             if (!isPrepared) {
                 ToastUtil.msg(this, "正在獲取地方信息，請稍候");
-                query.start(); // 重新向服務器發送請求
+                headerQuery.start(); // 重新向服務器發送請求
                 return;
             }
             search();
@@ -266,8 +287,12 @@ public class MainActivity extends AppCompatActivity {
         switchQueryOpts1.setOnCheckedChangeListener((buttonView, isChecked) -> setSearchView());
         switchQueryOptsRev.setOnCheckedChangeListener((buttonView, isChecked) -> setSearchView());
         //inputEditText.setOnClickListener(v -> toggleNightTheme());
-        GeneralCharacterManager.cityFilter = (HashSet<String>) sp.getStringSet("querying_filter_city", new HashSet<>());
-        ResultFragment.pronCityFilter = (HashSet<String>) sp.getStringSet("querying_filter_city_pron", new HashSet<>());
+        GeneralCharacterManager.cityFilter = new HashSet<>(
+                sp.getStringSet("querying_filter_city", new HashSet<>()));
+        ResultFragment.pronCityFilter = new HashSet<>(
+                sp.getStringSet("querying_filter_city_pron", new HashSet<>()));
+        ResultFragment.pronBookFilter = new HashSet<>(
+                sp.getStringSet("querying_filter_book_pron", new HashSet<>()));
 
         queryingModeConfig = sp.getInt("querying_mode_config", 0);
         btnColoringJppPartial.setOnClickListener(view -> {
@@ -307,11 +332,21 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
             ArrayList<String> names = new ArrayList<>();
+            String fanwanLabel = getString(R.string.search_filter_book_item, "分韻");
+            String jingwaaLabel = getString(R.string.search_filter_book_item, "英華");
+            names.add(fanwanLabel);
+            names.add(jingwaaLabel);
             for (LocationInfo.Location loc : locList) {
                 names.add(loc.displayName());
             }
-            // pronCityFilter 存的是 id 字符串，轉為名稱 filter
+            // 對話框顯示名稱；內部仍分別保存韻書名與地點 id。
             HashSet<String> nameFilter = new HashSet<>();
+            if (ResultFragment.pronBookFilter.contains("分韻")) {
+                nameFilter.add(fanwanLabel);
+            }
+            if (ResultFragment.pronBookFilter.contains("英華")) {
+                nameFilter.add(jingwaaLabel);
+            }
             for (LocationInfo.Location loc : locList) {
                 if (ResultFragment.pronCityFilter.contains(String.valueOf(loc.id))) {
                     nameFilter.add(loc.displayName());
@@ -322,7 +357,11 @@ public class MainActivity extends AppCompatActivity {
                     names,
                     nameFilter,
                     newFilter -> {
-                        // 從名稱 filter 轉回 id filter
+                        HashSet<String> bookFilter = new HashSet<>();
+                        if (newFilter.contains(fanwanLabel)) bookFilter.add("分韻");
+                        if (newFilter.contains(jingwaaLabel)) bookFilter.add("英華");
+                        ResultFragment.pronBookFilter = bookFilter;
+
                         HashSet<String> idFilter = new HashSet<>();
                         for (LocationInfo.Location loc : locList) {
                             if (newFilter.contains(loc.displayName())) {
@@ -342,7 +381,7 @@ public class MainActivity extends AppCompatActivity {
 
         boolean hadCheckedInfoActivity = sp.getBoolean("had_checked_info_activity_2", false);
         if (hadCheckedInfoActivity) {
-            if (!isPrepared) { query.start(); }
+            if (!isPrepared) { headerQuery.start(); }
         } else {
             displayTipsMessageBox();
         }
@@ -357,7 +396,7 @@ public class MainActivity extends AppCompatActivity {
      * @param onConfirm  確定時回調，傳入最終的 filter 集合
      */
     private void showFilterDialog(int titleRes, ArrayList<String> itemNames,
-                                  HashSet<String> filter, java.util.function.Consumer<HashSet<String>> onConfirm) {
+                                  HashSet<String> filter, FilterResultListener onConfirm) {
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setTitle(titleRes);
 
@@ -400,8 +439,12 @@ public class MainActivity extends AppCompatActivity {
         });
 
         builder.setView(dialogView);
-        builder.setPositiveButton(R.string.button_confirm, (dialog, which) -> onConfirm.accept(tempFilter));
+        builder.setPositiveButton(R.string.button_confirm, (dialog, which) -> onConfirm.onConfirm(tempFilter));
         builder.create().show();
+    }
+
+    private interface FilterResultListener {
+        void onConfirm(HashSet<String> filter);
     }
 
     private AlertDialog.Builder getDialogForColoringJpp() {
@@ -431,23 +474,53 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void finishSearchUi() {
+        loadingProgressBar.setVisibility(View.GONE);
+        btnColoringJppPartial.setEnabled(true);
+        btnQueryConfirm.setEnabled(true);
+    }
+
+    private void showRequestError(Object errorObject) {
+        if (errorObject instanceof HttpUtil.RequestError
+                && ((HttpUtil.RequestError) errorObject).kind == HttpUtil.ErrorKind.TIMEOUT) {
+            ToastUtil.msg(this, getString(R.string.error_tips_network_out_of_time));
+            return;
+        }
+        String errorCode = errorObject == null ? "network" : errorObject.toString();
+        ToastUtil.msg(this, getString(R.string.error_tips_network, errorCode));
+    }
+
     private void setLocationsAdapter() {
         if (isPrepared) return;
         if (FjbHeaderInfo.isLoaded) {
+            locationsAdapter.clear();
+            locationsAdapter.add(getString(R.string.select_drop_down_standard));
+            locationsAdapter.add(getString(R.string.select_drop_down_convenience));
             locationsAdapter.addAll(FjbHeaderInfo.getCityList());
+            int savedLocation = sp.getInt("spinner_selected_position", 0);
+            int lastLocation = Math.max(0, locationsAdapter.getCount() - 1);
             spinnerQueryLocation.setSelection(
-                    sp.getInt("spinner_selected_position", 0));
+                    Math.max(0, Math.min(savedLocation, lastLocation)));
             isPrepared = true;
-            query.setHandler(mainHandler);
             // 在泛粵字表表頭初始化完成後，啟動地點列表請求（如果尚未加載）
             if (!LocationInfo.isLoaded) {
-                locationQuery.setUrl(URL_API_ROOT + "detail?chara=")
-                        .setHandler(mainHandler, INITIALIZE_DETAIL_LOCATIONS)
+                locationQuery.setUrl(ApiUrlBuilder.from(URL_API_ROOT, "detail")
+                                .add("chara", "")
+                                .build())
+                        .setHandler(
+                                mainHandler,
+                                INITIALIZE_DETAIL_LOCATIONS,
+                                INITIALIZE_DETAIL_LOCATIONS_FAIL
+                        )
                         .start();
             }
         } else {
-            query.setUrl(URL_API_ROOT + "sheet")
-                    .setHandler(mainHandler, INITIALIZE_LOCATIONS);
+            headerQuery.setUrl(ApiUrlBuilder.from(URL_API_ROOT, "sheet").build())
+                    .setHandler(
+                            mainHandler,
+                            INITIALIZE_LOCATIONS,
+                            INITIALIZE_LOCATIONS_FAIL
+                    );
         }
     }
 
@@ -521,6 +594,7 @@ public class MainActivity extends AppCompatActivity {
         editor.putInt("querying_mode_config", queryingModeConfig);
         editor.putStringSet("querying_filter_city", GeneralCharacterManager.cityFilter);
         editor.putStringSet("querying_filter_city_pron", ResultFragment.pronCityFilter);
+        editor.putStringSet("querying_filter_book_pron", ResultFragment.pronBookFilter);
         editor.apply();
     }
 
@@ -532,8 +606,7 @@ public class MainActivity extends AppCompatActivity {
      * @param string 輸入框中的字符串
      */
     private void setInputString(String string) {
-        inputString = new String(string.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8)
-                .replace('&',' ');
+        inputString = string;
     }
 
     /**
@@ -568,72 +641,99 @@ public class MainActivity extends AppCompatActivity {
      */
     private void search() {
         if (inputEditText.getText() == null) { return; }
+        if (!isPrepared) {
+            ToastUtil.msg(this, "正在獲取地方信息，請稍候");
+            headerQuery.start();
+            return;
+        }
         setInputString(inputEditText.getText().toString()); // 必须放在最前面
         if (isPrepared && "".equals(inputString) && !(switchQueryOpts1.isChecked() && !switchQueryOptsRev.isChecked())) {
             return;
         } // 搜索欄爲空時不檢索
 
-        ResultItemAdapter.ResultInfo.clearItem();
         loadingProgressBar.setVisibility(View.VISIBLE);
         btnColoringJppPartial.setEnabled(false);
-        StringBuilder url = new StringBuilder(URL_API_ROOT);
+        ApiUrlBuilder url;
+        int modeSnapshot;
         if (switchQueryOpts1.isChecked()) { // 檢索泛粵字表
-            queryingMode = QUERYING_SHEET;
+            modeSnapshot = QUERYING_SHEET;
+            url = ApiUrlBuilder.from(URL_API_ROOT, "sheet");
             if (inputString.isEmpty() && !switchQueryOptsRev.isChecked()) {
-                url.append("sheet?random=10");
+                url.add("random", 10);
             } else {
-                url.append("sheet?q=").append(inputString);
+                url.add("q", inputString);
+                String sheetMode;
                 if (StringUtil.isAlphaString(inputString) && !switchQueryOptsRev.isChecked()) {
-                    url.append("&mode=trim");
+                    sheetMode = "trim";
                 } else if (switchQueryOptsRev.isChecked()) {
-                    url.append("&mode=meaning");
+                    sheetMode = "meaning";
                 } else {
-                    url.append("&mode=fuzzy");
+                    sheetMode = "fuzzy";
                 }
+                if (switchQueryOptsRegex.isChecked()) {
+                    sheetMode = "regex";
+                }
+                url.add("mode", sheetMode);
+
                 int selectedColumn = spinnerQueryLocation.getSelectedItemPosition();
 
                 if (selectedColumn >= 2) {
                     String col = FjbHeaderInfo.getCityNameByNumber(selectedColumn - 2);
-                    url.append("&col=").append(col);
+                    url.add("col", col);
                 } else if (selectedColumn == 1) {
-                    if (StringUtil.isAlphaString(inputString)) { url.append("&col=").append("檢"); }
-                }
-
-                if (switchQueryOptsRegex.isChecked()) {
-                    url.append("&mode=regex");
+                    if (StringUtil.isAlphaString(inputString)) {
+                        url.add("col", "檢");
+                    }
                 }
             }
         } else { // 檢索通用字表
+            url = ApiUrlBuilder.from(URL_API_ROOT, "detail");
             if (StringUtil.isJyutpingInput(inputString)) { // 音（允許空格作模糊佔位）
                 String[] parts = JyutpingUtil.parseJyutpingQuery(inputString);
                 if (parts != null) {
-                    queryingMode = QUERYING_PRON;
-                    url.append("detail?in=").append(parts[0])
-                       .append("&nu=").append(parts[1])
-                       .append("&co=").append(parts[2]);
+                    modeSnapshot = QUERYING_PRON;
+                    url.add("in", parts[0])
+                            .add("nu", parts[1])
+                            .add("co", parts[2]);
                     if (parts[3] != null && !parts[3].isEmpty()) {
-                        url.append("&to=").append(parts[3]);
+                        url.add("to", parts[3]);
                     }
+                    addPronunciationBookFilter(url);
                 } else {
                     // 解析失敗，回退為查字模式
-                    queryingMode = QUERYING_CHARA;
-                    url.append("detail?chara=").append(inputString);
+                    modeSnapshot = QUERYING_CHARA;
+                    url.add("chara", inputString);
                 }
             } else { // 字
-                queryingMode = QUERYING_CHARA;
-                url.append("detail?chara=").append(inputString);
+                modeSnapshot = QUERYING_CHARA;
+                url.add("chara", inputString);
             }
         }
-        //query.setUrl("http://www.baidu.com/").start();
-        query.setUrl(url.toString()).start(); // GET請求服務器API
+        queryingMode = modeSnapshot;
+        int responseMode = modeSnapshot | queryingModeConfig;
+        searchQuery.setUrl(url.build())
+                .setHandler(
+                        mainHandler,
+                        SEARCH_SUCCESS_BASE | responseMode,
+                        SEARCH_FAIL
+                )
+                .start();
         btnQueryConfirm.setEnabled(false);
         saveLayoutStatus();
     }
 
-    private final ActivityResultLauncher<Intent> startActivityInfo = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> query.start()
-    );
+    private void addPronunciationBookFilter(ApiUrlBuilder url) {
+        boolean hidesFanwan = ResultFragment.pronBookFilter.contains("分韻");
+        boolean hidesJingwaa = ResultFragment.pronBookFilter.contains("英華");
+        if (hidesFanwan && hidesJingwaa) {
+            url.add("wanshyu", "none");
+        } else if (hidesFanwan) {
+            url.add("wanshyu", "jingwaa");
+        } else if (hidesJingwaa) {
+            url.add("wanshyu", "fanwan");
+        }
+    }
+
     private final ActivityResultLauncher<Intent> startActivitySetting = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
@@ -674,9 +774,7 @@ public class MainActivity extends AppCompatActivity {
                 .setMessage("在使用之前，請務必閱覽本應用之說明。\n\n起碼把紅字看完！\n\n註意：內含隱私聲明，返回此界面則代表同意該聲明。")
                 .setPositiveButton("打開「幫助」頁面",
                         (dialogInterface, i) -> {
-                            startActivityInfo.launch(
-                                    new Intent(MainActivity.this, InfoActivity.class)
-                            );
+                            startActivity(new Intent(MainActivity.this, InfoActivity.class));
                             sp.edit().putBoolean("had_checked_info_activity_2", true).apply();
                         })
                 .setCancelable(false)
@@ -731,6 +829,17 @@ public class MainActivity extends AppCompatActivity {
         public interface IHandleMessageProcessor {
             void handleMessage(Message msg);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        headerQuery.cancel();
+        locationQuery.cancel();
+        searchQuery.cancel();
+        if (mainHandler != null) {
+            mainHandler.removeCallbacksAndMessages(null);
+        }
+        super.onDestroy();
     }
 
     @Override

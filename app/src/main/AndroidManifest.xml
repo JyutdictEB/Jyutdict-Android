@@ -10,6 +10,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
+        <activity android:name=".LocationReaderActivity" />
         <activity android:name=".InfoActivity" />
         <activity
             android:name=".SettingsActivity"
