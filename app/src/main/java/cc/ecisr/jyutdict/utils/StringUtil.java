@@ -27,6 +27,18 @@ public class StringUtil {
     }
 
     /**
+     * 泛粵字表以非 ASCII 輸入識別查字，以 ASCII 輸入識別查音。
+     * 此規則與網頁端一致，也避免所選地點列攔截漢字查詢。
+     */
+    public static boolean isSheetPronunciationInput(final String s) {
+        if (s == null || s.isEmpty()) return false;
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) > 0x7f) return false;
+        }
+        return true;
+    }
+
+    /**
      * 生成漢字的統一碼
      * 支持擴展B區及以後的漢字
      * 允許以多個漢字作輸入

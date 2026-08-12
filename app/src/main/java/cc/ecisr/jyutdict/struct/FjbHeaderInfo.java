@@ -19,6 +19,7 @@ public final class FjbHeaderInfo {
 	
 	public static final String COLUMN_NAME_CHARACTER = "繁";
 	public static final String COLUMN_NAME_PRONUNCIATION = "綜";
+	public static final String COLUMN_NAME_RETRIEVAL = "檢";
 	public static final String COLUMN_NAME_MEANING = "釋義";
 	public static final String COLUMN_NAME_CONVENTIONAL = "俗/常";
 	public static final String COLUMN_NAME_NOTE = "註";
@@ -41,6 +42,7 @@ public final class FjbHeaderInfo {
 	private static final Map<String, Boolean> isCity = new HashMap<>();
 	private static final Map<String, Integer> colNumber = new HashMap<>();  // colNumber.get("穗")=>0 etc
 	private static final Map<String, ArrayList<String>> cityColors = new HashMap<>();
+	private static final Map<String, ArrayList<String>> columnColors = new HashMap<>();
 	private static final Map<String, String[]> fullName = new HashMap<>(); // fullName.get("穗")=>["广州",""] etc
 	
 	private static final Map<String, ArrayList<String>> foreignColors = new HashMap<>();
@@ -88,6 +90,7 @@ public final class FjbHeaderInfo {
 			// 完成單條資料的容錯解析後才寫入靜態表，避免半初始化。
 			colNumber.put(colName, id);
 			fullList.add(colName);
+			columnColors.put(colName, colors);
 			switch (cityKind) {
 				case 2: // 域外音
 					foreignList.add(colName);
@@ -147,6 +150,7 @@ public final class FjbHeaderInfo {
 		isCity.clear();
 		colNumber.clear();
 		cityColors.clear();
+		columnColors.clear();
 		foreignColors.clear();
 		fullName.clear();
 		meaningsColNum = 0;
@@ -195,11 +199,21 @@ public final class FjbHeaderInfo {
 	static public String getCityNameByNumber(int index) {
 		return cityList.get(index);
 	}
-	static String getCityColor(String colName) {
-		return ColorUtil.primaryLocationColor(cityColors.get(colName));
+	static ArrayList<String> getCityColors(String colName) {
+		return copyColors(cityColors.get(colName));
 	}
-	static String getForeignColor(String colName) {
-		return ColorUtil.primaryLocationColor(foreignColors.get(colName));
+	static ArrayList<String> getForeignColors(String colName) {
+		return copyColors(foreignColors.get(colName));
+	}
+	public static ArrayList<String> getColumnColors(String colName) {
+		return copyColors(columnColors.get(colName));
+	}
+	private static ArrayList<String> copyColors(ArrayList<String> colors) {
+		if (colors == null || colors.isEmpty()) {
+			return new ArrayList<>(java.util.Collections.singletonList(
+					ColorUtil.DEFAULT_LOCATION_COLOR));
+		}
+		return new ArrayList<>(colors);
 	}
 	static String[] getFullName(String colName) {
 		return fullName.get(colName);

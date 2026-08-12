@@ -42,8 +42,8 @@
     <string name="entry_menu_copy_chara">複製字項內容</string>
     <string name="entry_menu_search_common">在通用字表檢索：%1$s</string>
     <string name="entry_menu_search_special">在泛粵字表檢索：%1$s</string>
-    <string name="select_drop_down_standard">字/綜合音</string>
-    <string name="select_drop_down_convenience">字/檢索音</string>
+    <string name="select_drop_down_standard">綜合音</string>
+    <string name="select_drop_down_convenience">檢索音</string>
 
     <!-- Toast Message-->
     <string name="error_tips_network">網絡或服務器錯誤，錯誤碼：%1$s</string>

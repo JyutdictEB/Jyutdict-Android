@@ -25,6 +25,7 @@ import java.util.Map;
 import cc.ecisr.jyutdict.utils.ColorUtil;
 import cc.ecisr.jyutdict.utils.StringUtil;
 import cc.ecisr.jyutdict.utils.ToastUtil;
+import cc.ecisr.jyutdict.widget.GradientTextSpan;
 import cc.ecisr.jyutdict.widget.LocationClickSpan;
 
 /**
@@ -209,14 +210,15 @@ public class FjbCharacter {
 
             // 對地區名著色
             if (settings.isAreaColoring) {
-                presentStringEndPosition = ssb.length();
-                int textColor = ColorUtil.darken(FjbHeaderInfo.getCityColor(key),
-                        settings.isUsingNightMode ?
-                                2 - settings.areaColoringDarkenRatio : // 將顏色調亮
-                                settings.areaColoringDarkenRatio  // 將顏色調暗
+                int[] textColors = ColorUtil.locationColorInts(
+                        FjbHeaderInfo.getCityColors(key),
+                        settings.isUsingNightMode
+                                ? 2 - settings.areaColoringDarkenRatio
+                                : settings.areaColoringDarkenRatio
                 );
-                ssb.setSpan(new ForegroundColorSpan(textColor),
-                        presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                ssb.setSpan(new GradientTextSpan(textColors),
+                        presentStringBeginPosition, locationNameEnd,
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 presentStringBeginPosition = ssb.length();
             }
 
@@ -266,15 +268,16 @@ public class FjbCharacter {
                 ssb.setSpan(new CustomClickable(v -> ToastUtil.tips(view, s, "善")) {},
                         pronStartPos, pronEndPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 
-                int underlineColor = Color.parseColor("#999999");
+                int[] underlineColors = new int[]{Color.parseColor("#999999")};
                 if (settings.isAreaColoring) {
-                    underlineColor = ColorUtil.darken(FjbHeaderInfo.getCityColor(key),
-                            settings.isUsingNightMode ?
-                                    2 - settings.areaColoringDarkenRatio : 
-                                    settings.areaColoringDarkenRatio
+                    underlineColors = ColorUtil.locationColorInts(
+                            FjbHeaderInfo.getCityColors(key),
+                            settings.isUsingNightMode
+                                    ? 2 - settings.areaColoringDarkenRatio
+                                    : settings.areaColoringDarkenRatio
                     );
                 }
-                ssb.setSpan(new cc.ecisr.jyutdict.widget.DashedUnderlineSpan(underlineColor),
+                ssb.setSpan(new cc.ecisr.jyutdict.widget.DashedUnderlineSpan(underlineColors),
                         pronStartPos, pronEndPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             }
         }
@@ -301,17 +304,19 @@ public class FjbCharacter {
                 sb.append(key).append(": ");
                 presentStringBeginPosition = ssb.length();
                 ssb.append(sb);
+                int locationNameEnd = presentStringBeginPosition + key.length();
 
                 // 對地區名著色
                 if (settings.isAreaColoring) {
-                    presentStringEndPosition = ssb.length();
-                    int textColor = ColorUtil.darken(FjbHeaderInfo.getForeignColor(key),
-                            settings.isUsingNightMode ?
-                                    2 - settings.areaColoringDarkenRatio : // 將顏色調亮
-                                    settings.areaColoringDarkenRatio  // 將顏色調暗
+                    int[] textColors = ColorUtil.locationColorInts(
+                            FjbHeaderInfo.getForeignColors(key),
+                            settings.isUsingNightMode
+                                    ? 2 - settings.areaColoringDarkenRatio
+                                    : settings.areaColoringDarkenRatio
                     );
-                    ssb.setSpan(new ForegroundColorSpan(textColor),
-                            presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    ssb.setSpan(new GradientTextSpan(textColors),
+                            presentStringBeginPosition, locationNameEnd,
+                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                     presentStringBeginPosition = ssb.length();
                 }
 
@@ -336,15 +341,16 @@ public class FjbCharacter {
                     ssb.setSpan(new CustomClickable(v -> ToastUtil.tips(view, s, "善")) {},
                             pronStartPos, pronEndPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                             
-                    int underlineColor = Color.parseColor("#999999");
+                    int[] underlineColors = new int[]{Color.parseColor("#999999")};
                     if (settings.isAreaColoring) {
-                        underlineColor = ColorUtil.darken(FjbHeaderInfo.getForeignColor(key),
-                                settings.isUsingNightMode ?
-                                        2 - settings.areaColoringDarkenRatio : 
-                                        settings.areaColoringDarkenRatio
+                        underlineColors = ColorUtil.locationColorInts(
+                                FjbHeaderInfo.getForeignColors(key),
+                                settings.isUsingNightMode
+                                        ? 2 - settings.areaColoringDarkenRatio
+                                        : settings.areaColoringDarkenRatio
                         );
                     }
-                    ssb.setSpan(new cc.ecisr.jyutdict.widget.DashedUnderlineSpan(underlineColor),
+                    ssb.setSpan(new cc.ecisr.jyutdict.widget.DashedUnderlineSpan(underlineColors),
                             pronStartPos, pronEndPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 }
             }

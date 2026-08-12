@@ -34,7 +34,6 @@ public class GeneralCharacterManager {
     ArrayList<GeneralCharacter> charas = new ArrayList<>();
     ArrayList<String> charaHead = new ArrayList<>();
     HashMap<String, ArrayList<String>> div2city = new HashMap<>();
-    HashMap<String, String> city2color = new HashMap<>();
     public static ArrayList<String> cityList = new ArrayList<>();
     public static HashSet<String> cityFilter = new HashSet<>(); // static 是因為 MainActivity 要調用
     EntrySetting settings;
@@ -58,7 +57,6 @@ public class GeneralCharacterManager {
         for (int index=0; index<charas.size(); index++) {
             GeneralCharacter chara = charas.get(index);
             for (GeneralCharacter.SingleLoc i: chara.areas) {
-                if (!city2color.containsKey(i.city)) { city2color.put(i.city, i.color); }
                 if (!cityList.contains(i.city)) {
                     cityList.add(i.city);
                 }

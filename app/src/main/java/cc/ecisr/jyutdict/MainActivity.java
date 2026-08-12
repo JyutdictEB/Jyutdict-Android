@@ -31,7 +31,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -58,6 +57,7 @@ import cc.ecisr.jyutdict.utils.ThemeUtil;
 import cc.ecisr.jyutdict.utils.ToastUtil;
 import androidx.appcompat.widget.AppCompatEditText;
 import cc.ecisr.jyutdict.widget.SwitchCustomized;
+import cc.ecisr.jyutdict.widget.LocationSpinnerAdapter;
 
 /**
  * app 的主頁面，包含一個查詢結果的 fragment
@@ -94,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
     boolean isJustInitialized = true;
 
     // 下拉選擇框的 Adapter，存放的是可供查詢的查詢地名
-    ArrayAdapter<String> locationsAdapter;
+    LocationSpinnerAdapter locationsAdapter;
 
     // 用於獲取用戶的設置，與存儲各開關的狀態
     SharedPreferences sp;
@@ -135,10 +135,9 @@ public class MainActivity extends AppCompatActivity {
         toolbar = findViewById(R.id.tool_bar);
 
         setSupportActionBar(toolbar);
-        locationsAdapter = new ArrayAdapter<>(this, R.layout.spinner_drop_down_item);
+        locationsAdapter = new LocationSpinnerAdapter(this);
         spinnerQueryLocation.setAdapter(locationsAdapter);
-        locationsAdapter.add(getString(R.string.select_drop_down_standard));
-        locationsAdapter.add(getString(R.string.select_drop_down_convenience));
+        locationsAdapter.setOptions(buildLocationOptions(false));
     }
 
 
@@ -516,10 +515,7 @@ public class MainActivity extends AppCompatActivity {
     private void setLocationsAdapter() {
         if (isPrepared) return;
         if (FjbHeaderInfo.isLoaded) {
-            locationsAdapter.clear();
-            locationsAdapter.add(getString(R.string.select_drop_down_standard));
-            locationsAdapter.add(getString(R.string.select_drop_down_convenience));
-            locationsAdapter.addAll(FjbHeaderInfo.getCityList());
+            locationsAdapter.setOptions(buildLocationOptions(true));
             int savedLocation = sp.getInt("spinner_selected_position", 0);
             int lastLocation = Math.max(0, locationsAdapter.getCount() - 1);
             spinnerQueryLocation.setSelection(
@@ -545,6 +541,29 @@ public class MainActivity extends AppCompatActivity {
                             INITIALIZE_LOCATIONS_FAIL
                     );
         }
+    }
+
+    private ArrayList<LocationSpinnerAdapter.Option> buildLocationOptions(boolean includeCities) {
+        ArrayList<LocationSpinnerAdapter.Option> options = new ArrayList<>();
+        options.add(new LocationSpinnerAdapter.Option(
+                getString(R.string.select_drop_down_standard),
+                FjbHeaderInfo.getColumnColors(FjbHeaderInfo.COLUMN_NAME_PRONUNCIATION)
+        ));
+        options.add(new LocationSpinnerAdapter.Option(
+                getString(R.string.select_drop_down_convenience),
+                FjbHeaderInfo.getColumnColors(FjbHeaderInfo.COLUMN_NAME_RETRIEVAL)
+        ));
+        if (includeCities) {
+            String[] cityNames = FjbHeaderInfo.getCityList();
+            for (int i = 0; i < cityNames.length; i++) {
+                String column = FjbHeaderInfo.getCityNameByNumber(i);
+                options.add(new LocationSpinnerAdapter.Option(
+                        cityNames[i],
+                        FjbHeaderInfo.getColumnColors(column)
+                ));
+            }
+        }
+        return options;
     }
 
     /**
@@ -685,8 +704,10 @@ public class MainActivity extends AppCompatActivity {
                 url.add("random", 10);
             } else {
                 url.add("q", inputString);
+                boolean pronunciationInput = StringUtil.isSheetPronunciationInput(inputString)
+                        && !switchQueryOptsRev.isChecked();
                 String sheetMode;
-                if (StringUtil.isAlphaString(inputString) && !switchQueryOptsRev.isChecked()) {
+                if (pronunciationInput) {
                     sheetMode = "trim";
                 } else if (switchQueryOptsRev.isChecked()) {
                     sheetMode = "meaning";
@@ -700,13 +721,11 @@ public class MainActivity extends AppCompatActivity {
 
                 int selectedColumn = spinnerQueryLocation.getSelectedItemPosition();
 
-                if (selectedColumn >= 2) {
-                    String col = FjbHeaderInfo.getCityNameByNumber(selectedColumn - 2);
-                    url.add("col", col);
-                } else if (selectedColumn == 1) {
-                    if (StringUtil.isAlphaString(inputString)) {
-                        url.add("col", "檢");
-                    }
+                // 漢字必須交由 API 自動選擇字頭列；只有查音纔傳讀音列。
+                if (pronunciationInput && selectedColumn >= 2) {
+                    url.add("col", FjbHeaderInfo.getCityNameByNumber(selectedColumn - 2));
+                } else if (pronunciationInput && selectedColumn == 1) {
+                    url.add("col", FjbHeaderInfo.COLUMN_NAME_RETRIEVAL);
                 }
             }
         } else { // 檢索通用字表

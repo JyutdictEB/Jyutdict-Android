@@ -16,12 +16,32 @@
 ** limitations under the License.
 */
 -->
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@android:id/text1"
-    style="?attr/spinnerDropDownItemStyle"
-    android:singleLine="true"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="30dp"
-    android:textColor="?attr/clockTextColor"
     android:background="?attr/clockBackground"
-    android:ellipsize="marquee"/>
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="4dp"
+    android:paddingEnd="4dp">
+
+    <View
+        android:id="@+id/location_color_swatch"
+        android:layout_width="4dp"
+        android:layout_height="match_parent"
+        android:layout_marginTop="3dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="3dp" />
+
+    <TextView
+        android:id="@android:id/text1"
+        style="?attr/spinnerDropDownItemStyle"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:gravity="center_vertical"
+        android:singleLine="true"
+        android:textColor="?attr/clockTextColor" />
+
+</LinearLayout>

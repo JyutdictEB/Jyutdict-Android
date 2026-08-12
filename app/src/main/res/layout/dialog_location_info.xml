@@ -52,10 +52,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="14dp"
-        android:background="@drawable/bg_location_metadata"
         android:orientation="horizontal">
 
         <View
+            android:id="@+id/location_metadata_accent"
             android:layout_width="4dp"
             android:layout_height="match_parent"
             android:background="@color/colorPrimary" />

@@ -74,15 +74,20 @@ public final class LocationLabelSpan extends ReplacementSpan {
         Shader originalShader = paint.getShader();
 
         float nameX = x;
-        int colorOffset = 0;
         if (!year.isEmpty()) {
             float badgeWidth = originalTextSize * YEAR_EM;
             float badgeHeight = originalTextSize * 1.18f;
             float badgeTop = y - originalTextSize * 0.92f;
             RectF badge = new RectF(x, badgeTop, x + badgeWidth, badgeTop + badgeHeight);
-            int badgeColor = colors.length > 0 ? colors[0] : originalColor;
+            int badgeColor = colors.length > 0 ? representativeColor(colors) : originalColor;
 
-            paint.setShader(null);
+            if (colors.length > 1) {
+                paint.setShader(new LinearGradient(
+                        badge.left, badge.top, badge.right, badge.top,
+                        colors, null, Shader.TileMode.CLAMP));
+            } else {
+                paint.setShader(null);
+            }
             paint.setStyle(Paint.Style.FILL);
             paint.setColor(badgeColor);
             canvas.drawRoundRect(
@@ -94,6 +99,7 @@ public final class LocationLabelSpan extends ReplacementSpan {
 
             paint.setTextSize(originalTextSize * BADGE_TEXT_SCALE);
             paint.setTextScaleX(1f);
+            paint.setShader(null);
             paint.setColor(readableForeground(badgeColor));
             float yearWidth = paint.measureText(year);
             Paint.FontMetrics badgeMetrics = paint.getFontMetrics();
@@ -102,7 +108,6 @@ public final class LocationLabelSpan extends ReplacementSpan {
             canvas.drawText(year, badge.centerX() - yearWidth / 2f, yearBaseline, paint);
 
             nameX += badgeWidth + originalTextSize * COLUMN_GAP_EM;
-            colorOffset = Math.min(1, colors.length);
         }
 
         paint.setTextSize(originalTextSize);
@@ -111,10 +116,8 @@ public final class LocationLabelSpan extends ReplacementSpan {
         int[] nameColors;
         if (colors.length == 0) {
             nameColors = new int[]{originalColor};
-        } else if (colorOffset >= colors.length) {
-            nameColors = new int[]{colors[0]};
         } else {
-            nameColors = Arrays.copyOfRange(colors, colorOffset, colors.length);
+            nameColors = Arrays.copyOf(colors, colors.length);
         }
 
         if (nameColors.length > 1) {
@@ -190,5 +193,22 @@ public final class LocationLabelSpan extends ReplacementSpan {
                 + Color.green(background) * 0.587
                 + Color.blue(background) * 0.114;
         return lightness > 165 ? Color.BLACK : Color.WHITE;
+    }
+
+    private static int representativeColor(int[] colors) {
+        if (colors == null || colors.length == 0) return Color.GRAY;
+        long red = 0;
+        long green = 0;
+        long blue = 0;
+        for (int color : colors) {
+            red += Color.red(color);
+            green += Color.green(color);
+            blue += Color.blue(color);
+        }
+        return Color.rgb(
+                (int) (red / colors.length),
+                (int) (green / colors.length),
+                (int) (blue / colors.length)
+        );
     }
 }

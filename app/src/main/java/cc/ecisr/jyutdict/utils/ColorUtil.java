@@ -1,6 +1,7 @@
 package cc.ecisr.jyutdict.utils;
 
 import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -85,6 +86,47 @@ public class ColorUtil {
     public static int parseColorOrDefault(String colorString) {
         String normalized = normalizeLocationColor(colorString);
         return Color.parseColor(normalized != null ? normalized : DEFAULT_LOCATION_COLOR);
+    }
+
+    /** 將一個地點的全部顏色轉為可直接繪製的色值，無有效值時回退為中性灰。 */
+    public static int[] locationColorInts(List<String> colors) {
+        return locationColorInts(colors, 1.0);
+    }
+
+    /** 與 {@link #locationColorInts(List)} 相同，並按顯示主題調整每種顏色的明度。 */
+    public static int[] locationColorInts(List<String> colors, double darkenRatio) {
+        ArrayList<Integer> parsed = new ArrayList<>();
+        if (colors != null) {
+            for (String color : colors) {
+                String normalized = normalizeLocationColor(color);
+                if (normalized != null) {
+                    parsed.add(darken(normalized, darkenRatio));
+                }
+            }
+        }
+        if (parsed.isEmpty()) {
+            parsed.add(darken(DEFAULT_LOCATION_COLOR, darkenRatio));
+        }
+
+        int[] result = new int[parsed.size()];
+        for (int i = 0; i < parsed.size(); i++) {
+            result[i] = parsed.get(i);
+        }
+        return result;
+    }
+
+    /** 單色時返回純色 drawable，多色時返回由左至右的漸變。 */
+    public static GradientDrawable locationColorDrawable(List<String> colors) {
+        int[] parsed = locationColorInts(colors);
+        if (parsed.length == 1) {
+            GradientDrawable drawable = new GradientDrawable();
+            drawable.setColor(parsed[0]);
+            return drawable;
+        }
+        return new GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                parsed
+        );
     }
 
     /**

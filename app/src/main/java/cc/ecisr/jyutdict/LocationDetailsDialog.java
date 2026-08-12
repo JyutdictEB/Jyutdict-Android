@@ -15,6 +15,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AlertDialog;
 
 import cc.ecisr.jyutdict.struct.LocationInfo;
+import cc.ecisr.jyutdict.utils.ColorUtil;
 import cc.ecisr.jyutdict.utils.LocationArticleRepository;
 
 /** 網站端地名懸浮卡在 Android 上的觸控版。 */
@@ -36,11 +37,13 @@ public final class LocationDetailsDialog {
         TextView title = view.findViewById(R.id.location_title);
         TextView redirect = view.findViewById(R.id.location_redirect);
         TextView metadata = view.findViewById(R.id.location_metadata);
+        View metadataAccent = view.findViewById(R.id.location_metadata_accent);
         ProgressBar checking = view.findViewById(R.id.location_article_checking);
         Button article = view.findViewById(R.id.location_article);
         Button phonology = view.findViewById(R.id.location_phonology);
 
-        renderLocation(context, requestedName, initialLocation, title, metadata, phonology);
+        renderLocation(context, requestedName, initialLocation, title, metadata,
+                metadataAccent, phonology);
         article.setEnabled(false);
         article.setText(R.string.location_article_checking);
 
@@ -72,6 +75,7 @@ public final class LocationDetailsDialog {
                         resolvedLocation,
                         title,
                         metadata,
+                        metadataAccent,
                         phonology
                 );
                 if (result.redirected()) {
@@ -119,16 +123,19 @@ public final class LocationDetailsDialog {
     private static void renderLocation(Context context, String fallbackName,
                                        LocationInfo.Location location,
                                        TextView title, TextView metadata,
+                                       View metadataAccent,
                                        Button phonology) {
         if (location == null) {
             title.setText(fallbackName);
             metadata.setText(R.string.location_no_metadata);
+            metadataAccent.setBackground(ColorUtil.locationColorDrawable(null));
             phonology.setEnabled(false);
             phonology.setText(R.string.location_phonology_unavailable);
             phonology.setTag(null);
             return;
         }
         title.setText(location.displayTitle());
+        metadataAccent.setBackground(ColorUtil.locationColorDrawable(location.colors));
         metadata.setText(location.sheetInfo.isEmpty()
                 ? context.getString(R.string.location_no_metadata)
                 : location.sheetInfo);
