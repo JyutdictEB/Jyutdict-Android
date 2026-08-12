@@ -79,15 +79,9 @@ public final class LocationLabelSpan extends ReplacementSpan {
             float badgeHeight = originalTextSize * 1.18f;
             float badgeTop = y - originalTextSize * 0.92f;
             RectF badge = new RectF(x, badgeTop, x + badgeWidth, badgeTop + badgeHeight);
-            int badgeColor = colors.length > 0 ? representativeColor(colors) : originalColor;
+            int badgeColor = yearColor(colors, originalColor);
 
-            if (colors.length > 1) {
-                paint.setShader(new LinearGradient(
-                        badge.left, badge.top, badge.right, badge.top,
-                        colors, null, Shader.TileMode.CLAMP));
-            } else {
-                paint.setShader(null);
-            }
+            paint.setShader(null);
             paint.setStyle(Paint.Style.FILL);
             paint.setColor(badgeColor);
             canvas.drawRoundRect(
@@ -113,12 +107,7 @@ public final class LocationLabelSpan extends ReplacementSpan {
         paint.setTextSize(originalTextSize);
         paint.setStyle(Paint.Style.FILL);
         float nameWidth = originalTextSize * NAME_EM;
-        int[] nameColors;
-        if (colors.length == 0) {
-            nameColors = new int[]{originalColor};
-        } else {
-            nameColors = Arrays.copyOf(colors, colors.length);
-        }
+        int[] nameColors = nameColors(colors, !year.isEmpty(), originalColor);
 
         if (nameColors.length > 1) {
             paint.setShader(new LinearGradient(
@@ -195,20 +184,18 @@ public final class LocationLabelSpan extends ReplacementSpan {
         return lightness > 165 ? Color.BLACK : Color.WHITE;
     }
 
-    private static int representativeColor(int[] colors) {
-        if (colors == null || colors.length == 0) return Color.GRAY;
-        long red = 0;
-        long green = 0;
-        long blue = 0;
-        for (int color : colors) {
-            red += Color.red(color);
-            green += Color.green(color);
-            blue += Color.blue(color);
-        }
-        return Color.rgb(
-                (int) (red / colors.length),
-                (int) (green / colors.length),
-                (int) (blue / colors.length)
-        );
+    static int yearColor(int[] colors, int fallback) {
+        return colors == null || colors.length == 0 ? fallback : colors[0];
     }
+
+    static int[] nameColors(int[] colors, boolean hasYear, int fallback) {
+        if (colors == null || colors.length == 0) return new int[]{fallback};
+        if (hasYear && colors.length > 1) {
+            // 多色年份地點：首色只用於年份標籤。
+            return Arrays.copyOfRange(colors, 1, colors.length);
+        }
+        // 無年份或只有一色時，地名使用全部顏色。
+        return Arrays.copyOf(colors, colors.length);
+    }
+
 }

@@ -3,6 +3,7 @@ package cc.ecisr.jyutdict;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -128,14 +129,20 @@ public final class LocationDetailsDialog {
         if (location == null) {
             title.setText(fallbackName);
             metadata.setText(R.string.location_no_metadata);
-            metadataAccent.setBackground(ColorUtil.locationColorDrawable(null));
+            metadataAccent.setBackground(ColorUtil.locationColorDrawable(
+                    null,
+                    GradientDrawable.Orientation.TOP_BOTTOM
+            ));
             phonology.setEnabled(false);
             phonology.setText(R.string.location_phonology_unavailable);
             phonology.setTag(null);
             return;
         }
         title.setText(location.displayTitle());
-        metadataAccent.setBackground(ColorUtil.locationColorDrawable(location.colors));
+        metadataAccent.setBackground(ColorUtil.locationColorDrawable(
+                location.colors,
+                GradientDrawable.Orientation.TOP_BOTTOM
+        ));
         metadata.setText(location.sheetInfo.isEmpty()
                 ? context.getString(R.string.location_no_metadata)
                 : location.sheetInfo);

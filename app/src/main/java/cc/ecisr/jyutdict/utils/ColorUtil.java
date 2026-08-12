@@ -117,6 +117,14 @@ public class ColorUtil {
 
     /** 單色時返回純色 drawable，多色時返回由左至右的漸變。 */
     public static GradientDrawable locationColorDrawable(List<String> colors) {
+        return locationColorDrawable(colors, GradientDrawable.Orientation.LEFT_RIGHT);
+    }
+
+    /** 單色時返回純色 drawable，多色時按指定方向漸變。 */
+    public static GradientDrawable locationColorDrawable(
+            List<String> colors,
+            GradientDrawable.Orientation orientation
+    ) {
         int[] parsed = locationColorInts(colors);
         if (parsed.length == 1) {
             GradientDrawable drawable = new GradientDrawable();
@@ -124,7 +132,7 @@ public class ColorUtil {
             return drawable;
         }
         return new GradientDrawable(
-                GradientDrawable.Orientation.LEFT_RIGHT,
+                orientation,
                 parsed
         );
     }
