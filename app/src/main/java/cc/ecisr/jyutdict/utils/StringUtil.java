@@ -18,11 +18,11 @@ public class StringUtil {
     }
 
     /**
-     * 判斷字符串是否為粵拼輸入（字母、數字、空格的組合）
+     * 判斷字符串是否為粵拼輸入（字母、數字、星號、撇號、空格的組合）
      * 空格用作模糊佔位符
      */
     public static boolean isJyutpingInput(final String s) {
-        Pattern pattern = Pattern.compile("^[0-9a-zA-Z ]+$");
+        Pattern pattern = Pattern.compile("^[0-9a-zA-Z *']+$");
         return pattern.matcher(s).matches();
     }
 

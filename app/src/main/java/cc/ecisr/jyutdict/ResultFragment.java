@@ -27,6 +27,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.regex.Matcher;
@@ -36,6 +37,7 @@ import cc.ecisr.jyutdict.struct.LocationInfo;
 import android.text.SpannableStringBuilder;
 
 import cc.ecisr.jyutdict.struct.FjbCharacter;
+import cc.ecisr.jyutdict.struct.FjbHeaderInfo;
 import cc.ecisr.jyutdict.struct.EntrySetting;
 import cc.ecisr.jyutdict.struct.GeneralCharacterManager;
 import cc.ecisr.jyutdict.utils.ColorUtil;
@@ -178,6 +180,8 @@ public class ResultFragment extends Fragment {
 
         ArrayList<ArrayList<Spanned>> previousItems =
                 new ArrayList<>(ResultItemAdapter.ResultInfo.list);
+        ArrayList<Integer> previousTypes =
+                new ArrayList<>(ResultItemAdapter.ResultInfo.types);
         ResultItemAdapter.ResultInfo.clearItem();
 
         try {
@@ -187,7 +191,9 @@ public class ResultFragment extends Fragment {
         } catch (JSONException | RuntimeException e) {
             ResultItemAdapter.ResultInfo.list.clear();
             ResultItemAdapter.ResultInfo.list.addAll(previousItems);
-            mRvMain.getAdapter().notifyDataSetChanged();
+            ResultItemAdapter.ResultInfo.types.clear();
+            ResultItemAdapter.ResultInfo.types.addAll(previousTypes);
+            publishResultViews();
             throw e;
         }
     }
@@ -211,7 +217,8 @@ public class ResultFragment extends Fragment {
                 gcm.coloring(queryObjectWhat & DISPLAY_CHECKING_MASK);
                 for (int i = 0; i<gcm.length(); i++) {
                     Spanned[] spanneds = gcm.printChara(i);
-                    addItem(spanneds[0], spanneds[1], spanneds[2], spanneds[3], spanneds[4]);
+                    addItem(spanneds[0], spanneds[1], spanneds[2], spanneds[3], spanneds[4],
+                            ResultItemAdapter.ResultInfo.TYPE_GENERAL);
                 }
                 break;
             case QUERYING_PRON:
@@ -220,27 +227,51 @@ public class ResultFragment extends Fragment {
             case QUERYING_SHEET:
                 FjbCharacter character; // TODO: Use ManagerClass like QUERYING_CHARA.
                 JSONArray jsonArray = new JSONArray(jsonString);
-                JSONObject entry;
+                ArrayList<JSONObject> sortedEntries = new ArrayList<>(jsonArray.length());
                 if (jsonArray.length() == 0) {
                     ToastUtil.msg(getContext(), getString(R.string.tips_no_result));
                 }
-                for (int i = 0; i < jsonArray.length(); i++) {  // v1.0 沒有表頭行，從 0 開始
-                    entry = jsonArray.getJSONObject(i);
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    sortedEntries.add(jsonArray.getJSONObject(i));
+                }
+                // 與網頁端一致：地方讀音覆蓋度越高的條目越靠前；TimSort 保持同分原序。
+                Collections.sort(sortedEntries, (left, right) -> Integer.compare(
+                        FjbHeaderInfo.densityScore(right),
+                        FjbHeaderInfo.densityScore(left)
+                ));
+                for (JSONObject entry : sortedEntries) {
                     character = new FjbCharacter(entry, entrySettings, mRvMain);
 
                     addItem(character.printCharacter(),
                             character.printUnicode(),
                             character.printPronunciation(),
                             character.printMeanings(),
-                            character.printLocations()
+                            character.printLocations(),
+                            ResultItemAdapter.ResultInfo.TYPE_SHEET
                     );
                 }
-                mRvMain.getAdapter().notifyItemRangeChanged(0, jsonArray.length());
                 break;
             default:
                 break;
         }
-        mRvMain.getAdapter().notifyDataSetChanged();
+        publishResultViews();
+    }
+
+    /**
+     * Selectable TextView 的 Editor/ActionMode 狀態會跟隨 ViewHolder 留在回收池中。
+     * 同模式再次查詢若只 notifyDataSetChanged，重綁後的文字可能再也無法長按選取；
+     * 發佈一批新結果時丟棄舊 holder，確保每次查詢都使用全新的選取狀態。
+     */
+    private void publishResultViews() {
+        RecyclerView.Adapter<?> adapter = mRvMain.getAdapter();
+        if (adapter == null) return;
+        mRvMain.stopScroll();
+        mRvMain.setAdapter(null);
+        mRvMain.getRecycledViewPool().clear();
+        mRvMain.setAdapter(adapter);
+        if (adapter.getItemCount() > 0) {
+            mRvMain.scrollToPosition(0);
+        }
     }
 
 
@@ -259,14 +290,16 @@ public class ResultFragment extends Fragment {
      * @param rightBottom layout 中的右下部分
      *                    顯示地方音
      */
-    private void addItem(Spanned chara, Spanned leftMiddle, Spanned leftBottom, Spanned rightTop, Spanned rightBottom) {
+    private void addItem(Spanned chara, Spanned leftMiddle, Spanned leftBottom,
+                         Spanned rightTop, Spanned rightBottom, int type) {
         if (rightTop.length()!=0 || rightBottom.length()!=0) {
             ResultItemAdapter.ResultInfo.addItem(
                     chara,
                     leftMiddle,
                     leftBottom,
                     rightTop,
-                    rightBottom
+                    rightBottom,
+                    type
             );
         }
     }
@@ -309,7 +342,9 @@ public class ResultFragment extends Fragment {
                     }
                 }
                 if (pronListSsb.length() > 0) {
-                    addItem(new SpannableStringBuilder(), new SpannableStringBuilder(), new SpannableStringBuilder(), bookNameSsb, pronListSsb);
+                    addItem(new SpannableStringBuilder(), new SpannableStringBuilder(),
+                            new SpannableStringBuilder(), bookNameSsb, pronListSsb,
+                            ResultItemAdapter.ResultInfo.TYPE_GENERAL);
                 }
             }
         }
@@ -383,7 +418,9 @@ public class ResultFragment extends Fragment {
                 }
                 
                 if (hasData) {
-                    addItem(new SpannableStringBuilder(), new SpannableStringBuilder(), new SpannableStringBuilder(), cityNameSsb, pronListSsb);
+                    addItem(new SpannableStringBuilder(), new SpannableStringBuilder(),
+                            new SpannableStringBuilder(), cityNameSsb, pronListSsb,
+                            ResultItemAdapter.ResultInfo.TYPE_GENERAL);
                 }
             }
         }

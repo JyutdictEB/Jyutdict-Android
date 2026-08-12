@@ -18,6 +18,7 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.EditTextPreference;
 import androidx.preference.ListPreference;
+import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SwitchPreference;
 
@@ -26,11 +27,16 @@ import org.json.JSONObject;
 
 import java.util.Locale;
 
+import cc.ecisr.jyutdict.utils.DiskTextCache;
 import cc.ecisr.jyutdict.utils.EnumConst;
 import cc.ecisr.jyutdict.utils.HttpUtil;
+import cc.ecisr.jyutdict.utils.LocationArticleRepository;
+import cc.ecisr.jyutdict.utils.ThemeUtil;
 import cc.ecisr.jyutdict.utils.ToastUtil;
 
 public class SettingsActivity extends AppCompatActivity {
+    private static final String EXTRA_THEME_CHANGED = "theme_changed";
+
     Button btnCheckVersion;
     SettingHandler mHandler;
     final HttpUtil versionQuery = new HttpUtil(HttpUtil.GET);
@@ -44,7 +50,10 @@ public class SettingsActivity extends AppCompatActivity {
     @SuppressLint("HandlerLeak")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTheme(ThemeUtil.isNightMode(this) ? R.style.DarkSettingsTheme : R.style.AppTheme);
         super.onCreate(savedInstanceState);
+        sp = getSharedPreferences("settings", Context.MODE_PRIVATE);
+        editor = sp.edit();
         setContentView(R.layout.activity_settings);
         getSupportFragmentManager()
                 .beginTransaction()
@@ -54,9 +63,6 @@ public class SettingsActivity extends AppCompatActivity {
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
-
-        sp = getSharedPreferences("settings", Context.MODE_PRIVATE);
-        editor = sp.edit();
 
         v0This = Integer.parseInt(getResources().getString(R.string.app_version_0));
         v1This = Integer.parseInt(getResources().getString(R.string.app_version_1));
@@ -117,6 +123,12 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return true;
+    }
+
+    @Override
     protected void onDestroy() {
         versionQuery.cancel();
         if (mHandler != null) mHandler.removeCallbacksAndMessages(null);
@@ -130,6 +142,8 @@ public class SettingsActivity extends AppCompatActivity {
         EditTextPreference editAreaColoringDarkenRatio;
         ListPreference listThemeMode;
         SwitchPreference switchIpaPresent;
+        Preference clearCache;
+
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey);
@@ -139,11 +153,31 @@ public class SettingsActivity extends AppCompatActivity {
             editAreaColoringDarkenRatio = findPreference("area_coloring_darken_ratio");
             listThemeMode = findPreference("theme_mode");
             switchIpaPresent = findPreference("ipa_presence");
+            clearCache = findPreference("clear_cache");
 
             if (editAreaColoringDarkenRatio != null) {
                 editAreaColoringDarkenRatio.setOnBindEditTextListener(editText ->
                         editText.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL)
                 );
+            }
+            if (listThemeMode != null) {
+                listThemeMode.setOnPreferenceChangeListener((preference, newValue) -> {
+                    sp.edit().putString("theme_mode", String.valueOf(newValue)).commit();
+                    requireActivity().getIntent().putExtra(EXTRA_THEME_CHANGED, true);
+                    requireActivity().getWindow().getDecorView().post(requireActivity()::recreate);
+                    return true;
+                });
+            }
+            if (clearCache != null) {
+                clearCache.setOnPreferenceClickListener(preference -> {
+                    int deleted = DiskTextCache.clear(requireContext());
+                    LocationArticleRepository.clearMemoryCache();
+                    ToastUtil.msg(
+                            requireContext(),
+                            getString(R.string.cache_cleared, deleted)
+                    );
+                    return true;
+                });
             }
         }
 
@@ -151,7 +185,9 @@ public class SettingsActivity extends AppCompatActivity {
             int settings = 0;
             String newThemeMode = listThemeMode.getValue();
             String oldThemeMode = sp.getString("theme_mode", "follow_system");
-            settings |= !newThemeMode.equals(oldThemeMode) ? 1 << 1 : 0;
+            boolean themeChanged = requireActivity().getIntent()
+                    .getBooleanExtra(EXTRA_THEME_CHANGED, false);
+            settings |= themeChanged || !newThemeMode.equals(oldThemeMode) ? 1 << 1 : 0;
 
             editor.putBoolean("advanced_search", switchAdvancedSearch.isChecked());
             editor.putBoolean("area_coloring", switchAreaColoring.isChecked());

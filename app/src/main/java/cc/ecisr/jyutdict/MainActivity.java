@@ -43,6 +43,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 import cc.ecisr.jyutdict.struct.FjbHeaderInfo;
@@ -402,6 +403,7 @@ public class MainActivity extends AppCompatActivity {
 
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_filter_pron, null);
         LinearLayout container = dialogView.findViewById(R.id.checkbox_container);
+        AppCompatEditText filterSearch = dialogView.findViewById(R.id.filter_search);
 
         // 臨時 filter，在確定前不直接修改原始 filter
         HashSet<String> tempFilter = new HashSet<>(filter);
@@ -422,6 +424,27 @@ public class MainActivity extends AppCompatActivity {
             container.addView(cb);
             checkBoxes.add(cb);
         }
+
+        filterSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence text, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence text, int start, int before, int count) {
+                String query = String.valueOf(text).trim().toLowerCase(Locale.ROOT);
+                for (int index = 0; index < checkBoxes.size(); index++) {
+                    String item = itemNames.get(index).toLowerCase(Locale.ROOT);
+                    checkBoxes.get(index).setVisibility(
+                            item.contains(query) ? View.VISIBLE : View.GONE
+                    );
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+            }
+        });
 
         // 全選按鈕
         dialogView.findViewById(R.id.btn_dialog_select_all).setOnClickListener(btn -> {

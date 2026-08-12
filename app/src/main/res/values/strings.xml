@@ -61,11 +61,14 @@
     <string name="info_load_error">加載失敗，請檢查網絡連接</string>
     <string name="info_load_error_retry">加載失敗，點按重試</string>
     <string name="info_empty">暫時沒有可閱讀的文章</string>
-    <string name="info_bundled_title">說明</string>
+    <string name="info_bundled_title">應用説明</string>
 
     <!-- Location details and read-only readers -->
     <string name="location_no_metadata">暫無地點詳細信息</string>
     <string name="location_article">地點介紹</string>
+    <string name="location_article_checking">正在檢查文章…</string>
+    <string name="location_article_unavailable_button">暫無地點介紹</string>
+    <string name="location_article_redirected">已重定向到「%1$s」</string>
     <string name="location_phonology">音系表</string>
     <string name="location_phonology_unavailable">尚無音系表</string>
     <string name="location_article_unavailable">此地點暫無介紹文章</string>
@@ -84,4 +87,9 @@
     <string name="display_title_theme_mode">主題模式</string>
     <string name="display_title_ipa_present">[通表] 顯示 IPA</string>
 
+    <string name="cache_header">快取</string>
+    <string name="cache_clear_title">清除快取</string>
+    <string name="cache_clear_summary">清除已快取的文章、地點目錄和音系表</string>
+    <string name="cache_cleared">已清除快取（%1$d 項）</string>
+    <string name="search_filter_hint">輸入文字篩選地點</string>
 </resources>

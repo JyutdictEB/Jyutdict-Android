@@ -20,17 +20,15 @@ import cc.ecisr.jyutdict.struct.ArticleInfo;
 import cc.ecisr.jyutdict.utils.ImmersiveBarUtil;
 import cc.ecisr.jyutdict.utils.ThemeUtil;
 
-/**
- * 說明頁使用隨 APK 發佈的可信內容，避免後端 about 配置缺失導致整頁不可用。
- */
+/** 伺服器三篇說明文章的只讀分頁；正文由 ArticleFragment 半持久化快取。 */
 public class InfoActivity extends AppCompatActivity {
     private final List<ArticleInfo> articleList = new ArrayList<>();
     private TabLayoutMediator tabMediator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         setTheme(ThemeUtil.isNightMode(this) ? R.style.DarkTheme : R.style.AppTheme);
+        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_info);
         ImmersiveBarUtil.setImmersiveBar(this, true, false);
 
@@ -45,10 +43,13 @@ public class InfoActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        ArticleInfo bundledInfo = new ArticleInfo();
-        bundledInfo.id = ArticleFragment.BUNDLED_INFO_ID;
-        bundledInfo.title = getString(R.string.info_bundled_title);
-        articleList.add(bundledInfo);
+        articleList.add(article(
+                ArticleFragment.BUNDLED_INFO_ID,
+                getString(R.string.info_bundled_title)
+        ));
+        articleList.add(article("intro", "泛粵典"));
+        articleList.add(article("jpp", "擴展粵拼"));
+        articleList.add(article("tone", "聲調總表"));
 
         ArticlePagerAdapter pagerAdapter = new ArticlePagerAdapter(this, articleList);
         viewPager.setAdapter(pagerAdapter);
@@ -64,6 +65,13 @@ public class InfoActivity extends AppCompatActivity {
                 (tab, position) -> tab.setText(articleList.get(position).title)
         );
         tabMediator.attach();
+    }
+
+    private static ArticleInfo article(String id, String title) {
+        ArticleInfo info = new ArticleInfo();
+        info.id = id;
+        info.title = title;
+        return info;
     }
 
     @Override

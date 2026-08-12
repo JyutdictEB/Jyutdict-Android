@@ -246,4 +246,16 @@ public final class FjbHeaderInfo {
 	static Boolean isNameACity(String colName) {
 		return isCity.get(colName);
 	}
+
+	/** 與網頁端泛粵字表相同的地方讀音覆蓋度排序分數。 */
+	public static int densityScore(JSONObject row) {
+		int score = 0;
+		for (String key : cityList) {
+			String value = row.isNull(key) ? "" : row.optString(key, "").trim();
+			if (!value.isEmpty() && !"_".equals(value) && !"?".equals(value)) {
+				score++;
+			}
+		}
+		return score;
+	}
 }

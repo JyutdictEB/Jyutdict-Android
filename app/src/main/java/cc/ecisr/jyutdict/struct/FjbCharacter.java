@@ -25,6 +25,7 @@ import java.util.Map;
 import cc.ecisr.jyutdict.utils.ColorUtil;
 import cc.ecisr.jyutdict.utils.StringUtil;
 import cc.ecisr.jyutdict.utils.ToastUtil;
+import cc.ecisr.jyutdict.widget.LocationClickSpan;
 
 /**
  * FjbCharacter 類，用於儲存一條字頭項，與輸出顯示內容
@@ -197,6 +198,14 @@ public class FjbCharacter {
             sb.append(fullName[0]).append(fullName[1]).append(": ");
             presentStringBeginPosition = ssb.length();
             ssb.append(sb);
+            int locationNameEnd = presentStringBeginPosition
+                    + fullName[0].length() + fullName[1].length();
+            ssb.setSpan(
+                    new LocationClickSpan(fullName[0] + fullName[1]),
+                    presentStringBeginPosition,
+                    locationNameEnd,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
 
             // 對地區名著色
             if (settings.isAreaColoring) {
@@ -269,7 +278,9 @@ public class FjbCharacter {
                         pronStartPos, pronEndPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             }
         }
-        ssb.delete(ssb.length()-" \t".length(), ssb.length());
+        if (ssb.length() >= " \t".length()) {
+            ssb.delete(ssb.length()-" \t".length(), ssb.length());
+        }
 
         if (settings.isDisplayEcdemic) {
             boolean isForeignPronEnterExist = false;

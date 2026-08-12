@@ -9,12 +9,12 @@ public class JyutpingUtil {
             "((mb?|n[jrd]?|ngg?|[bdg]{1,2}|g[hn]?|r[bdgzscrh]|[zcs][hrjl]?|[ptkvw]h?|[hqfjlr])" +
                     "([jwv]?))?(ng?|m|((i[rwi]?|u[rwu]?|[aeo][aeo]?|y)+" +
                     "(n[ng]?|[mptkh])?))" +
-                    "([0-9]?[0-9*][0-9']?)?"; // What the ?!
+                    "([0-9]?[0-9*][0-9*']?)?"; // 與網頁端/API 一致，亦接受 **、1** 等調號
     final static private String rePronStr  = "^" + standardJppForm + "$";
     final static private Pattern rePron    = Pattern.compile("\\b" + standardJppForm + "\\b");
     final static private Pattern reInitial = Pattern.compile("^(mb?|n[jrd]?|ngg?|[bdg]{1,2}|g[hn]?|r[bdgzscrh]|[zcs][hrjl]?|[ptkvw]h?|[hqfjlr])([jwv]?)(?=[aeoiuymn])");
     final static private Pattern reCoda    = Pattern.compile("(n[ng]?|[mptkh])?$");
-    final static private Pattern reTone    = Pattern.compile("[0-9]?[0-9*][0-9']?$");
+    final static private Pattern reTone    = Pattern.compile("[0-9]?[0-9*][0-9*']?$");
     final static private Pattern reFinal   = Pattern.compile("(^ng?$|^m$)|(i[rwi]?|u[rwu]?|[aeo][aeo]?|yu$|y)+");
 
     static public boolean isValidJpp(String jyutping)  {
@@ -75,7 +75,7 @@ public class JyutpingUtil {
                 "(?<=[aoreiwuy])(n[ng]?|[mptkh])$");
         // 聲調：末尾數字
         Pattern reQueryTone = Pattern.compile(
-                "[0-9]?[0-9*][0-9']?$");
+                "[0-9]?[0-9*][0-9*']?$");
 
         String initial = "", nucleus, coda = "", tone = "";
 

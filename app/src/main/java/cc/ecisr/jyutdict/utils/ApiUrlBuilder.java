@@ -14,6 +14,7 @@ public final class ApiUrlBuilder {
             for (String segment : endpoint.split("/")) {
                 if (!segment.isEmpty()) builder.appendPath(segment);
             }
+            if (endpoint.endsWith("/")) builder.appendPath("");
         }
     }
 

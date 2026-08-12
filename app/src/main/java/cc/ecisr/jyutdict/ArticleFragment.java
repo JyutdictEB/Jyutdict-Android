@@ -28,6 +28,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
 import cc.ecisr.jyutdict.utils.ApiUrlBuilder;
+import cc.ecisr.jyutdict.utils.DiskTextCache;
 import cc.ecisr.jyutdict.utils.HttpUtil;
 import cc.ecisr.jyutdict.utils.MarkdownUtil;
 import cc.ecisr.jyutdict.utils.ThemeUtil;
@@ -40,6 +41,7 @@ public class ArticleFragment extends Fragment {
     public static final String BUNDLED_INFO_ID = "__bundled_info__";
     private static final String ARG_ARTICLE_ID = "article_id";
     private static final String URL_API_BASE = "https://jyutdict.org/api/v1.0/";
+    private static final long CACHE_MAX_AGE = 7L * 24L * 60L * 60L * 1000L;
 
     private WebView webView;
     private ProgressBar progressBar;
@@ -104,8 +106,9 @@ public class ArticleFragment extends Fragment {
         settings.setSupportZoom(true);
         settings.setBuiltInZoomControls(true);
         settings.setDisplayZoomControls(false);
-        settings.setLoadWithOverviewMode(true);
-        settings.setUseWideViewPort(true);
+        settings.setLoadWithOverviewMode(false);
+        settings.setUseWideViewPort(false);
+        settings.setTextZoom(110);
         settings.setAllowFileAccess(BUNDLED_INFO_ID.equals(articleId));
         settings.setAllowContentAccess(false);
 
@@ -160,6 +163,12 @@ public class ArticleFragment extends Fragment {
     private void loadContent() {
         if (isLoading || articleId == null || articleId.isEmpty()) return;
 
+        String cacheKey = "about_article_" + articleId;
+        String cached = getContext() == null
+                ? null
+                : DiskTextCache.readFresh(getContext(), cacheKey, CACHE_MAX_AGE);
+        if (cached != null && applyResponse(cached)) return;
+
         isLoading = true;
         progressBar.setVisibility(View.VISIBLE);
         webView.setVisibility(View.GONE);
@@ -181,22 +190,19 @@ public class ArticleFragment extends Fragment {
                     }
 
                     if (msg.what == HttpUtil.REQUEST_CONTENT_SUCCESSFULLY) {
-                        try {
-                            JSONObject response = new JSONObject(msg.obj.toString());
-                            loadedContent = response.optString("content", "");
-                            loadedImagesBase = response.optString("images_base", "");
-                            if (loadedContent.isEmpty()) {
-                                showError();
-                                return true;
+                        String response = msg.obj.toString();
+                        if (applyResponse(response)) {
+                            if (getContext() != null) {
+                                DiskTextCache.write(getContext(), cacheKey, response);
                             }
-                            isLoaded = true;
-                            showContent(loadedContent, loadedImagesBase);
-                        } catch (JSONException e) {
-                            showError();
+                            return true;
                         }
-                    } else {
-                        showError();
                     }
+                    String stale = getContext() == null
+                            ? null
+                            : DiskTextCache.readAny(getContext(), cacheKey);
+                    if (stale != null && applyResponse(stale)) return true;
+                    if (!loadBundledArticleFallback(cacheKey)) showError();
                     return true;
                 });
         contentRequest.setUrl(ApiUrlBuilder.from(URL_API_BASE, "articles/about")
@@ -204,6 +210,67 @@ public class ArticleFragment extends Fragment {
                         .build())
                 .setHandler(contentHandler)
                 .start();
+    }
+
+    private boolean loadBundledArticleFallback(String cacheKey) {
+        if (getActivity() == null) return false;
+        String fileName;
+        switch (articleId) {
+            case "intro":
+                fileName = "about.md";
+                break;
+            case "jpp":
+                fileName = "jpp.md";
+                break;
+            case "tone":
+                fileName = "tone.md";
+                break;
+            default:
+                return false;
+        }
+
+        try (InputStream input = getActivity().getAssets().open("about/" + fileName);
+             BufferedReader reader = new BufferedReader(
+                     new InputStreamReader(input, StandardCharsets.UTF_8))) {
+            StringBuilder markdown = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                markdown.append(line).append('\n');
+            }
+            String content = markdown.toString()
+                    .replace("](img/", "](_IMG_BASE_/")
+                    .replace("](./img/", "](_IMG_BASE_/")
+                    .replace("src=\"img/", "src=\"_IMG_BASE_/")
+                    .replace("src=\"./img/", "src=\"_IMG_BASE_/");
+            String imagesBase = "https://jyutdict.org/img/";
+
+            JSONObject fallback = new JSONObject();
+            fallback.put("content", content);
+            fallback.put("images_base", imagesBase);
+            fallback.put("bundled_fallback", true);
+            if (getContext() != null) {
+                DiskTextCache.write(getContext(), cacheKey, fallback.toString());
+            }
+            return applyResponse(fallback.toString());
+        } catch (IOException | JSONException | RuntimeException e) {
+            return false;
+        }
+    }
+
+    private boolean applyResponse(String raw) {
+        try {
+            JSONObject response = new JSONObject(raw);
+            String content = response.optString("content", "");
+            if (content.isEmpty()) return false;
+            loadedContent = content;
+            loadedImagesBase = response.optString("images_base", "");
+            isLoaded = true;
+            isLoading = false;
+            showContent(loadedContent, loadedImagesBase);
+            return true;
+        } catch (JSONException e) {
+            return false;
+        }
     }
 
     private void showContent(String markdown, String imagesBase) {

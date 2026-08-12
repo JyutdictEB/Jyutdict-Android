@@ -37,7 +37,7 @@
                 android:paddingHorizontal="12dp"
                 android:text="@string/result_list_chara"
                 android:textColor="?attr/clockTextColor"
-                android:textSize="40sp" />
+                android:textSize="36sp" />
 
             <TextView
                 android:id="@+id/chara_info"
@@ -81,6 +81,7 @@
         android:id="@+id/content_location"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:lineSpacingExtra="2dp"
         android:paddingHorizontal="4dp"
         android:paddingVertical="4dp"
         android:text="@string/result_list_bottom"

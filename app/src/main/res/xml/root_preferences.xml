@@ -64,4 +64,13 @@
             app:useSimpleSummaryProvider="true"/>
 
     </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/cache_header">
+
+        <Preference
+            app:key="clear_cache"
+            app:title="@string/cache_clear_title"
+            app:summary="@string/cache_clear_summary" />
+
+    </PreferenceCategory>
 </PreferenceScreen>

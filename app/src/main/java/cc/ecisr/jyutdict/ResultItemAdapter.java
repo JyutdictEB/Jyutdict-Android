@@ -27,7 +27,10 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
     @NonNull
     @Override
     public ResultItemAdapter.LinearViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new LinearViewHolder(LayoutInflater.from(mContext).inflate(R.layout.layout_result_list_item, parent, false));
+        int layout = viewType == ResultInfo.TYPE_SHEET
+                ? R.layout.layout_result_list_item_sheet
+                : R.layout.layout_result_list_item;
+        return new LinearViewHolder(LayoutInflater.from(mContext).inflate(layout, parent, false));
     }
 
 
@@ -43,8 +46,8 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         holder.tvCharaHeader.setText(header);
         holder.tvCharaInfo.setText(info);
         holder.tvCharaExtra.setText(extra);
-        holder.tvRightTop.setText(wanshyu);
-        holder.tvRightBottom.setText(location);
+        holder.tvRightTop.setSelectableText(wanshyu);
+        holder.tvRightBottom.setSelectableText(location);
         int lyCharaVisibility = (header.length()!=0 || info.length()!=0) ? View.VISIBLE : View.GONE;
         int tvContentInfoVisibility = (info.length()!=0) ? View.VISIBLE : View.GONE;
         int tvContentExtraVisibility = (extra.length()!=0) ? View.VISIBLE : View.GONE;
@@ -65,7 +68,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 
     @Override
     public int getItemViewType(int position) {
-        return super.getItemViewType(position);
+        return ResultInfo.types.get(position);
     }
 
     @Override
@@ -107,9 +110,12 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
     }
 
     static class ResultInfo {
+        static final int TYPE_GENERAL = 0;
+        static final int TYPE_SHEET = 1;
         private static final int CHARA = 0, LEFT_MIDDLE = 1, LEFT_BOTTOM = 2, RIGHT_TOP = 3, RIGHT_BOTTOM = 4;
 
         static ArrayList<ArrayList<Spanned>> list = new ArrayList<>(0);
+        static ArrayList<Integer> types = new ArrayList<>(0);
 
         ResultInfo() {
         }
@@ -117,7 +123,8 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         /**
          * 向本類維護的字項列表中添加一項
          */
-        static void addItem(Spanned chara, Spanned leftMiddle, Spanned leftBottom, Spanned rightTop, Spanned rightBottom) {
+        static void addItem(Spanned chara, Spanned leftMiddle, Spanned leftBottom,
+                            Spanned rightTop, Spanned rightBottom, int type) {
             ArrayList<Spanned> item = new ArrayList<>(5);
             item.add(chara);
             item.add(leftMiddle);
@@ -125,11 +132,12 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
             item.add(rightTop);
             item.add(rightBottom);
             list.add(item);
+            types.add(type);
         }
 
         static void clearItem() {
             list.clear();
-
+            types.clear();
         }
     }
 }

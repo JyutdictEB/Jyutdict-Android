@@ -2,10 +2,12 @@ package cc.ecisr.jyutdict.widget;
 
 import android.content.Context;
 import android.text.Layout;
+import android.text.Selection;
 import android.text.Spannable;
 import android.text.style.ClickableSpan;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
+import android.widget.TextView;
 
 import androidx.appcompat.widget.AppCompatTextView;
 
@@ -38,6 +40,39 @@ public class SelectableTextView extends AppCompatTextView {
 
     private void init() {
         setTextIsSelectable(true);
+    }
+
+    /**
+     * RecyclerView 在兩種條目佈局間切換時，TextView 內部的選區 ActionMode
+     * 可能仍綁在上一份文字上。重新建立 selectable 狀態可清掉該隱藏狀態。
+     */
+    public void setSelectableText(CharSequence text) {
+        mIsPressedOnLink = false;
+        mHasPerformedLongPress = false;
+        mPressedSpan = null;
+        cancelLongPress();
+        clearFocus();
+        clearSelection();
+        setText(null, TextView.BufferType.SPANNABLE);
+        setText(text, TextView.BufferType.SPANNABLE);
+        clearSelection();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        mIsPressedOnLink = false;
+        mHasPerformedLongPress = false;
+        mPressedSpan = null;
+        cancelLongPress();
+        clearSelection();
+        super.onDetachedFromWindow();
+    }
+
+    private void clearSelection() {
+        CharSequence text = getText();
+        if (text instanceof Spannable) {
+            Selection.removeSelection((Spannable) text);
+        }
     }
 
     @Override

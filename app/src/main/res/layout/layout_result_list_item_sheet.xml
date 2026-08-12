@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/list_item"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="10dp"
+    android:layout_marginTop="7dp"
+    android:layout_marginBottom="3dp"
+    android:background="?attr/clockBackground"
+    android:baselineAligned="false"
+    android:elevation="2dp"
+    android:orientation="horizontal"
+    android:paddingHorizontal="5dp"
+    android:paddingVertical="5dp">
+
+    <LinearLayout
+        android:id="@+id/item_chara"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/chara_header"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:paddingHorizontal="12dp"
+            android:text="@string/result_list_chara"
+            android:textColor="?attr/clockTextColor"
+            android:textSize="40sp" />
+
+        <TextView
+            android:id="@+id/chara_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:paddingHorizontal="5dp"
+            android:text="@string/result_list_info"
+            android:textColor="?attr/clockTextColor"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/chara_extra"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:paddingHorizontal="5dp"
+            android:paddingVertical="2dp"
+            android:text="@string/result_list_extra"
+            android:textColor="?attr/clockTextColor"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <cc.ecisr.jyutdict.widget.SelectableTextView
+            android:id="@+id/content_wanshyu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingVertical="4dp"
+            android:text="@string/result_list_upper"
+            android:textColor="?attr/clockTextColor"
+            android:textSize="14sp" />
+
+        <cc.ecisr.jyutdict.widget.SelectableTextView
+            android:id="@+id/content_location"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:lineSpacingExtra="1dp"
+            android:paddingVertical="4dp"
+            android:text="@string/result_list_bottom"
+            android:textColor="?attr/clockTextColor"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+
+</LinearLayout>

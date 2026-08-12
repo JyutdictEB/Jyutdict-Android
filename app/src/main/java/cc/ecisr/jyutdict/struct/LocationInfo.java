@@ -52,7 +52,6 @@ public class LocationInfo {
 
         public String hierarchy() {
             ArrayList<String> levels = new ArrayList<>();
-            if (first != null && !first.isEmpty()) levels.add(first);
             if (second != null && !second.isEmpty()) levels.add(second);
             if (third != null && !third.isEmpty()) levels.add(third);
             return android.text.TextUtils.join(" · ", levels);
@@ -111,6 +110,20 @@ public class LocationInfo {
 
     public static Location get(int id) {
         return locationMap.get(id);
+    }
+
+    /** 兼容通用字表名稱、泛粵字表名稱經伺服器別名解析後的抽象地名。 */
+    public static Location findByName(String name) {
+        if (name == null || name.trim().isEmpty()) return null;
+        String target = name.trim();
+        for (Location location : locationList) {
+            if (target.equals(location.displayName())
+                    || target.equals(location.displayTitle())
+                    || target.equals(location.detailedName)) {
+                return location;
+            }
+        }
+        return null;
     }
 
     public static ArrayList<Location> getAll() {

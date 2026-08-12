@@ -10,7 +10,11 @@ import android.text.style.ReplacementSpan;
 
 import androidx.annotation.NonNull;
 
+import java.text.BreakIterator;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * 以固定欄寬繪製地名。
@@ -22,7 +26,7 @@ public final class LocationLabelSpan extends ReplacementSpan {
     private static final float NAME_EM = 4.0f;
     private static final float YEAR_EM = 2.35f;
     private static final float COLUMN_GAP_EM = 0.34f;
-    private static final float BADGE_TEXT_SCALE = 0.58f;
+    private static final float BADGE_TEXT_SCALE = 0.68f;
 
     private final String fullName;
     private final String year;
@@ -132,15 +136,53 @@ public final class LocationLabelSpan extends ReplacementSpan {
         paint.setTextScaleX(1f);
         float measured = paint.measureText(placeName);
         float scale = measured > nameWidth && measured > 0f ? nameWidth / measured : 1f;
-        paint.setTextScaleX(scale);
-        float drawnWidth = measured * scale;
-        canvas.drawText(placeName, nameX + Math.max(0f, (nameWidth - drawnWidth) / 2f), y, paint);
+        if (scale < 1f) {
+            paint.setTextScaleX(scale);
+            canvas.drawText(placeName, nameX, y, paint);
+        } else {
+            drawDistributed(canvas, placeName, nameX, nameWidth, y, paint);
+        }
 
         paint.setTextSize(originalTextSize);
         paint.setTextScaleX(originalScaleX);
         paint.setColor(originalColor);
         paint.setStyle(originalStyle);
         paint.setShader(originalShader);
+    }
+
+    /**
+     * Uses the four-em column's remaining width as equal leading, inter-character and
+     * trailing gaps. Measuring each text element separately keeps two- and three-character
+     * names visually balanced even when their glyph widths differ.
+     */
+    private static void drawDistributed(Canvas canvas, String text, float left, float width,
+                                        int baseline, Paint paint) {
+        List<String> elements = textElements(text);
+        if (elements.isEmpty()) return;
+
+        float glyphWidth = 0f;
+        for (String element : elements) {
+            glyphWidth += paint.measureText(element);
+        }
+        float gap = Math.max(0f, width - glyphWidth) / elements.size() / 2;
+        float drawX = left + gap;
+        for (String element : elements) {
+            canvas.drawText(element, drawX, baseline, paint);
+            drawX += paint.measureText(element) + gap * 2;
+        }
+    }
+
+    private static List<String> textElements(String text) {
+        List<String> elements = new ArrayList<>();
+        BreakIterator iterator = BreakIterator.getCharacterInstance(Locale.ROOT);
+        iterator.setText(text);
+        int start = iterator.first();
+        for (int end = iterator.next();
+             end != BreakIterator.DONE;
+             start = end, end = iterator.next()) {
+            elements.add(text.substring(start, end));
+        }
+        return elements;
     }
 
     private static int readableForeground(int background) {

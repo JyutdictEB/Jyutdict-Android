@@ -18,6 +18,17 @@
         <item name="clockTextColorDim">@color/colorGrayDark</item>
     </style>
 
+    <style name="DarkSettingsTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowBackground">@color/colorBackgroundDark</item>
+        <item name="android:colorBackground">@color/colorBackgroundDark</item>
+        <item name="clockBackground">@color/colorBackgroundDark</item>
+        <item name="clockTextColor">@color/colorHover</item>
+        <item name="clockTextColorDim">@color/colorGrayDark</item>
+    </style>
+
     <style name="MyEditText" parent="Theme.AppCompat.Light">
         <item name="colorControlNormal">@color/colorPrimary</item>
         <item name="colorControlActivated">@color/colorAccent</item>
