@@ -149,4 +149,20 @@
         <item name="android:textAppearance">@style/TextAppearance.Material3.LabelMedium</item>
     </style>
 
+    <style name="Widget.Jyutdict.TextToggleButton" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:minHeight">0dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">10dp</item>
+        <item name="android:textAppearance">@style/TextAppearance.Material3.LabelMedium</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">@color/text_toggle_text</item>
+        <item name="backgroundTint">@color/text_toggle_background</item>
+        <item name="strokeColor">@color/text_toggle_stroke</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cornerRadius">10dp</item>
+    </style>
+
 </resources>

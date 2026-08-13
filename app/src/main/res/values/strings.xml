@@ -25,8 +25,8 @@
     <string name="result_list_bottom">廣州\tcung4 /tsʰʊŋ²¹/\n香港\tzung6 /tsʊŋ²²/</string>
     <string name="search_tips">請輸入漢字或讀音</string>
     <string name="search_tips_expend">留空檢索以隨機展示</string>
-    <string name="search_tips_backward">請輸入檢索字符串</string>
-    <string name="search_button">查</string>
+    <string name="search_tips_backward">請輸入反查字符串</string>
+    <string name="search_button">耖</string>
     <string name="search_clear">×</string>
     <string name="search_common_sheet">通用字表</string>
     <string name="search_jyut_sheet">泛粵字表</string>

@@ -42,6 +42,7 @@ import android.widget.TextView;
 import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.color.MaterialColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.radiobutton.MaterialRadioButton;
 
@@ -67,7 +68,6 @@ import cc.ecisr.jyutdict.utils.HttpUtil;
 import cc.ecisr.jyutdict.utils.ThemeUtil;
 import cc.ecisr.jyutdict.utils.ToastUtil;
 import androidx.appcompat.widget.AppCompatEditText;
-import cc.ecisr.jyutdict.widget.SwitchCustomized;
 import cc.ecisr.jyutdict.widget.LocationSpinnerAdapter;
 
 /**
@@ -89,14 +89,17 @@ public class MainActivity extends AppCompatActivity {
     private static final long HEADER_RETRY_BASE_DELAY = 2_000L;
     private static final long HEADER_RETRY_MAX_DELAY = 30_000L;
     private static final long HEADER_READY_STATUS_DURATION = 2_500L;
+    private static final int DEFAULT_LOCATION_POSITION = 1;
+    private static final String LOCATION_SELECTION_EXPLICIT_KEY =
+            "location_selection_explicit_v1";
 
     AppCompatEditText inputEditText;
     Button btnQueryConfirm, btnFilterArea, btnFilterAreaPron, btnColoringJppPartial;
+    MaterialButton switchQueryOptsRev, switchQueryOptsRegex;
     MaterialButtonToggleGroup sheetModeGroup;
-    SwitchCustomized switchQueryOptsRev, switchQueryOptsRegex;
     ResultFragment resultFragment;
     ProgressBar loadingProgressBar, headerLoadingSpinner;
-    View headerLoadingStatus, locationPicker, locationPickerSwatch;
+    View headerLoadingStatus, locationPicker, locationPickerSwatch, sheetQueryOptions;
     TextView headerLoadingText, locationPickerText;
     Toolbar toolbar;
     LinearLayout lyMain, lyAdvancedSearch;
@@ -170,6 +173,7 @@ public class MainActivity extends AppCompatActivity {
         btnFilterAreaPron = findViewById(R.id.btn_filter_area_pron);
         btnColoringJppPartial = findViewById(R.id.btn_coloring_jpp_partial);
         locationPicker = findViewById(R.id.locate_picker);
+        sheetQueryOptions = findViewById(R.id.sheet_query_options);
         locationPickerText = findViewById(R.id.locate_picker_text);
         locationPickerSwatch = findViewById(R.id.locate_picker_swatch);
         lyAdvancedSearch = findViewById(R.id.input_advanced_switch);
@@ -185,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         locationOptions = buildLocationOptions(false);
         selectedLocationPosition = Math.max(0, Math.min(
-                sp.getInt("spinner_selected_position", 0),
+                getInitialLocationPosition(),
                 Math.max(0, locationOptions.size() - 1)));
         updateLocationPickerPresentation();
         locationPicker.setOnClickListener(view -> showLocationPickerDialog());
@@ -293,7 +297,6 @@ public class MainActivity extends AppCompatActivity {
                 com.google.android.material.R.attr.colorPrimary);
 
         // 讀取幾個開關之前的狀態
-        switchQueryOptsRev.setSetCheckedListener(this::setInputEditTextHint);
         setSheetMode(sp.getBoolean("switch_1_is_checked", false));
         switchQueryOptsRev.setChecked(sp.getBoolean("switch_2_is_checked", false));
         switchQueryOptsRegex.setChecked(sp.getBoolean("switch_3_is_checked", false));
@@ -303,7 +306,12 @@ public class MainActivity extends AppCompatActivity {
             setInputEditTextHint();
             setSearchView();
         });
-        switchQueryOptsRev.setOnCheckedChangeListener((buttonView, isChecked) -> setSearchView());
+        switchQueryOptsRev.addOnCheckedChangeListener((button, isChecked) -> {
+            setInputEditTextHint();
+            setSearchView();
+        });
+        setInputEditTextHint();
+        setSearchView();
         //inputEditText.setOnClickListener(v -> toggleNightTheme());
         GeneralCharacterManager.cityFilter = new HashSet<>(
                 sp.getStringSet("querying_filter_city", new HashSet<>()));
@@ -527,6 +535,7 @@ public class MainActivity extends AppCompatActivity {
             radio.setChecked(index == selectedLocationPosition);
             row.setOnClickListener(view -> {
                 selectedLocationPosition = optionIndex;
+                sp.edit().putBoolean(LOCATION_SELECTION_EXPLICIT_KEY, true).apply();
                 updateLocationPickerPresentation();
                 saveLayoutStatus();
                 dialog.dismiss();
@@ -716,11 +725,21 @@ public class MainActivity extends AppCompatActivity {
         if (!FjbHeaderInfo.isLoaded) return;
         int selectedLocation = locationOptions.size() > 2
                 ? selectedLocationPosition
-                : sp.getInt("spinner_selected_position", 0);
+                : getInitialLocationPosition();
         locationOptions = buildLocationOptions(true);
         int lastLocation = Math.max(0, locationOptions.size() - 1);
         selectedLocationPosition = Math.max(0, Math.min(selectedLocation, lastLocation));
         updateLocationPickerPresentation();
+    }
+
+    private int getInitialLocationPosition() {
+        int savedPosition = sp.getInt(
+                "spinner_selected_position", DEFAULT_LOCATION_POSITION);
+        if (sp.getBoolean(LOCATION_SELECTION_EXPLICIT_KEY, false)
+                || savedPosition >= 2) {
+            return savedPosition;
+        }
+        return DEFAULT_LOCATION_POSITION;
     }
 
     private void updateLocationPickerPresentation() {
@@ -976,15 +995,19 @@ public class MainActivity extends AppCompatActivity {
     private void setSearchView() {
         boolean is1Checked = isSheetMode();
         boolean is2Checked = switchQueryOptsRev.isChecked();
+        boolean advancedSearchVisible = lyAdvancedSearch.getVisibility() == View.VISIBLE;
         if (is1Checked) {
             switchQueryOptsRev.setVisibility(View.VISIBLE);
             locationPicker.setVisibility(is2Checked ? View.GONE : View.VISIBLE);
+            sheetQueryOptions.setVisibility(!is2Checked || advancedSearchVisible
+                    ? View.VISIBLE : View.GONE);
             btnFilterArea.setVisibility(View.GONE);
             btnFilterAreaPron.setVisibility(View.GONE);
             btnColoringJppPartial.setVisibility(View.GONE);
         } else {
             switchQueryOptsRev.setVisibility(View.GONE);
             locationPicker.setVisibility(View.GONE);
+            sheetQueryOptions.setVisibility(View.GONE);
             boolean isJpp = inputEditText.getText() != null && StringUtil.isJyutpingInput(inputEditText.getText().toString());
             btnFilterArea.setVisibility(isJpp ? View.GONE : View.VISIBLE);
             btnFilterAreaPron.setVisibility(isJpp ? View.VISIBLE : View.GONE);
@@ -1192,6 +1215,7 @@ public class MainActivity extends AppCompatActivity {
                 boolean isEnableAdvancedSearch = (resultCode&0b1) != 0;
                 lyAdvancedSearch.setVisibility(isEnableAdvancedSearch ? View.VISIBLE : View.GONE);
                 if (!isEnableAdvancedSearch) switchQueryOptsRegex.setChecked(false);
+                setSearchView();
 
                 boolean isToggleNightMode = (resultCode&0b10) != 0;
                 if (isToggleNightMode) {
