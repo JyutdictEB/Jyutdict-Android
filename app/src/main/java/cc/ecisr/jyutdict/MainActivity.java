@@ -44,6 +44,7 @@ import com.google.android.material.color.MaterialColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.radiobutton.MaterialRadioButton;
 
 import org.json.JSONArray;
@@ -525,7 +526,13 @@ public class MainActivity extends AppCompatActivity {
         AppCompatEditText search = dialogView.findViewById(R.id.location_picker_search);
         TextView summary = dialogView.findViewById(R.id.location_picker_summary);
         ScrollView scroll = dialogView.findViewById(R.id.location_picker_scroll);
+        MaterialCardView recentCard = dialogView.findViewById(R.id.location_picker_recent);
+        View recentSwatch = dialogView.findViewById(R.id.location_picker_recent_swatch);
+        TextView recentText = dialogView.findViewById(R.id.location_picker_recent_text);
         ArrayList<View> rows = new ArrayList<>();
+        ArrayList<LocationSpinnerAdapter.Option> listedOptions = new ArrayList<>();
+        LocationSpinnerAdapter.Option recentOption = null;
+        int selectedListedPosition = 0;
 
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.search_choose_location)
@@ -534,8 +541,15 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog dialog = builder.create();
 
         for (int index = 0; index < locationOptions.size(); index++) {
-            final int optionIndex = index;
             LocationSpinnerAdapter.Option option = locationOptions.get(index);
+            if (option.recent) {
+                recentOption = option;
+                continue;
+            }
+            if (index == selectedLocationPosition) {
+                selectedListedPosition = listedOptions.size();
+            }
+            listedOptions.add(option);
             View row = getLayoutInflater().inflate(
                     R.layout.location_picker_item, container, false);
             View swatch = row.findViewById(R.id.location_picker_item_swatch);
@@ -543,23 +557,28 @@ public class MainActivity extends AppCompatActivity {
             swatch.setBackground(ColorUtil.locationColorDrawable(option.colors));
             radio.setText(option.label);
             radio.setChecked(index == selectedLocationPosition);
-            row.setOnClickListener(view -> {
-                LocationSpinnerAdapter.Option selected = locationOptions.get(optionIndex);
-                if (!selected.recent) {
-                    sp.edit().putString(LAST_LOCATION_COLUMN_KEY, selected.queryColumn).apply();
-                    locationOptions = buildLocationOptions(FjbHeaderInfo.isLoaded);
-                    selectedLocationPosition = findLocationOption(
-                            selected.queryColumn, false, locationOptions);
-                } else {
-                    selectedLocationPosition = optionIndex;
-                }
-                sp.edit().putBoolean(LOCATION_SELECTION_EXPLICIT_KEY, true).apply();
-                updateLocationPickerPresentation();
-                saveLayoutStatus();
-                dialog.dismiss();
-            });
+            row.setOnClickListener(view -> selectLocationOption(option, dialog));
             container.addView(row);
             rows.add(row);
+        }
+
+        if (recentOption != null) {
+            LocationSpinnerAdapter.Option standaloneRecent = recentOption;
+            recentText.setText(standaloneRecent.label);
+            recentSwatch.setBackground(
+                    ColorUtil.locationColorDrawable(standaloneRecent.colors));
+            LocationSpinnerAdapter.Option current = getSelectedLocationOption();
+            int recentBackground = MaterialColors.getColor(
+                    recentCard,
+                    current != null && current.recent
+                            ? com.google.android.material.R.attr.colorSecondaryContainer
+                            : com.google.android.material.R.attr.colorSurfaceContainerHigh
+            );
+            recentCard.setCardBackgroundColor(recentBackground);
+            recentCard.setOnClickListener(view ->
+                    selectLocationOption(standaloneRecent, dialog));
+        } else {
+            recentCard.setVisibility(View.GONE);
         }
 
         search.addTextChangedListener(new TextWatcher() {
@@ -571,14 +590,14 @@ public class MainActivity extends AppCompatActivity {
             public void onTextChanged(CharSequence text, int start, int before, int count) {
                 String query = String.valueOf(text).trim().toLowerCase(Locale.ROOT);
                 int visibleCount = 0;
-                for (int index = 0; index < locationOptions.size(); index++) {
-                    boolean visible = locationOptions.get(index).label
+                for (int index = 0; index < listedOptions.size(); index++) {
+                    boolean visible = listedOptions.get(index).label
                             .toLowerCase(Locale.ROOT).contains(query);
                     rows.get(index).setVisibility(visible ? View.VISIBLE : View.GONE);
                     if (visible) visibleCount++;
                 }
                 summary.setText(getString(R.string.search_location_picker_summary,
-                        visibleCount, locationOptions.size()));
+                        visibleCount, listedOptions.size()));
             }
 
             @Override
@@ -586,14 +605,33 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         summary.setText(getString(R.string.search_location_picker_summary,
-                locationOptions.size(), locationOptions.size()));
+                listedOptions.size(), listedOptions.size()));
 
         dialog.setCanceledOnTouchOutside(true);
         dialog.show();
         constrainDialogWidth(dialog, 340);
+        int initialScrollPosition = selectedListedPosition;
         scroll.post(() -> scroll.scrollTo(0,
-                selectedLocationPosition * getResources().getDimensionPixelSize(
-                        R.dimen.compact_touch_target)));
+                initialScrollPosition * Math.round(
+                        34 * getResources().getDisplayMetrics().density)));
+    }
+
+    private void selectLocationOption(LocationSpinnerAdapter.Option selected,
+                                      AlertDialog dialog) {
+        LocationSpinnerAdapter.Option previous = getSelectedLocationOption();
+        if (!selected.recent && previous != null
+                && !previous.queryColumn.equals(selected.queryColumn)) {
+            sp.edit().putString(
+                    LAST_LOCATION_COLUMN_KEY, previous.queryColumn).apply();
+        }
+
+        locationOptions = buildLocationOptions(FjbHeaderInfo.isLoaded);
+        selectedLocationPosition = findLocationOption(
+                selected.queryColumn, selected.recent, locationOptions);
+        sp.edit().putBoolean(LOCATION_SELECTION_EXPLICIT_KEY, true).apply();
+        updateLocationPickerPresentation();
+        saveLayoutStatus();
+        dialog.dismiss();
     }
 
     private void constrainDialogWidth(AlertDialog dialog, int maxWidthDp) {
@@ -669,8 +707,8 @@ public class MainActivity extends AppCompatActivity {
         locationHeaderNeedsRefresh = !restoreCachedHeader(false);
         headerLoadingInitialized = true;
         headerLoadingStatus.setOnClickListener(view -> retryHeadersNow());
-        updateHeaderLoadingStatus(
-                !sheetHeaderNeedsRefresh && !locationHeaderNeedsRefresh);
+        boolean usingFreshCache = !sheetHeaderNeedsRefresh && !locationHeaderNeedsRefresh;
+        updateHeaderLoadingStatus(usingFreshCache, usingFreshCache);
     }
 
     /**
@@ -897,6 +935,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateHeaderLoadingStatus(boolean announceReady) {
+        updateHeaderLoadingStatus(announceReady, false);
+    }
+
+    private void updateHeaderLoadingStatus(boolean announceReady, boolean usingFreshCache) {
         if (!headerLoadingInitialized) {
             headerLoadingStatus.setVisibility(View.GONE);
             return;
@@ -905,7 +947,10 @@ public class MainActivity extends AppCompatActivity {
         mainHandler.removeCallbacks(hideHeaderReadyStatus);
         if (!sheetHeaderNeedsRefresh && !locationHeaderNeedsRefresh) {
             headerLoadingSpinner.setVisibility(View.GONE);
-            headerLoadingText.setText(R.string.header_sync_ready);
+            headerLoadingText.setText(usingFreshCache
+                    ? R.string.header_sync_cached
+                    : R.string.header_sync_ready);
+            headerLoadingText.setAlpha(usingFreshCache ? 0.52f : 1f);
             headerLoadingStatus.setVisibility(announceReady ? View.VISIBLE : View.GONE);
             if (announceReady) {
                 mainHandler.postDelayed(hideHeaderReadyStatus, HEADER_READY_STATUS_DURATION);
@@ -916,6 +961,7 @@ public class MainActivity extends AppCompatActivity {
         int readyCount = (FjbHeaderInfo.isLoaded ? 1 : 0) + (LocationInfo.isLoaded ? 1 : 0);
         boolean loading = sheetHeaderInFlight || locationHeaderInFlight;
         boolean waitingToRetry = sheetHeaderRetryScheduled || locationHeaderRetryScheduled;
+        headerLoadingText.setAlpha(1f);
         headerLoadingSpinner.setVisibility(loading || !waitingToRetry
                 ? View.VISIBLE : View.INVISIBLE);
         if (loading || !waitingToRetry) {

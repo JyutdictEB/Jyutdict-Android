@@ -37,9 +37,12 @@ public final class BookLabelSpan extends ReplacementSpan {
         float textWidth = paint.measureText(label);
         float horizontalPadding = originalSize * HORIZONTAL_PADDING_EM;
         float badgeWidth = textWidth + horizontalPadding * 2;
-        float badgeHeight = originalSize * 1.16f;
+        float badgeHeight = Math.min(
+                Math.max(1f, bottom - top - 1f),
+                originalSize * 1.02f
+        );
         Paint.FontMetrics metrics = paint.getFontMetrics();
-        float centerY = baseline - (metrics.ascent + metrics.descent) / 2f;
+        float centerY = (top + bottom) / 2f;
         RectF badge = new RectF(
                 x,
                 centerY - badgeHeight / 2f,

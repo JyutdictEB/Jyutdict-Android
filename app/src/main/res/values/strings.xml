@@ -51,6 +51,7 @@
     <string name="header_sync_stale">查詢資料暫未更新 · 點按重試</string>
     <string name="header_sync_required">查詢資料仍在載入，完成後會自動查詢</string>
     <string name="header_sync_ready">查詢資料已就緒</string>
+    <string name="header_sync_cached">正在使用已緩存的表頭數據</string>
 
     <!-- EntryMenu -->
     <string name="entry_menu_copy_chara">複製字項內容</string>
