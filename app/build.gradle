@@ -1,5 +1,21 @@
 apply plugin: 'com.android.application'
 
+def semanticVersion = providers.gradleProperty("appVersionName").get()
+def semanticVersionMatcher = semanticVersion =~ /^(\d+)\.(\d+)\.(\d+)$/
+if (!semanticVersionMatcher.matches()) {
+    throw new GradleException("appVersionName must use major.minor.patch: ${semanticVersion}")
+}
+def versionMajor = semanticVersionMatcher.group(1).toInteger()
+def versionMinor = semanticVersionMatcher.group(2).toInteger()
+def versionPatch = semanticVersionMatcher.group(3).toInteger()
+if (versionMinor > 99 || versionPatch > 99) {
+    throw new GradleException("minor and patch must be between 0 and 99")
+}
+def semanticVersionCode = versionMajor * 10000 + versionMinor * 100 + versionPatch
+if (semanticVersionCode <= 670) {
+    throw new GradleException("versionCode must remain above previously released code 670")
+}
+
 android {
     compileSdkVersion 34
 
@@ -7,8 +23,8 @@ android {
         applicationId "cc.ecisr.jyutdict"
         minSdkVersion 19
         targetSdkVersion 34
-        versionCode 100
-        versionName "1.0.0"
+        versionCode semanticVersionCode
+        versionName semanticVersion
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

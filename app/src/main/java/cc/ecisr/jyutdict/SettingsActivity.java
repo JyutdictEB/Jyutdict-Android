@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -30,6 +31,9 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import cc.ecisr.jyutdict.utils.DiskTextCache;
 import cc.ecisr.jyutdict.utils.EnumConst;
 import cc.ecisr.jyutdict.utils.HttpUtil;
@@ -40,6 +44,8 @@ import cc.ecisr.jyutdict.utils.ToastUtil;
 
 public class SettingsActivity extends AppCompatActivity {
     private static final String EXTRA_THEME_CHANGED = "theme_changed";
+    private static final Pattern SEMANTIC_VERSION_PATTERN = Pattern.compile(
+            "^(\\d+)\\.(\\d+)\\.(\\d+)(?:[-+].*)?$");
 
     Button btnCheckVersion;
     MaterialButton dialogCheckVersion;
@@ -50,6 +56,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     static SharedPreferences sp;
     static SharedPreferences.Editor editor;
+    String versionNameThis;
     int v0This, v1This, v2This; // 版本号
 
     SettingsFragment settingsFragment = new SettingsFragment();
@@ -74,9 +81,11 @@ public class SettingsActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        v0This = Integer.parseInt(getResources().getString(R.string.app_version_0));
-        v1This = Integer.parseInt(getResources().getString(R.string.app_version_1));
-        v2This = Integer.parseInt(getResources().getString(R.string.app_version_2));
+        versionNameThis = getInstalledVersionName();
+        int[] currentVersion = parseSemanticVersion(versionNameThis);
+        v0This = currentVersion[0];
+        v1This = currentVersion[1];
+        v2This = currentVersion[2];
 
         mHandler = new SettingHandler(getMainLooper(), msg -> {
             switch (msg.what) {
@@ -110,7 +119,7 @@ public class SettingsActivity extends AppCompatActivity {
 
 
         btnCheckVersion = findViewById(R.id.btn_check_version);
-        btnCheckVersion.setText(getResources().getString(R.string.app_version, v0This, v1This, v2This));
+        btnCheckVersion.setText(getString(R.string.app_version, versionNameThis));
         btnCheckVersion.setOnClickListener(v -> showVersionDialog());
     }
 
@@ -120,7 +129,7 @@ public class SettingsActivity extends AppCompatActivity {
                 R.layout.dialog_version_info, null);
         TextView currentVersion = content.findViewById(R.id.version_current);
         currentVersion.setText(getString(
-                R.string.version_current_value, v0This, v1This, v2This));
+                R.string.version_current_value, versionNameThis));
         dialogVersionStatus = content.findViewById(R.id.version_check_status);
         dialogCheckVersion = content.findViewById(R.id.version_check_action);
         dialogCheckVersion.setOnClickListener(view -> checkVersion());
@@ -156,6 +165,27 @@ public class SettingsActivity extends AppCompatActivity {
         if (major != v0This) return major > v0This;
         if (minor != v1This) return minor > v1This;
         return patch > v2This;
+    }
+
+    private String getInstalledVersionName() {
+        try {
+            String versionName = getPackageManager()
+                    .getPackageInfo(getPackageName(), 0)
+                    .versionName;
+            return versionName == null ? "0.0.0" : versionName;
+        } catch (PackageManager.NameNotFoundException exception) {
+            return "0.0.0";
+        }
+    }
+
+    private int[] parseSemanticVersion(String versionName) {
+        Matcher matcher = SEMANTIC_VERSION_PATTERN.matcher(versionName);
+        if (!matcher.matches()) return new int[]{0, 0, 0};
+        return new int[]{
+                Integer.parseInt(matcher.group(1)),
+                Integer.parseInt(matcher.group(2)),
+                Integer.parseInt(matcher.group(3))
+        };
     }
 
     private void setVersionStatus(String status) {
