@@ -8,8 +8,6 @@ import android.widget.Toast;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.color.MaterialColors;
 
-import cc.ecisr.jyutdict.R;
-
 public class ToastUtil {
     private static Toast mToast;
     public static void msg(Context context, String msg) {
@@ -34,7 +32,9 @@ public class ToastUtil {
         // TextView snackTextView = mSnackbar.getView().findViewById(R.id.snackbar_text);
         // snackTextView.setMaxLines(5);
         // snackTextView.setPadding(50,50,50,50);
-        TextView snackButtonView = mSnackbar.getView().findViewById(R.id.snackbar_action);
+        TextView snackButtonView = mSnackbar.getView().findViewById(
+                com.google.android.material.R.id.snackbar_action
+        );
         snackButtonView.setTextSize(14);
         snackButtonView.setTextColor(MaterialColors.getColor(
                 snackButtonView,

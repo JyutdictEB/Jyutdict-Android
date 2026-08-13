@@ -17,12 +17,14 @@ if (semanticVersionCode <= 670) {
 }
 
 android {
-    compileSdkVersion 36
+    // This module is Java-only; keep AGP's built-in Kotlin support disabled per module.
+    enableKotlin = false
+    compileSdkVersion 37
 
     defaultConfig {
         applicationId "cc.ecisr.jyutdict"
         minSdkVersion 23
-        targetSdkVersion 36
+        targetSdkVersion 37
         versionCode semanticVersionCode
         versionName semanticVersion
 
@@ -39,7 +41,7 @@ android {
         sourceCompatibility = 18
         targetCompatibility = 18
     }
-    namespace 'cc.ecisr.jyutdict'
+    namespace = 'cc.ecisr.jyutdict'
 
 }
 
