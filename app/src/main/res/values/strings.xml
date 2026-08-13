@@ -22,7 +22,7 @@
     <string name="result_list_info">澄通鍾三開平dryung\n澄通鍾三開上dryungx\n澄通鍾三開去dryungh</string>
     <string name="result_list_extra">U+91CD</string>
     <string name="result_list_upper">分韻 第六東董凍篤-虫 , 穿東陽平(chung4) , 復也曡也 | 第六東董凍篤-仲 , 照東陽去(zhung) , 厚也又慎重輕重\n英華 chung꜅(zhung6) | ꜁ch\'ung(chung4)</string>
-    <string name="result_list_bottom">U+8FFFFF</string>
+    <string name="result_list_bottom">廣州\tcung4 /tsʰʊŋ²¹/\n香港\tzung6 /tsʊŋ²²/</string>
     <string name="search_tips">請輸入漢字或讀音</string>
     <string name="search_tips_expend">留空檢索以隨機展示</string>
     <string name="search_tips_backward">請輸入檢索字符串</string>

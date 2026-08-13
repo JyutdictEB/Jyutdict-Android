@@ -35,13 +35,13 @@
             <LinearLayout
                 android:id="@+id/item_chara"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:background="@drawable/bg_character_block"
                 android:gravity="center"
                 android:minHeight="64dp"
                 android:orientation="vertical"
                 android:paddingHorizontal="@dimen/space_sm"
-                android:paddingVertical="6dp">
+                android:paddingVertical="@dimen/space_sm">
 
                 <TextView
                     android:id="@+id/chara_header"
@@ -61,15 +61,17 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:gravity="center"
-                    android:text="@string/result_list_info"
+                    android:visibility="gone"
                     android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
-                    android:textColor="?attr/colorOnPrimaryContainer" />
+                    android:textColor="?attr/colorOnPrimaryContainer"
+                    tools:text=""
+                    tools:visibility="gone" />
 
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_marginStart="10dp"
                 android:layout_weight="1"
                 android:orientation="vertical">
@@ -80,7 +82,7 @@
                     android:layout_height="wrap_content"
                     android:includeFontPadding="false"
                     android:lineSpacingExtra="1dp"
-                    android:text="@string/result_list_extra"
+                    android:text="@string/result_list_info"
                     android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
                     android:textColor="?attr/colorPrimary" />
 

@@ -755,7 +755,7 @@ public class MainActivity extends AppCompatActivity {
         setHeaderNeedsRefresh(sheet, false);
         setHeaderRetryAttempt(sheet, 0);
         clearHeaderRetry(sheet);
-        updateHeaderLoadingStatus();
+        updateHeaderLoadingStatus(true);
         maybeRunPendingSearch();
     }
 
@@ -821,6 +821,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateHeaderLoadingStatus() {
+        updateHeaderLoadingStatus(false);
+    }
+
+    private void updateHeaderLoadingStatus(boolean announceReady) {
         if (!headerLoadingInitialized) {
             headerLoadingStatus.setVisibility(View.GONE);
             return;
@@ -830,8 +834,10 @@ public class MainActivity extends AppCompatActivity {
         if (!sheetHeaderNeedsRefresh && !locationHeaderNeedsRefresh) {
             headerLoadingSpinner.setVisibility(View.GONE);
             headerLoadingText.setText(R.string.header_sync_ready);
-            headerLoadingStatus.setVisibility(View.VISIBLE);
-            mainHandler.postDelayed(hideHeaderReadyStatus, HEADER_READY_STATUS_DURATION);
+            headerLoadingStatus.setVisibility(announceReady ? View.VISIBLE : View.GONE);
+            if (announceReady) {
+                mainHandler.postDelayed(hideHeaderReadyStatus, HEADER_READY_STATUS_DURATION);
+            }
             return;
         }
 

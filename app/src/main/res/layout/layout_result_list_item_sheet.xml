@@ -27,14 +27,14 @@
 
         <LinearLayout
             android:id="@+id/item_chara"
-            android:layout_width="72dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_character_block"
             android:gravity="center"
             android:minHeight="88dp"
             android:orientation="vertical"
             android:paddingHorizontal="@dimen/space_xs"
-            android:paddingVertical="6dp">
+            android:paddingVertical="@dimen/space_xs">
 
             <TextView
                 android:id="@+id/chara_header"
@@ -54,6 +54,7 @@
                 android:layout_marginTop="2dp"
                 android:gravity="center"
                 android:text="@string/result_list_info"
+                android:visibility="gone"
                 android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
                 android:textColor="?attr/colorOnPrimaryContainer" />
 

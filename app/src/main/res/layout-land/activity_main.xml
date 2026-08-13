@@ -48,19 +48,20 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="10dp">
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="6dp">
 
                     <LinearLayout
                         android:id="@+id/input_line"
                         android:layout_width="match_parent"
-                        android:layout_height="52dp"
+                        android:layout_height="48dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
                         <com.google.android.material.textfield.TextInputLayout
                             style="@style/Widget.Jyutdict.SearchField"
                             android:layout_width="0dp"
-                            android:layout_height="52dp"
+                            android:layout_height="48dp"
                             android:layout_weight="1"
                             app:endIconContentDescription="@string/search_clear"
                             app:endIconMode="clear_text"
@@ -90,7 +91,7 @@
                             android:id="@+id/btn_query"
                             style="@style/Widget.Jyutdict.ActionButton"
                             android:layout_width="56dp"
-                            android:layout_height="52dp"
+                            android:layout_height="48dp"
                             android:layout_marginStart="6dp"
                             android:insetTop="0dp"
                             android:insetBottom="0dp"
@@ -105,13 +106,13 @@
                     <LinearLayout
                         android:id="@+id/input_switch"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/compact_touch_target"
-                        android:layout_marginTop="@dimen/space_xs"
+                        android:layout_height="36dp"
+                        android:layout_marginTop="2dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
                         <TextView
-                            android:layout_width="64dp"
+                            android:layout_width="52dp"
                             android:layout_height="match_parent"
                             android:gravity="center_vertical"
                             android:text="@string/search_options_title"
@@ -120,7 +121,7 @@
 
                         <com.google.android.material.button.MaterialButtonToggleGroup
                             android:id="@+id/sheet_mode_group"
-                            android:layout_width="176dp"
+                            android:layout_width="168dp"
                             android:layout_height="match_parent"
                             app:checkedButton="@id/btn_common_sheet"
                             app:selectionRequired="true"
@@ -149,7 +150,7 @@
                             style="@style/Widget.Jyutdict.Switch"
                             android:layout_width="wrap_content"
                             android:layout_height="match_parent"
-                            android:layout_marginStart="8dp"
+                            android:layout_marginStart="6dp"
                             android:text="@string/search_reversal"
                             android:textColor="?attr/colorOnSurface"
                             android:visibility="gone" />
@@ -160,7 +161,7 @@
                         android:id="@+id/locate_picker"
                         style="@style/Widget.Material3.CardView.Outlined"
                         android:layout_width="match_parent"
-                        android:layout_height="44dp"
+                        android:layout_height="38dp"
                         android:layout_marginTop="2dp"
                         android:clickable="true"
                         android:focusable="true"
@@ -182,7 +183,7 @@
                             <View
                                 android:id="@+id/locate_picker_swatch"
                                 android:layout_width="4dp"
-                                android:layout_height="24dp"
+                                android:layout_height="22dp"
                                 android:layout_marginEnd="10dp" />
 
                             <TextView
@@ -197,8 +198,8 @@
                                 android:textColor="?attr/colorOnSurface" />
 
                             <ImageView
-                                android:layout_width="24dp"
-                                android:layout_height="24dp"
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
                                 android:contentDescription="@string/search_choose_location"
                                 android:src="@drawable/ic_arrow_drop_down_24"
                                 app:tint="?attr/colorOnSurfaceVariant" />
@@ -216,45 +217,46 @@
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_filter_area"
-                            style="@style/Widget.Jyutdict.TextButton"
+                            style="@style/Widget.Jyutdict.CompactTextButton"
                             android:layout_width="0dp"
-                            android:layout_height="@dimen/compact_touch_target"
+                            android:layout_height="36dp"
                             android:layout_weight="1"
                             android:text="@string/search_filtering_area" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_filter_area_pron"
-                            style="@style/Widget.Jyutdict.TextButton"
+                            style="@style/Widget.Jyutdict.CompactTextButton"
                             android:layout_width="0dp"
-                            android:layout_height="@dimen/compact_touch_target"
+                            android:layout_height="36dp"
                             android:layout_weight="1"
                             android:text="@string/search_filtering_area_pron"
                             android:visibility="gone" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_coloring_jpp_partial"
-                            style="@style/Widget.Jyutdict.TextButton"
+                            style="@style/Widget.Jyutdict.CompactTextButton"
                             android:layout_width="0dp"
-                            android:layout_height="@dimen/compact_touch_target"
+                            android:layout_height="36dp"
                             android:layout_weight="1"
                             android:text="@string/search_coloring_jpp_partial" />
 
-                    </LinearLayout>
+                        <LinearLayout
+                            android:id="@+id/input_advanced_switch"
+                            android:layout_width="0dp"
+                            android:layout_height="36dp"
+                            android:layout_weight="1"
+                            android:gravity="end|center_vertical"
+                            android:orientation="horizontal">
 
-                    <LinearLayout
-                        android:id="@+id/input_advanced_switch"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="64dp"
-                        android:orientation="vertical">
+                            <cc.ecisr.jyutdict.widget.SwitchCustomized
+                                android:id="@+id/switch_use_regex"
+                                style="@style/Widget.Jyutdict.Switch"
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:text="@string/search_enable_regex"
+                                android:textColor="?attr/colorOnSurface" />
 
-                        <cc.ecisr.jyutdict.widget.SwitchCustomized
-                            android:id="@+id/switch_use_regex"
-                            style="@style/Widget.Jyutdict.Switch"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/search_enable_regex"
-                            android:textColor="?attr/colorOnSurface" />
+                        </LinearLayout>
 
                     </LinearLayout>
 
