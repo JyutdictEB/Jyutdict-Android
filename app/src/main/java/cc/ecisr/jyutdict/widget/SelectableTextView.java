@@ -23,6 +23,10 @@ import androidx.appcompat.widget.AppCompatTextView;
  * 长按任意区域：启动文本选择
  */
 public class SelectableTextView extends AppCompatTextView {
+    public interface OnAnnotationClickListener {
+        void onAnnotationClick(String annotation);
+    }
+
     private static final String WORD_JOINER = "\u2060";
 
     private boolean mIsPressedOnLink;
@@ -30,6 +34,7 @@ public class SelectableTextView extends AppCompatTextView {
     private ClickableSpan mPressedSpan;
     private CharSequence mSourceText;
     private int mRenderedContentWidth = -1;
+    private OnAnnotationClickListener mAnnotationClickListener;
 
     public SelectableTextView(Context context) {
         super(context);
@@ -71,6 +76,16 @@ public class SelectableTextView extends AppCompatTextView {
 
     public String getSelectablePlainText() {
         return stripLayoutCharacters(getText());
+    }
+
+    public void setOnAnnotationClickListener(OnAnnotationClickListener listener) {
+        mAnnotationClickListener = listener;
+    }
+
+    void dispatchAnnotationClick(String annotation) {
+        if (mAnnotationClickListener != null) {
+            mAnnotationClickListener.onAnnotationClick(annotation);
+        }
     }
 
     @Override

@@ -48,6 +48,9 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         holder.tvCharaExtra.setText(extra);
         holder.tvRightTop.setSelectableText(wanshyu);
         holder.tvRightBottom.setSelectableText(location);
+        holder.collapseAnnotation();
+        holder.tvRightBottom.setOnAnnotationClickListener(annotation ->
+                holder.toggleAnnotation(annotation));
         int lyCharaVisibility = (header.length()!=0 || info.length()!=0) ? View.VISIBLE : View.GONE;
         int tvContentInfoVisibility = (info.length()!=0) ? View.VISIBLE : View.GONE;
         int tvContentExtraVisibility = (extra.length()!=0) ? View.VISIBLE : View.GONE;
@@ -84,8 +87,10 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
     public static class LinearViewHolder extends RecyclerView.ViewHolder {
         LinearLayout lyChara;
         View contentDivider;
+        View annotationContainer;
         TextView tvCharaHeader, tvCharaInfo, tvCharaExtra;
-        SelectableTextView tvRightTop, tvRightBottom;
+        SelectableTextView tvRightTop, tvRightBottom, tvAnnotation;
+        String expandedAnnotation;
 
         LinearViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -97,6 +102,32 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
             tvRightTop = itemView.findViewById(R.id.content_wanshyu);
             tvRightBottom = itemView.findViewById(R.id.content_location);
             contentDivider = itemView.findViewById(R.id.content_divider);
+            annotationContainer = itemView.findViewById(R.id.sheet_annotation_container);
+            tvAnnotation = itemView.findViewById(R.id.sheet_annotation_text);
+            if (annotationContainer != null) {
+                annotationContainer.setOnClickListener(view -> collapseAnnotation());
+            }
+            if (tvAnnotation != null) {
+                tvAnnotation.setOnClickListener(view -> collapseAnnotation());
+            }
+        }
+
+        void toggleAnnotation(String annotation) {
+            if (annotationContainer == null || tvAnnotation == null) return;
+            if (annotationContainer.getVisibility() == View.VISIBLE
+                    && annotation.equals(expandedAnnotation)) {
+                collapseAnnotation();
+                return;
+            }
+            expandedAnnotation = annotation;
+            tvAnnotation.setSelectableText(annotation);
+            annotationContainer.setVisibility(View.VISIBLE);
+        }
+
+        void collapseAnnotation() {
+            expandedAnnotation = null;
+            if (annotationContainer != null) annotationContainer.setVisibility(View.GONE);
+            if (tvAnnotation != null) tvAnnotation.setSelectableText("");
         }
 
         String getChara() {

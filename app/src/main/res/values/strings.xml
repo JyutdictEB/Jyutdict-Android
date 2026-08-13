@@ -23,6 +23,7 @@
     <string name="result_list_extra">U+91CD</string>
     <string name="result_list_upper">分韻 第六東董凍篤-虫 , 穿東陽平(chung4) , 復也曡也 | 第六東董凍篤-仲 , 照東陽去(zhung) , 厚也又慎重輕重\n英華 chung꜅(zhung6) | ꜁ch\'ung(chung4)</string>
     <string name="result_list_bottom">廣州\tcung4 /tsʰʊŋ²¹/\n香港\tzung6 /tsʊŋ²²/</string>
+    <string name="result_sheet_annotation_title">讀音註釋</string>
     <string name="search_tips">請輸入漢字或讀音</string>
     <string name="search_tips_expend">留空檢索以隨機展示</string>
     <string name="search_tips_backward">請輸入反查字符串</string>
@@ -57,6 +58,7 @@
     <string name="entry_menu_search_special">在泛粵字表檢索：%1$s</string>
     <string name="select_drop_down_standard">綜合音</string>
     <string name="select_drop_down_convenience">檢索音</string>
+    <string name="select_drop_down_recent">上次使用 · %1$s</string>
     <string name="search_choose_location">選擇查詢地點</string>
     <string name="search_location_picker_summary">顯示 %1$d / %2$d 個地點</string>
     <string name="search_filter_selection_summary">已選 %1$d / %2$d</string>

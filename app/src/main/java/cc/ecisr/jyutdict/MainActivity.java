@@ -92,6 +92,12 @@ public class MainActivity extends AppCompatActivity {
     private static final int DEFAULT_LOCATION_POSITION = 1;
     private static final String LOCATION_SELECTION_EXPLICIT_KEY =
             "location_selection_explicit_v1";
+    private static final String LOCATION_SELECTION_COLUMN_KEY =
+            "location_selection_column_v2";
+    private static final String LOCATION_SELECTION_RECENT_KEY =
+            "location_selection_recent_v2";
+    private static final String LAST_LOCATION_COLUMN_KEY =
+            "last_location_column_v2";
 
     AppCompatEditText inputEditText;
     Button btnQueryConfirm, btnFilterArea, btnFilterAreaPron, btnColoringJppPartial;
@@ -538,7 +544,15 @@ public class MainActivity extends AppCompatActivity {
             radio.setText(option.label);
             radio.setChecked(index == selectedLocationPosition);
             row.setOnClickListener(view -> {
-                selectedLocationPosition = optionIndex;
+                LocationSpinnerAdapter.Option selected = locationOptions.get(optionIndex);
+                if (!selected.recent) {
+                    sp.edit().putString(LAST_LOCATION_COLUMN_KEY, selected.queryColumn).apply();
+                    locationOptions = buildLocationOptions(FjbHeaderInfo.isLoaded);
+                    selectedLocationPosition = findLocationOption(
+                            selected.queryColumn, false, locationOptions);
+                } else {
+                    selectedLocationPosition = optionIndex;
+                }
                 sp.edit().putBoolean(LOCATION_SELECTION_EXPLICIT_KEY, true).apply();
                 updateLocationPickerPresentation();
                 saveLayoutStatus();
@@ -727,23 +741,56 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateLocationsAdapter() {
         if (!FjbHeaderInfo.isLoaded) return;
-        int selectedLocation = locationOptions.size() > 2
-                ? selectedLocationPosition
-                : getInitialLocationPosition();
+        boolean hasSemanticSelection = sp.contains(LOCATION_SELECTION_COLUMN_KEY);
+        String selectedColumn = sp.getString(
+                LOCATION_SELECTION_COLUMN_KEY, FjbHeaderInfo.COLUMN_NAME_RETRIEVAL);
+        boolean selectedRecent = sp.getBoolean(LOCATION_SELECTION_RECENT_KEY, false);
         locationOptions = buildLocationOptions(true);
-        int lastLocation = Math.max(0, locationOptions.size() - 1);
-        selectedLocationPosition = Math.max(0, Math.min(selectedLocation, lastLocation));
+        if (hasSemanticSelection) {
+            selectedLocationPosition = findLocationOption(
+                    selectedColumn, selectedRecent, locationOptions);
+        } else {
+            selectedLocationPosition = getInitialLocationPosition();
+        }
         updateLocationPickerPresentation();
     }
 
     private int getInitialLocationPosition() {
+        if (sp.contains(LOCATION_SELECTION_COLUMN_KEY)) {
+            return findLocationOption(
+                    sp.getString(LOCATION_SELECTION_COLUMN_KEY,
+                            FjbHeaderInfo.COLUMN_NAME_RETRIEVAL),
+                    sp.getBoolean(LOCATION_SELECTION_RECENT_KEY, false),
+                    locationOptions);
+        }
         int savedPosition = sp.getInt(
                 "spinner_selected_position", DEFAULT_LOCATION_POSITION);
-        if (sp.getBoolean(LOCATION_SELECTION_EXPLICIT_KEY, false)
-                || savedPosition >= 2) {
-            return savedPosition;
+        if (savedPosition >= 2 && locationOptions.size() > 3) {
+            return Math.min(savedPosition + 1, locationOptions.size() - 1);
+        }
+        if (savedPosition == 0
+                && sp.getBoolean(LOCATION_SELECTION_EXPLICIT_KEY, false)) {
+            return 0;
         }
         return DEFAULT_LOCATION_POSITION;
+    }
+
+    private LocationSpinnerAdapter.Option getSelectedLocationOption() {
+        if (locationOptions.isEmpty()) return null;
+        int position = Math.max(0, Math.min(
+                selectedLocationPosition, locationOptions.size() - 1));
+        return locationOptions.get(position);
+    }
+
+    private int findLocationOption(String queryColumn, boolean recent,
+                                   ArrayList<LocationSpinnerAdapter.Option> options) {
+        for (int index = 0; index < options.size(); index++) {
+            LocationSpinnerAdapter.Option option = options.get(index);
+            if (option.recent == recent && option.queryColumn.equals(queryColumn)) {
+                return index;
+            }
+        }
+        return Math.min(DEFAULT_LOCATION_POSITION, Math.max(0, options.size() - 1));
     }
 
     private void updateLocationPickerPresentation() {
@@ -947,22 +994,45 @@ public class MainActivity extends AppCompatActivity {
         ArrayList<LocationSpinnerAdapter.Option> options = new ArrayList<>();
         options.add(new LocationSpinnerAdapter.Option(
                 getString(R.string.select_drop_down_standard),
-                FjbHeaderInfo.getColumnColors(FjbHeaderInfo.COLUMN_NAME_PRONUNCIATION)
+                FjbHeaderInfo.getColumnColors(FjbHeaderInfo.COLUMN_NAME_PRONUNCIATION),
+                FjbHeaderInfo.COLUMN_NAME_PRONUNCIATION
         ));
         options.add(new LocationSpinnerAdapter.Option(
                 getString(R.string.select_drop_down_convenience),
-                FjbHeaderInfo.getColumnColors(FjbHeaderInfo.COLUMN_NAME_RETRIEVAL)
+                FjbHeaderInfo.getColumnColors(FjbHeaderInfo.COLUMN_NAME_RETRIEVAL),
+                FjbHeaderInfo.COLUMN_NAME_RETRIEVAL
         ));
+        String recentColumn = sp.getString(
+                LAST_LOCATION_COLUMN_KEY, FjbHeaderInfo.COLUMN_NAME_RETRIEVAL);
+        LocationSpinnerAdapter.Option recentSource = null;
         if (includeCities) {
             String[] cityNames = FjbHeaderInfo.getCityList();
             for (int i = 0; i < cityNames.length; i++) {
                 String column = FjbHeaderInfo.getCityNameByNumber(i);
-                options.add(new LocationSpinnerAdapter.Option(
+                LocationSpinnerAdapter.Option cityOption = new LocationSpinnerAdapter.Option(
                         cityNames[i],
-                        FjbHeaderInfo.getColumnColors(column)
-                ));
+                        FjbHeaderInfo.getColumnColors(column),
+                        column
+                );
+                options.add(cityOption);
+                if (column.equals(recentColumn)) recentSource = cityOption;
             }
         }
+        if (recentSource == null) {
+            for (LocationSpinnerAdapter.Option option : options) {
+                if (option.queryColumn.equals(recentColumn)) {
+                    recentSource = option;
+                    break;
+                }
+            }
+        }
+        if (recentSource == null) recentSource = options.get(DEFAULT_LOCATION_POSITION);
+        options.add(2, new LocationSpinnerAdapter.Option(
+                getString(R.string.select_drop_down_recent, recentSource.label),
+                recentSource.colors,
+                recentSource.queryColumn,
+                true
+        ));
         return options;
     }
 
@@ -1068,6 +1138,11 @@ public class MainActivity extends AppCompatActivity {
         editor.putBoolean("switch_2_is_checked", switchQueryOptsRev.isChecked());
         editor.putBoolean("switch_3_is_checked", switchQueryOptsRegex.isChecked());
         editor.putInt("spinner_selected_position", selectedLocationPosition);
+        LocationSpinnerAdapter.Option selectedLocation = getSelectedLocationOption();
+        if (selectedLocation != null) {
+            editor.putString(LOCATION_SELECTION_COLUMN_KEY, selectedLocation.queryColumn);
+            editor.putBoolean(LOCATION_SELECTION_RECENT_KEY, selectedLocation.recent);
+        }
         editor.putInt("querying_mode_config", queryingModeConfig);
         editor.putStringSet("querying_filter_city", GeneralCharacterManager.cityFilter);
         editor.putStringSet("querying_filter_city_pron", ResultFragment.pronCityFilter);
@@ -1156,13 +1231,15 @@ public class MainActivity extends AppCompatActivity {
                 }
                 url.add("mode", sheetMode);
 
-                int selectedColumn = selectedLocationPosition;
+                LocationSpinnerAdapter.Option selectedLocation = getSelectedLocationOption();
+                String selectedColumn = selectedLocation == null
+                        ? FjbHeaderInfo.COLUMN_NAME_RETRIEVAL
+                        : selectedLocation.queryColumn;
 
                 // 漢字必須交由 API 自動選擇字頭列；只有查音纔傳讀音列。
-                if (pronunciationInput && selectedColumn >= 2) {
-                    url.add("col", FjbHeaderInfo.getCityNameByNumber(selectedColumn - 2));
-                } else if (pronunciationInput && selectedColumn == 1) {
-                    url.add("col", FjbHeaderInfo.COLUMN_NAME_RETRIEVAL);
+                if (pronunciationInput
+                        && !FjbHeaderInfo.COLUMN_NAME_PRONUNCIATION.equals(selectedColumn)) {
+                    url.add("col", selectedColumn);
                 }
             }
         } else { // 檢索通用字表

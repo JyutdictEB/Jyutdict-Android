@@ -241,7 +241,7 @@ public class ResultFragment extends Fragment {
                         FjbHeaderInfo.densityScore(left)
                 ));
                 for (JSONObject entry : sortedEntries) {
-                    character = new FjbCharacter(entry, entrySettings, mRvMain);
+                    character = new FjbCharacter(entry, entrySettings);
 
                     addItem(character.printCharacter(),
                             character.printUnicode(),

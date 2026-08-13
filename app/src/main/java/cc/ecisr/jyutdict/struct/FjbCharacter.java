@@ -5,15 +5,10 @@ import android.graphics.Typeface;
 import android.text.Html;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
-import android.text.TextPaint;
-import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StrikethroughSpan;
 import android.text.style.StyleSpan;
-import android.view.View;
-
-import androidx.annotation.NonNull;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -24,7 +19,7 @@ import java.util.Map;
 
 import cc.ecisr.jyutdict.utils.ColorUtil;
 import cc.ecisr.jyutdict.utils.StringUtil;
-import cc.ecisr.jyutdict.utils.ToastUtil;
+import cc.ecisr.jyutdict.widget.AnnotationClickSpan;
 import cc.ecisr.jyutdict.widget.GradientTextSpan;
 import cc.ecisr.jyutdict.widget.LocationClickSpan;
 
@@ -47,9 +42,6 @@ public class FjbCharacter {
     // 包含如“是否對地方名著色”等顯示設置
     private final EntrySetting settings;
 
-    // 父級界面的 view，在實例化時傳入，用於在 view 上顯示 toast 等通知
-    View view;
-
     /**
      * 構造函數
      *
@@ -58,7 +50,7 @@ public class FjbCharacter {
      *
      * @param settings 一個 EntrySettings 類對象，以初始化 this.settings
      */
-    public FjbCharacter(JSONObject charaEntry, final EntrySetting settings, final View v) {
+    public FjbCharacter(JSONObject charaEntry, final EntrySetting settings) {
         this.settings = settings;
         key2val = new MapHelper(FjbHeaderInfo.getInfoLength());
         Iterator<String> keysIterator = charaEntry.keys(); // 獲取地名鍵
@@ -69,7 +61,6 @@ public class FjbCharacter {
             }
             cellNotes = new JSONObject(key2val.get(FjbHeaderInfo.COLUMN_NAME_CELL_NOTE));
         } catch (JSONException ignored) {}
-        view = v;
     }
 
     /**
@@ -265,7 +256,7 @@ public class FjbCharacter {
                 sb.append(key).append("] ").append(value).append(", \n");
                 sb.append(cellNotes.optString(key).replaceAll("\n\t-.+", "\t\t- by Anonymous").replaceAll("\n-{10,}", ""));
                 final String s = sb.toString();
-                ssb.setSpan(new CustomClickable(v -> ToastUtil.tips(view, s, "善")) {},
+                ssb.setSpan(new AnnotationClickSpan(s),
                         pronStartPos, pronEndPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 
                 int[] underlineColors = new int[]{Color.parseColor("#999999")};
@@ -338,7 +329,7 @@ public class FjbCharacter {
                     sb.append(key).append("] ").append(value).append(", \n");
                     sb.append(cellNotes.optString(key).replaceAll("\n\t-.+", "\t\t- by Anonymous").replaceAll("\n-{10,}", ""));
                     final String s = sb.toString();
-                    ssb.setSpan(new CustomClickable(v -> ToastUtil.tips(view, s, "善")) {},
+                    ssb.setSpan(new AnnotationClickSpan(s),
                             pronStartPos, pronEndPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                             
                     int[] underlineColors = new int[]{Color.parseColor("#999999")};
@@ -474,23 +465,6 @@ public class FjbCharacter {
 
         return ssb;
     }
-
-    static class CustomClickable extends ClickableSpan implements View.OnClickListener {
-        private final View.OnClickListener mListener;
-        public CustomClickable(View.OnClickListener mListener) {
-            this.mListener = mListener;
-        }
-        @Override
-        public void onClick(@NonNull View v) {
-            mListener.onClick(v);
-        }
-
-        @Override
-        public void updateDrawState(@NonNull TextPaint ds) {
-            ds.setUnderlineText(false);
-        }
-    }
-
 
     private static class MapHelper {
         Map<String, String> map;
