@@ -315,6 +315,10 @@ public class MainActivity extends AppCompatActivity {
         //inputEditText.setOnClickListener(v -> toggleNightTheme());
         GeneralCharacterManager.cityFilter = new HashSet<>(
                 sp.getStringSet("querying_filter_city", new HashSet<>()));
+        if (GeneralCharacterManager.cityFilter.remove("韻書")) {
+            GeneralCharacterManager.cityFilter.add(GeneralCharacterManager.FILTER_BOOK_FANWAN);
+            GeneralCharacterManager.cityFilter.add(GeneralCharacterManager.FILTER_BOOK_JINGWAA);
+        }
         ResultFragment.pronCityFilter = new HashSet<>(
                 sp.getStringSet("querying_filter_city_pron", new HashSet<>()));
         ResultFragment.pronBookFilter = new HashSet<>(
@@ -756,7 +760,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void rebuildGeneralLocationList() {
         GeneralCharacterManager.cityList = new ArrayList<>();
-        GeneralCharacterManager.cityList.add("韻書");
+        GeneralCharacterManager.cityList.add(GeneralCharacterManager.FILTER_BOOK_FANWAN);
+        GeneralCharacterManager.cityList.add(GeneralCharacterManager.FILTER_BOOK_JINGWAA);
         for (LocationInfo.Location location : LocationInfo.getAll()) {
             GeneralCharacterManager.cityList.add(location.displayName());
         }

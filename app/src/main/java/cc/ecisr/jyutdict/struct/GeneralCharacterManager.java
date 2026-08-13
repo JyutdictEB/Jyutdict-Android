@@ -26,10 +26,14 @@ import java.util.TreeMap;
 
 import cc.ecisr.jyutdict.utils.ColorUtil;
 import cc.ecisr.jyutdict.widget.FixedWidthSpan;
+import cc.ecisr.jyutdict.widget.BookLabelSpan;
 import cc.ecisr.jyutdict.widget.LocationClickSpan;
 import cc.ecisr.jyutdict.widget.LocationLabelSpan;
+import cc.ecisr.jyutdict.widget.NoBreakCandidateSpan;
 
 public class GeneralCharacterManager {
+    public static final String FILTER_BOOK_FANWAN = "韻書 · 分韻";
+    public static final String FILTER_BOOK_JINGWAA = "韻書 · 英華";
     public enum ColoringMode { NoColoring, InnerColoring, InterColoring}
     ArrayList<GeneralCharacter> charas = new ArrayList<>();
     ArrayList<String> charaHead = new ArrayList<>();
@@ -163,20 +167,12 @@ public class GeneralCharacterManager {
         }
 
         SpannableStringBuilder contentWanshyu = new SpannableStringBuilder("");
-        if (!cityFilter.contains("韻書") && !chara.books.fanwan.isEmpty()) {
-            for (int i = 0; i<chara.books.fanwan.size(); i++) {
-                if (i==0) { contentWanshyu.append("[分韻] "); }
-                if (i>0) { contentWanshyu.append(" | "); }
-                contentWanshyu.append(chara.books.fanwan.get(i));
-            }
+        if (!isBookFiltered(FILTER_BOOK_FANWAN) && !chara.books.fanwan.isEmpty()) {
+            appendBook(contentWanshyu, "分韻", chara.books.fanwan);
         }
-        if (!cityFilter.contains("韻書") && !chara.books.jingwaa.isEmpty()) {
-            if (contentWanshyu.length()>0) { contentWanshyu.append("\n"); }
-            for (int i = 0; i<chara.books.jingwaa.size(); i++) {
-                if (i==0) { contentWanshyu.append("[英華] "); }
-                if (i>0) { contentWanshyu.append(" | "); }
-                contentWanshyu.append(chara.books.jingwaa.get(i));
-            }
+        if (!isBookFiltered(FILTER_BOOK_JINGWAA) && !chara.books.jingwaa.isEmpty()) {
+            if (contentWanshyu.length()>0) contentWanshyu.append("\n");
+            appendBook(contentWanshyu, "英華", chara.books.jingwaa);
         }
 
         SpannableStringBuilder contentLoc = new SpannableStringBuilder();
@@ -236,6 +232,8 @@ public class GeneralCharacterManager {
                     }
                 }
 
+                int pronunciationUnitStart = contentLoc.length();
+
                 ArrayList<GeneralCharacter.SingleLoc.SinglePron> singleLoc = loc.prons.get(i);
                 for (int j=0; j<loc.prons.get(i).size(); j++) {
                     contentLoc.append(j > 0 ? "=" : "");
@@ -277,6 +275,13 @@ public class GeneralCharacterManager {
                     contentLoc.setSpan(new RelativeSizeSpan(0.75f),
                             presentBeginPosition, presentEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 }
+
+                contentLoc.setSpan(
+                        new NoBreakCandidateSpan(LocationLabelSpan.widthEm(displayName)),
+                        pronunciationUnitStart,
+                        contentLoc.length(),
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                );
             }
 
             float locationTextSize = TypedValue.applyDimension(
@@ -308,6 +313,23 @@ public class GeneralCharacterManager {
                 new SpannableString(""),
                 contentCharaInfo, contentWanshyu, contentLoc
         };
+    }
+
+    private static boolean isBookFiltered(String bookFilter) {
+        return cityFilter.contains("韻書") || cityFilter.contains(bookFilter);
+    }
+
+    private static void appendBook(SpannableStringBuilder output, String name,
+                                   ArrayList<String> entries) {
+        int labelStart = output.length();
+        output.append(name);
+        output.setSpan(new BookLabelSpan(), labelStart, output.length(),
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        output.append(" ");
+        for (int index = 0; index < entries.size(); index++) {
+            if (index > 0) output.append(" | ");
+            output.append(entries.get(index));
+        }
     }
 
 

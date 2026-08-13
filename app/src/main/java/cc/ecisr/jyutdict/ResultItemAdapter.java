@@ -106,8 +106,8 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
             return tvCharaHeader.getText().toString() + "\n" +
                     tvCharaInfo.getText().toString() + "\n" +
                     tvCharaExtra.getText().toString() + "\n" +
-                    tvRightTop.getText().toString() + "\n" +
-                    tvRightBottom.getText().toString() + "\n";
+                    tvRightTop.getSelectablePlainText() + "\n" +
+                    tvRightBottom.getSelectablePlainText() + "\n";
         }
     }
 
