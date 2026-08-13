@@ -669,7 +669,8 @@ public class MainActivity extends AppCompatActivity {
         locationHeaderNeedsRefresh = !restoreCachedHeader(false);
         headerLoadingInitialized = true;
         headerLoadingStatus.setOnClickListener(view -> retryHeadersNow());
-        updateHeaderLoadingStatus();
+        updateHeaderLoadingStatus(
+                !sheetHeaderNeedsRefresh && !locationHeaderNeedsRefresh);
     }
 
     /**
