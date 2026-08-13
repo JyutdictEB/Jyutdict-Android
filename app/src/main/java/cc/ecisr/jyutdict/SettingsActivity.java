@@ -14,13 +14,13 @@ import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.preference.EditTextPreference;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
-import androidx.preference.SwitchPreference;
+import androidx.preference.SwitchPreferenceCompat;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -31,6 +31,7 @@ import cc.ecisr.jyutdict.utils.DiskTextCache;
 import cc.ecisr.jyutdict.utils.EnumConst;
 import cc.ecisr.jyutdict.utils.HttpUtil;
 import cc.ecisr.jyutdict.utils.LocationArticleRepository;
+import cc.ecisr.jyutdict.utils.ImmersiveBarUtil;
 import cc.ecisr.jyutdict.utils.ThemeUtil;
 import cc.ecisr.jyutdict.utils.ToastUtil;
 
@@ -55,13 +56,16 @@ public class SettingsActivity extends AppCompatActivity {
         sp = getSharedPreferences("settings", Context.MODE_PRIVATE);
         editor = sp.edit();
         setContentView(R.layout.activity_settings);
+        boolean lightSystemBars = !ThemeUtil.isNightMode(this);
+        ImmersiveBarUtil.setImmersiveBar(this, lightSystemBars, lightSystemBars);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.settings, settingsFragment)
                 .commit();
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
         v0This = Integer.parseInt(getResources().getString(R.string.app_version_0));
@@ -136,12 +140,12 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     public static class SettingsFragment extends PreferenceFragmentCompat {
-        SwitchPreference switchAdvancedSearch;
-        SwitchPreference switchAreaColoring;
-        SwitchPreference switchPhraseMeaningDomain;
+        SwitchPreferenceCompat switchAdvancedSearch;
+        SwitchPreferenceCompat switchAreaColoring;
+        SwitchPreferenceCompat switchPhraseMeaningDomain;
         EditTextPreference editAreaColoringDarkenRatio;
         ListPreference listThemeMode;
-        SwitchPreference switchIpaPresent;
+        SwitchPreferenceCompat switchIpaPresent;
         Preference clearCache;
 
         @Override
@@ -162,7 +166,7 @@ public class SettingsActivity extends AppCompatActivity {
             }
             if (listThemeMode != null) {
                 listThemeMode.setOnPreferenceChangeListener((preference, newValue) -> {
-                    sp.edit().putString("theme_mode", String.valueOf(newValue)).commit();
+                    sp.edit().putString("theme_mode", String.valueOf(newValue)).apply();
                     requireActivity().getIntent().putExtra(EXTRA_THEME_CHANGED, true);
                     requireActivity().getWindow().getDecorView().post(requireActivity()::recreate);
                     return true;

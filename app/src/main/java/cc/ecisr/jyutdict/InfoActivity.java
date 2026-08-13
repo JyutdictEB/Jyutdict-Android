@@ -30,7 +30,8 @@ public class InfoActivity extends AppCompatActivity {
         setTheme(ThemeUtil.isNightMode(this) ? R.style.DarkTheme : R.style.AppTheme);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_info);
-        ImmersiveBarUtil.setImmersiveBar(this, true, false);
+        boolean lightSystemBars = !ThemeUtil.isNightMode(this);
+        ImmersiveBarUtil.setImmersiveBar(this, lightSystemBars, lightSystemBars);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         TabLayout tabLayout = findViewById(R.id.tab_layout);

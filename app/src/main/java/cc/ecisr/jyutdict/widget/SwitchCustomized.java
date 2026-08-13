@@ -6,9 +6,9 @@ import android.util.AttributeSet;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.google.android.material.materialswitch.MaterialSwitch;
 
-public class SwitchCustomized extends SwitchMaterial {
+public class SwitchCustomized extends MaterialSwitch {
     private OnSetCheckedListener mListener;
     private boolean isSetSetCheckedListener = false;
 

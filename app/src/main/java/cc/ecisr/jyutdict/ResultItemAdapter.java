@@ -53,11 +53,14 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         int tvContentExtraVisibility = (extra.length()!=0) ? View.VISIBLE : View.GONE;
         int tvContentWanshyuVisibility = (wanshyu.length()!=0) ? View.VISIBLE : View.GONE;
         int tvContentLocationVisibility = (location.length()!=0) ? View.VISIBLE : View.GONE;
+        int dividerVisibility = (wanshyu.length() != 0 && location.length() != 0)
+                ? View.VISIBLE : View.GONE;
         holder.lyChara.setVisibility(lyCharaVisibility);
         holder.tvCharaInfo.setVisibility(tvContentInfoVisibility);
         holder.tvCharaExtra.setVisibility(tvContentExtraVisibility);
         holder.tvRightTop.setVisibility(tvContentWanshyuVisibility);
         holder.tvRightBottom.setVisibility(tvContentLocationVisibility);
+        holder.contentDivider.setVisibility(dividerVisibility);
 
         // 短按彈出操作菜單
         holder.itemView.setOnClickListener(v -> mListener.onClick(holder));
@@ -78,6 +81,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 
     public static class LinearViewHolder extends RecyclerView.ViewHolder {
         LinearLayout lyChara;
+        View contentDivider;
         TextView tvCharaHeader, tvCharaInfo, tvCharaExtra;
         SelectableTextView tvRightTop, tvRightBottom;
 
@@ -90,6 +94,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
             tvCharaExtra = itemView.findViewById(R.id.chara_extra);
             tvRightTop = itemView.findViewById(R.id.content_wanshyu);
             tvRightBottom = itemView.findViewById(R.id.content_location);
+            contentDivider = itemView.findViewById(R.id.content_divider);
         }
 
         String getChara() {

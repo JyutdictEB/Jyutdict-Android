@@ -3,24 +3,26 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <ProgressBar
+    <com.google.android.material.progressindicator.CircularProgressIndicator
         android:id="@+id/progress_bar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center" />
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="center"
+        android:indeterminate="true" />
 
     <WebView
         android:id="@+id/web_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="?attr/colorSurface"
         android:visibility="gone" />
 
-    <TextView
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/error_text"
+        style="@style/Widget.Jyutdict.ActionButton"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/touch_target"
         android:layout_gravity="center"
-        android:textColor="?attr/clockTextColorDim"
         android:visibility="gone" />
 
 </FrameLayout>

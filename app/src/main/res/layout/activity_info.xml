@@ -4,58 +4,58 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     android:orientation="vertical"
     tools:context=".InfoActivity">
 
-    <androidx.appcompat.widget.Toolbar
+    <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
+        style="@style/Widget.Jyutdict.Toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingTop="25dp"
-        android:background="@color/colorPrimary"
-        app:titleTextColor="@color/colorWhite"
-        android:elevation="4dp"
+        android:layout_height="@dimen/top_app_bar_height"
         app:title="@string/menu_info" />
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tab_layout"
+        style="@style/Widget.Material3.TabLayout.Secondary"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?attr/clockBackground"
-        app:tabTextColor="?attr/clockTextColorDim"
-        app:tabSelectedTextColor="@color/colorPrimary"
-        app:tabIndicatorColor="@color/colorPrimary"
-        app:tabMode="scrollable" />
+        android:layout_height="48dp"
+        android:background="?attr/colorSurface"
+        app:tabIndicatorColor="?attr/colorPrimary"
+        app:tabIndicatorFullWidth="false"
+        app:tabMode="scrollable"
+        app:tabSelectedTextColor="?attr/colorPrimary"
+        app:tabTextAppearance="@style/TextAppearance.Material3.LabelLarge"
+        app:tabTextColor="?attr/colorOnSurfaceVariant" />
 
-    <ProgressBar
+    <com.google.android.material.progressindicator.LinearProgressIndicator
         android:id="@+id/progress_bar"
         android:layout_width="match_parent"
         android:layout_height="4dp"
-        style="?android:attr/progressBarStyleHorizontal"
         android:indeterminate="true"
-        android:visibility="gone" />
+        android:visibility="gone"
+        app:indicatorColor="?attr/colorPrimary"
+        app:trackColor="?attr/colorSurfaceContainerHighest"
+        app:trackThickness="4dp" />
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="?attr/clockBackground">
+        android:background="?attr/colorSurface">
 
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/view_pager"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
-        <TextView
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/error_text"
+            style="@style/Widget.Jyutdict.ActionButton"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="@dimen/touch_target"
             android:layout_gravity="center"
-            android:gravity="center"
-            android:minHeight="48dp"
-            android:padding="16dp"
             android:text="@string/info_load_error_retry"
-            android:textColor="?attr/clockTextColorDim"
             android:visibility="gone" />
 
     </FrameLayout>

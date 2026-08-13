@@ -34,6 +34,7 @@
     <string name="search_filtering_area_pron">篩選查音地點</string>
     <string name="search_filter_book_item">韻書 · %1$s</string>
     <string name="search_coloring_jpp_partial">音節高亮</string>
+    <string name="search_options_title">檢索選項</string>
     <string name="search_coloring_jpp_partial_notice">選擇所需對比的音節部分\n不選則無高亮</string>
     <string name="search_coloring_jpp_partial_inner">單字內部對比</string>
     <string name="search_coloring_jpp_partial_inter">多字對比</string>
@@ -83,6 +84,7 @@
 
     <!-- SettingActivity -->
     <string name="title_activity_settings">設置</string>
+    <string name="settings_supporting_text">外觀、檢索與本機資料</string>
     <string name="search_header">檢索</string>
     <string name="search_title_advanced_options">進階檢索選項 (beta)</string>
     <string name="display_header">顯示</string>

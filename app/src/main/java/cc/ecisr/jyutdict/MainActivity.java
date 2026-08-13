@@ -14,7 +14,6 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -36,6 +35,10 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+
+import com.google.android.material.checkbox.MaterialCheckBox;
+import com.google.android.material.color.MaterialColors;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -81,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
     private static final long HEADER_RETRY_MAX_DELAY = 30_000L;
 
     AppCompatEditText inputEditText;
-    Button btnQueryConfirm, btnQueryClear, btnFilterArea, btnFilterAreaPron, btnColoringJppPartial;
+    Button btnQueryConfirm, btnFilterArea, btnFilterAreaPron, btnColoringJppPartial;
     Spinner spinnerQueryLocation;
     SwitchCustomized switchQueryOpts1, switchQueryOptsRev, switchQueryOptsRegex;
     ResultFragment resultFragment;
@@ -149,7 +152,6 @@ public class MainActivity extends AppCompatActivity {
         lyMain = findViewById(R.id.whole_main_layout);
         inputEditText = findViewById(R.id.edit_text_input);
         btnQueryConfirm = findViewById(R.id.btn_query);
-        btnQueryClear = findViewById(R.id.btn_clear);
         btnFilterArea = findViewById(R.id.btn_filter_area);
         btnFilterAreaPron = findViewById(R.id.btn_filter_area_pron);
         btnColoringJppPartial = findViewById(R.id.btn_coloring_jpp_partial);
@@ -173,11 +175,12 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        sp = getSharedPreferences("settings", MODE_PRIVATE); // 要讀取夜間模式設置，所以 sp 放前面
         applyLightDarkTheme();
+        super.onCreate(savedInstanceState);
+        sp = getSharedPreferences("settings", MODE_PRIVATE);
         setContentView(R.layout.activity_main);
-        ImmersiveBarUtil.setImmersiveBar(this, true, false);
+        boolean lightSystemBars = !ThemeUtil.isNightMode(this);
+        ImmersiveBarUtil.setImmersiveBar(this, lightSystemBars, lightSystemBars);
         getView();
         if (savedInstanceState == null) {
             resultFragment = new ResultFragment();
@@ -224,7 +227,6 @@ public class MainActivity extends AppCompatActivity {
 
         // 查詢按鈕
         btnQueryConfirm.setOnClickListener(v -> search());
-        btnQueryClear.setOnClickListener(v -> inputEditText.setText(""));
 
         // 監聽焦點在輸入框內的軟鍵盤的確認按鈕
         inputEditText.setOnEditorActionListener((v, actionId, event) -> {
@@ -245,20 +247,16 @@ public class MainActivity extends AppCompatActivity {
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (s.toString().isEmpty()) {
-                    btnQueryClear.setVisibility(View.GONE);
-                } else {
-                    btnQueryClear.setVisibility(View.VISIBLE);
-                }
-
             }
             @Override
             public void afterTextChanged(Editable s) {
                 boolean isJpp = StringUtil.isJyutpingInput(s.toString());
 
                 int presentColor = isJpp ?
-                        getResources().getColor(R.color.colorSecondary) :
-                        getResources().getColor(R.color.colorPrimary);
+                        MaterialColors.getColor(btnQueryConfirm,
+                                com.google.android.material.R.attr.colorTertiary) :
+                        MaterialColors.getColor(btnQueryConfirm,
+                                com.google.android.material.R.attr.colorPrimary);
                 if (previousColor == presentColor) return;
                 ObjectAnimator objectAnimator;
                 objectAnimator = ObjectAnimator.ofInt(btnQueryConfirm,"textColor", previousColor, presentColor);
@@ -272,8 +270,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-        previousColor = getResources().getColor(R.color.colorPrimary);
-        btnQueryClear.setVisibility(View.GONE);
+        previousColor = MaterialColors.getColor(btnQueryConfirm,
+                com.google.android.material.R.attr.colorPrimary);
 
         // 讀取幾個開關之前的狀態
         switchQueryOpts1.setSetCheckedListener(this::setInputEditTextHint);
@@ -294,7 +292,7 @@ public class MainActivity extends AppCompatActivity {
 
         queryingModeConfig = sp.getInt("querying_mode_config", 0);
         btnColoringJppPartial.setOnClickListener(view -> {
-            AlertDialog.Builder dialog = getDialogForColoringJpp();
+            MaterialAlertDialogBuilder dialog = getDialogForColoringJpp();
             dialog.setMultiChoiceItems(
                     new String[]{
                             getString(R.string.syllable_initial),
@@ -392,7 +390,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void showFilterDialog(int titleRes, ArrayList<String> itemNames,
                                   HashSet<String> filter, FilterResultListener onConfirm) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(MainActivity.this);
         builder.setTitle(titleRes);
 
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_filter_pron, null);
@@ -402,11 +400,12 @@ public class MainActivity extends AppCompatActivity {
         // 臨時 filter，在確定前不直接修改原始 filter
         HashSet<String> tempFilter = new HashSet<>(filter);
 
-        ArrayList<android.widget.CheckBox> checkBoxes = new ArrayList<>();
+        ArrayList<MaterialCheckBox> checkBoxes = new ArrayList<>();
         for (int index = 0; index < itemNames.size(); index++) {
             String name = itemNames.get(index);
-            android.widget.CheckBox cb = new android.widget.CheckBox(builder.getContext());
+            MaterialCheckBox cb = new MaterialCheckBox(builder.getContext());
             cb.setText(name);
+            cb.setMinHeight(getResources().getDimensionPixelSize(R.dimen.touch_target));
             cb.setChecked(!tempFilter.contains(name));
             cb.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 if (isChecked) {
@@ -443,14 +442,14 @@ public class MainActivity extends AppCompatActivity {
         // 全選按鈕
         dialogView.findViewById(R.id.btn_dialog_select_all).setOnClickListener(btn -> {
             tempFilter.clear();
-            for (android.widget.CheckBox cb : checkBoxes) {
+            for (MaterialCheckBox cb : checkBoxes) {
                 cb.setChecked(true);
             }
         });
 
         // 反選按鈕
         dialogView.findViewById(R.id.btn_dialog_invert).setOnClickListener(btn -> {
-            for (android.widget.CheckBox cb : checkBoxes) {
+            for (MaterialCheckBox cb : checkBoxes) {
                 cb.setChecked(!cb.isChecked());
             }
         });
@@ -464,8 +463,8 @@ public class MainActivity extends AppCompatActivity {
         void onConfirm(HashSet<String> filter);
     }
 
-    private AlertDialog.Builder getDialogForColoringJpp() {
-        AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
+    private MaterialAlertDialogBuilder getDialogForColoringJpp() {
+        MaterialAlertDialogBuilder dialog = new MaterialAlertDialogBuilder(MainActivity.this);
         dialog.setTitle(R.string.search_coloring_jpp_partial_notice);
         dialog.setNegativeButton(R.string.search_coloring_jpp_partial_inter, (dialogInter, which) -> {
             queryingModeConfig = (queryingModeConfig & ~DISPLAY_CHECKING_IS_INNER);
@@ -1042,7 +1041,7 @@ public class MainActivity extends AppCompatActivity {
      * 首次使用時顯示提示框
      */
     private void displayTipsMessageBox() {
-        new AlertDialog.Builder(this)
+        new MaterialAlertDialogBuilder(this)
                 .setTitle("歡迎使用本應用！")
                 .setMessage("在使用之前，請務必閱覽本應用之說明。\n\n起碼把紅字看完！\n\n註意：內含隱私聲明，返回此界面則代表同意該聲明。")
                 .setPositiveButton("打開「幫助」頁面",

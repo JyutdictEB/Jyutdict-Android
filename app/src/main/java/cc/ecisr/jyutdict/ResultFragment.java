@@ -2,7 +2,6 @@ package cc.ecisr.jyutdict;
 
 import static cc.ecisr.jyutdict.utils.EnumConst.*;
 
-import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -21,6 +20,8 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -80,13 +81,13 @@ public class ResultFragment extends Fragment {
 
                 if (!selectionList.isEmpty() && null != getActivity()) {
                     final String[] selections = selectionList.toArray(new String[0]);
-                    new AlertDialog.Builder(getContext())
+                    new MaterialAlertDialogBuilder(getContext())
                             .setItems(selections, (dialogInterface, i) -> {
                                 if (i == 0) {
                                     View view = inflater.inflate(R.layout.layout_copy_alertdialog, null);
                                     TextView tv = view.findViewById(R.id.dialog_box_tv);
                                     tv.setText(holder.printContent());
-                                    new AlertDialog.Builder(getContext())
+                                    new MaterialAlertDialogBuilder(getContext())
                                             .setView(view).setPositiveButton(R.string.button_confirm, null).show();
                                 } else {
                                     int elseItemAddedCount = 1;

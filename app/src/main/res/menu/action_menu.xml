@@ -12,12 +12,14 @@
         android:id="@+id/menu_info"
         android:title="@string/menu_info"
         android:icon="@drawable/ic_about"
+        app:iconTint="?attr/colorOnSurfaceVariant"
         app:showAsAction="always">
     </item>
     <item
         android:id="@+id/menu_setting"
         android:title="@string/menu_options"
         android:icon="@drawable/ic_setting"
+        app:iconTint="?attr/colorOnSurfaceVariant"
         app:showAsAction="always">
 
     </item>

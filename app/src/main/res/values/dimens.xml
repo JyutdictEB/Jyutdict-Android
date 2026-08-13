@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="space_xs">4dp</dimen>
+    <dimen name="space_sm">8dp</dimen>
+    <dimen name="space_md">12dp</dimen>
+    <dimen name="space_lg">16dp</dimen>
+    <dimen name="space_xl">24dp</dimen>
+    <dimen name="content_horizontal_padding">16dp</dimen>
+    <dimen name="touch_target">48dp</dimen>
+    <dimen name="top_app_bar_height">64dp</dimen>
+    <dimen name="card_corner_radius">20dp</dimen>
+    <dimen name="dialog_corner_radius">28dp</dimen>
+</resources>

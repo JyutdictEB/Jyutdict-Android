@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    >
+    android:layout_height="match_parent">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/result_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:foregroundGravity="center"
-        android:background="?attr/clockBackground"
-        android:scrollbarSize="3dp"
-        android:scrollbarThumbVertical="@color/colorPrimary"
-        android:scrollbars="vertical"
-        app:layout_constraintTop_toTopOf="parent" />
-</RelativeLayout>
+        android:background="?attr/colorSurface"
+        android:clipToPadding="false"
+        android:paddingTop="@dimen/space_xs"
+        android:paddingBottom="@dimen/space_md"
+        android:scrollbarSize="2dp"
+        android:scrollbarThumbVertical="?attr/colorOutline"
+        android:scrollbars="vertical" />
+
+</FrameLayout>

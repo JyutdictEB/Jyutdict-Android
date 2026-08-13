@@ -39,29 +39,29 @@ public final class MarkdownUtil {
     }
 
     private static String style(boolean dark) {
-        String background = dark ? "#202020" : "#FAFAFA";
-        String foreground = dark ? "#E9E7EF" : "#0F110C";
-        String muted = dark ? "#ABAAB1" : "#606060";
-        String border = dark ? "#505050" : "#D7D7D7";
-        String surface = dark ? "#292929" : "#FFFFFF";
-        String header = dark ? "#343434" : "#F0F0F0";
-        String link = dark ? "#79B8FF" : "#175BC1";
-        String code = dark ? "#303030" : "#F0F0F0";
+        String background = dark ? "#1A1110" : "#FFF8F6";
+        String foreground = dark ? "#F1DEDB" : "#231918";
+        String muted = dark ? "#D8C2BE" : "#534341";
+        String border = dark ? "#534341" : "#D8C2BE";
+        String surface = dark ? "#271D1C" : "#FFF1EE";
+        String header = dark ? "#3D3230" : "#F1DEDB";
+        String link = dark ? "#FFB4A8" : "#9B2F24";
+        String code = dark ? "#322826" : "#FCEAE7";
         return "<style>"
                 + "*{box-sizing:border-box}html{-webkit-text-size-adjust:100%;text-size-adjust:100%}"
-                + "body{width:auto;max-width:100%;margin:0;padding:18px 16px 32px;"
-                + "font-family:sans-serif;font-size:16px;line-height:1.75;overflow-wrap:anywhere;"
+                + "body{width:auto;max-width:100%;margin:0;padding:20px 20px 40px;"
+                + "font-family:system-ui,sans-serif;font-size:16px;line-height:1.7;overflow-wrap:anywhere;"
                 + "color:" + foreground + ";background:" + background + "}"
-                + "article{width:100%;max-width:100%;margin:0 auto}"
-                + "h1,h2,h3,h4{font-family:serif;line-height:1.35;margin:1.35em 0 .55em}"
+                + "article{width:100%;max-width:760px;margin:0 auto}"
+                + "h1,h2,h3,h4{font-family:serif;line-height:1.35;margin:1.5em 0 .6em}"
                 + "h1{font-size:1.7em}h2{font-size:1.4em;border-bottom:1px solid " + border
                 + ";padding-bottom:.3em}h3{font-size:1.2em}h4{font-size:1.08em}"
                 + "p{margin:.5em 0 1em;text-indent:2em}li p,blockquote p,td p,th p{"
                 + "text-indent:0;margin:.25em 0}"
                 + "strong{color:#D32913}em{color:" + muted + "}"
                 + "a{color:" + link + ";text-decoration:underline}"
-                + "blockquote{margin:1em 0;border-left:4px solid #D32913;padding:.25em 1em;"
-                + "color:" + muted + ";background:" + surface + "}"
+                + "blockquote{margin:1em 0;border-left:4px solid #9B2F24;padding:.7em 1em;"
+                + "border-radius:0 12px 12px 0;color:" + muted + ";background:" + surface + "}"
                 + "img{display:block;max-width:100%;height:auto;margin:1em auto}"
                 + "ul,ol{padding-left:1.6em}li{margin:.25em 0}"
                 + "table{display:block;width:max-content;min-width:100%;max-width:100%;"

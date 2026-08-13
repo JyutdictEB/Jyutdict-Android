@@ -70,10 +70,11 @@ public class LocationReaderActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         setTheme(ThemeUtil.isNightMode(this) ? R.style.DarkTheme : R.style.AppTheme);
+        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_location_reader);
-        ImmersiveBarUtil.setImmersiveBar(this, true, false);
+        boolean lightSystemBars = !ThemeUtil.isNightMode(this);
+        ImmersiveBarUtil.setImmersiveBar(this, lightSystemBars, lightSystemBars);
 
         mode = getIntent().getStringExtra(EXTRA_MODE);
         locationName = getIntent().getStringExtra(EXTRA_LOCATION_NAME);

@@ -1,126 +1,137 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/location_card"
+    style="@style/Widget.Material3.CardView.Filled"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_location_dialog"
     android:minHeight="224dp"
     android:minWidth="300dp"
-    android:orientation="vertical"
-    android:padding="18dp">
+    app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+    app:cardCornerRadius="@dimen/dialog_corner_radius"
+    app:cardElevation="6dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="vertical"
+        android:padding="@dimen/space_xl">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/location_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+                android:textColor="?attr/colorOnSurface" />
+
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/location_close"
+                android:layout_width="@dimen/touch_target"
+                android:layout_height="@dimen/touch_target"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/location_close"
+                android:padding="14dp"
+                android:src="@drawable/ic_close_20"
+                app:tint="?attr/colorOnSurfaceVariant" />
+
+        </LinearLayout>
 
         <TextView
-            android:id="@+id/location_title"
-            android:layout_width="0dp"
+            android:id="@+id/location_redirect"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textColor="?attr/clockTextColor"
-            android:textSize="21sp"
-            android:textStyle="bold" />
+            android:layout_marginTop="@dimen/space_xs"
+            android:minHeight="16dp"
+            android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:visibility="invisible" />
 
-        <ImageButton
-            android:id="@+id/location_close"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/location_close"
-            android:padding="10dp"
-            android:src="@drawable/ic_close_20"
-            app:tint="?attr/clockTextColor" />
-
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/location_redirect"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:minHeight="16dp"
-        android:paddingStart="8dp"
-        android:textColor="?attr/clockTextColorDim"
-        android:textSize="12sp"
-        android:visibility="invisible" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
-        android:orientation="horizontal">
-
-        <View
-            android:id="@+id/location_metadata_accent"
-            android:layout_width="4dp"
-            android:layout_height="match_parent"
-            android:background="@color/colorPrimary" />
-
-        <TextView
-            android:id="@+id/location_metadata"
-            android:layout_width="0dp"
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.Material3.CardView.Filled"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:minHeight="98dp"
-            android:padding="11dp"
-            android:textColor="?attr/clockTextColor"
-            android:textIsSelectable="true"
-            android:textSize="13sp" />
+            android:layout_marginTop="@dimen/space_lg"
+            app:cardBackgroundColor="?attr/colorSurfaceContainerLowest"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <View
+                    android:id="@+id/location_metadata_accent"
+                    android:layout_width="5dp"
+                    android:layout_height="match_parent"
+                    android:minHeight="104dp" />
+
+                <TextView
+                    android:id="@+id/location_metadata"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:minHeight="104dp"
+                    android:padding="@dimen/space_lg"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textIsSelectable="true" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/location_article_checking"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:layout_marginTop="@dimen/space_md"
+            android:indeterminate="true"
+            app:indicatorColor="?attr/colorPrimary"
+            app:trackColor="?attr/colorSurfaceContainerHighest"
+            app:trackThickness="4dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_md"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/location_article"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/touch_target"
+                android:layout_weight="1"
+                android:enabled="false"
+                android:minWidth="0dp"
+                android:paddingHorizontal="@dimen/space_sm"
+                android:text="@string/location_article_checking"
+                android:textAllCaps="false"
+                android:textAppearance="@style/TextAppearance.Material3.LabelLarge" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/location_phonology"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/touch_target"
+                android:layout_marginStart="@dimen/space_sm"
+                android:layout_weight="1"
+                android:minWidth="0dp"
+                android:paddingHorizontal="@dimen/space_sm"
+                android:text="@string/location_phonology"
+                android:textAllCaps="false"
+                android:textAppearance="@style/TextAppearance.Material3.LabelLarge" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
-    <ProgressBar
-        android:id="@+id/location_article_checking"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="2dp"
-        android:layout_marginTop="12dp"
-        android:indeterminate="true" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:orientation="horizontal">
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/location_article"
-            android:layout_width="0dp"
-            android:layout_height="44dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_location_action_outline"
-            android:enabled="false"
-            android:gravity="center"
-            android:minHeight="0dp"
-            android:minWidth="0dp"
-            android:paddingHorizontal="8dp"
-            android:text="@string/location_article_checking"
-            android:textAllCaps="false"
-            android:textColor="@color/location_action_outline_text"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/location_phonology"
-            android:layout_width="0dp"
-            android:layout_height="44dp"
-            android:layout_marginStart="8dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_location_action_filled"
-            android:gravity="center"
-            android:minHeight="0dp"
-            android:minWidth="0dp"
-            android:paddingHorizontal="8dp"
-            android:text="@string/location_phonology"
-            android:textAllCaps="false"
-            android:textColor="@color/location_action_filled_text"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-
-    </LinearLayout>
-
-</LinearLayout>
+</com.google.android.material.card.MaterialCardView>

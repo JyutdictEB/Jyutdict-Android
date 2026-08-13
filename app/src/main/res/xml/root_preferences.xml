@@ -18,19 +18,21 @@
 <!--    </PreferenceCategory>-->
 
     <PreferenceCategory app:title="@string/search_header">
-        <SwitchPreference
+        <SwitchPreferenceCompat
             app:key="advanced_search"
             app:title="@string/search_title_advanced_options"
-            app:defaultValue="false"/>
+            app:defaultValue="false"
+            app:iconSpaceReserved="false" />
 
     </PreferenceCategory>
 
     <PreferenceCategory app:title="@string/display_header">
 
-        <SwitchPreference
+        <SwitchPreferenceCompat
             app:key="area_coloring"
             app:title="@string/display_title_area_coloring"
-            app:defaultValue="true"/>
+            app:defaultValue="true"
+            app:iconSpaceReserved="false" />
 
         <EditTextPreference
             app:key="area_coloring_darken_ratio"
@@ -38,6 +40,7 @@
             app:title="@string/display_title_area_coloring_ratio"
             app:useSimpleSummaryProvider="true"
             app:defaultValue="0.92"
+            app:iconSpaceReserved="false"
             />
 <!--        <SwitchPreferenceCompat-->
 <!--            app:dependency="sync"-->
@@ -46,22 +49,25 @@
 <!--            app:summaryOn="@string/attachment_summary_on"-->
 <!--            app:title="@string/attachment_title" />-->
 
-        <SwitchPreference
+        <SwitchPreferenceCompat
             app:key="phrase_meaning_domain"
             app:title="@string/display_title_phrase_meaning_domain"
-            app:defaultValue="false"/>
+            app:defaultValue="false"
+            app:iconSpaceReserved="false" />
 
-        <SwitchPreference
+        <SwitchPreferenceCompat
             app:key="ipa_presence"
             app:title="@string/display_title_ipa_present"
-            app:defaultValue="true"/>
+            app:defaultValue="true"
+            app:iconSpaceReserved="false" />
         <ListPreference
             app:key="theme_mode"
             app:title="@string/display_title_theme_mode"
             app:entries="@array/theme_mode_entries"
             app:entryValues="@array/theme_mode_values"
             app:defaultValue="follow_system"
-            app:useSimpleSummaryProvider="true"/>
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false" />
 
     </PreferenceCategory>
 
@@ -70,7 +76,8 @@
         <Preference
             app:key="clear_cache"
             app:title="@string/cache_clear_title"
-            app:summary="@string/cache_clear_summary" />
+            app:summary="@string/cache_clear_summary"
+            app:iconSpaceReserved="false" />
 
     </PreferenceCategory>
 </PreferenceScreen>

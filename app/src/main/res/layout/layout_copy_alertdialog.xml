@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dialog_box_main"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/dialog_box_main">
+    android:layout_height="wrap_content"
+    android:fillViewport="true">
+
     <TextView
         android:id="@+id/dialog_box_tv"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:textSize="16sp"
-        android:textIsSelectable="true"
-        android:lines="18"
-        android:ellipsize="end"
-        android:textColor="@color/colorBlack"
-        app:layout_constraintTop_toTopOf="@+id/dialog_box_main"
-        />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:maxHeight="480dp"
+        android:paddingHorizontal="@dimen/space_xl"
+        android:paddingVertical="@dimen/space_lg"
+        android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+        android:textColor="?attr/colorOnSurface"
+        android:textIsSelectable="true" />
+
+</ScrollView>

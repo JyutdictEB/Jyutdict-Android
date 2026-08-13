@@ -1,62 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingHorizontal="16dp"
-    android:paddingTop="8dp">
+    android:paddingStart="@dimen/space_xl"
+    android:paddingTop="@dimen/space_sm"
+    android:paddingEnd="@dimen/space_xl">
 
-    <androidx.appcompat.widget.AppCompatEditText
-        android:id="@+id/filter_search"
+    <com.google.android.material.textfield.TextInputLayout
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="wrap_content"
         android:hint="@string/search_filter_hint"
-        android:inputType="text"
-        android:maxLines="1"
-        android:singleLine="true"
-        android:textSize="15sp" />
+        app:endIconMode="clear_text">
 
-    <!-- 頂部操作按鈕列 -->
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/filter_search"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:imeOptions="actionDone"
+            android:inputType="text"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:textAppearance="@style/TextAppearance.Material3.BodyLarge" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:gravity="end"
-        android:layout_marginBottom="4dp">
+        android:orientation="horizontal">
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_dialog_select_all"
+            style="@style/Widget.Jyutdict.TextButton"
             android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:text="@string/button_all_check"
-            android:textSize="13sp"
-            android:minWidth="0dp"
-            android:paddingHorizontal="12dp"
-            style="@style/Widget.AppCompat.Button.Borderless" />
+            android:layout_height="@dimen/touch_target"
+            android:text="@string/button_all_check" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_dialog_invert"
+            style="@style/Widget.Jyutdict.TextButton"
             android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:text="@string/button_all_uncheck"
-            android:textSize="13sp"
-            android:minWidth="0dp"
-            android:paddingHorizontal="12dp"
-            style="@style/Widget.AppCompat.Button.Borderless" />
+            android:layout_height="@dimen/touch_target"
+            android:text="@string/button_all_uncheck" />
 
     </LinearLayout>
 
-    <!-- 複選框滾動容器 -->
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="320dp"
+        android:fillViewport="true"
+        android:scrollbarStyle="outsideOverlay">
 
         <LinearLayout
             android:id="@+id/checkbox_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingBottom="8dp" />
+            android:paddingBottom="@dimen/space_sm" />
 
     </ScrollView>
 

@@ -1,255 +1,236 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/whole_main_layout"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/whole_main_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:tools="http://schemas.android.com/tools"
+    android:fitsSystemWindows="true"
     android:orientation="vertical"
     tools:context=".MainActivity">
-    <androidx.appcompat.widget.Toolbar
+
+    <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/tool_bar"
-        android:paddingTop="25dp"
-        android:paddingHorizontal="20dp"
+        style="@style/Widget.Jyutdict.Toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/colorPrimary"
-        app:titleTextColor="@color/colorWhite"
-        android:elevation="4dp"/>
+        android:layout_height="@dimen/top_app_bar_height"
+        app:title="@string/app_name" />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/query_layout"
+        style="@style/Widget.Material3.CardView.Filled"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-
-        android:paddingVertical="15dp"
-        android:paddingHorizontal="10dp"
-        android:background="?attr/clockBackground"
-        android:elevation="3dp">
-
-        <LinearLayout
-            android:id="@+id/input_line"
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:orientation="horizontal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:paddingHorizontal="5dp"
-            >
-
-            <androidx.appcompat.widget.AppCompatEditText
-                android:id="@+id/edit_text_input"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="2"
-                android:backgroundTint="@color/colorPrimary"
-                android:ems="10"
-                android:hint="@string/search_tips"
-                android:imeActionId="3"
-                android:imeActionLabel="搜索"
-                android:imeOptions="actionSearch"
-                android:inputType="text"
-                android:maxLines="1"
-                android:paddingHorizontal="15dp"
-                android:paddingVertical="0dp"
-                android:textSize="18sp"
-                android:textColor="?attr/clockTextColor"
-                android:textColorHint="?attr/clockTextColorDim"
-                android:theme="@style/MyEditText"/>
-            <Button
-                android:id="@+id/btn_clear"
-                android:layout_width="25dp"
-                android:layout_height="match_parent"
-                android:background="#00000000"
-                android:foreground="?selectableItemBackground"
-                android:text="@string/search_clear"
-                android:textColor="@color/colorPrimary"
-                android:textSize="26sp"
-                android:layout_marginEnd="10dp"
-                android:layout_marginRight="10dp" />
-            <Button
-                android:id="@+id/btn_query"
-                android:layout_width="70dp"
-                android:paddingEnd="5dp"
-                android:paddingRight="5dp"
-                android:layout_height="match_parent"
-                android:background="#00000000"
-                android:foreground="?selectableItemBackground"
-                android:text="@string/search_button"
-                style="@style/ButtonTextColor"
-                android:textSize="18sp"/>
-
-        </LinearLayout>
+        android:layout_marginStart="@dimen/space_md"
+        android:layout_marginTop="@dimen/space_sm"
+        android:layout_marginEnd="@dimen/space_md"
+        android:layout_marginBottom="@dimen/space_sm"
+        app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="0dp">
 
         <LinearLayout
-            android:id="@+id/input_switch"
             android:layout_width="match_parent"
-            android:layout_height="25dp"
-            android:layout_marginTop="10dp"
-            android:paddingHorizontal="15dp"
-            android:orientation="horizontal"
-            app:layout_constraintBottom_toTopOf="@+id/input_advanced_switch"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/input_line">
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/space_lg">
 
-            <cc.ecisr.jyutdict.widget.SwitchCustomized
-                android:id="@+id/switch_select_sheet"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:text="@string/search_common_sheet"
-                android:textColor="?attr/clockTextColor"
-                android:theme="@style/SwitchStyle"
-                app:layout_constraintStart_toStartOf="@+id/input_line"
-                app:layout_constraintTop_toBottomOf="@+id/input_line" />
+            <LinearLayout
+                android:id="@+id/input_line"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <Button
-                android:id="@+id/btn_filter_area"
-                android:layout_width="60dp"
-                android:layout_height="wrap_content"
-                android:background="#00000000"
-                android:foreground="?selectableItemBackground"
-                style="@style/ButtonTextColor"
-                android:layout_marginLeft="10dp"
-                android:layout_marginStart="10dp"
-                android:text="@string/search_filtering_area" />
-            <Button
-                android:id="@+id/btn_filter_area_pron"
-                android:layout_width="60dp"
-                android:layout_height="wrap_content"
-                android:background="#00000000"
-                android:foreground="?selectableItemBackground"
-                style="@style/ButtonTextColor"
-                android:layout_marginLeft="10dp"
-                android:layout_marginStart="10dp"
-                android:visibility="gone"
-                android:text="@string/search_filtering_area_pron" />
-            <Button
-                android:id="@+id/btn_coloring_jpp_partial"
-                android:layout_width="60dp"
-                android:layout_height="wrap_content"
-                android:background="#00000000"
-                android:foreground="?selectableItemBackground"
-                style="@style/ButtonTextColor"
-                android:layout_marginLeft="10dp"
-                android:layout_marginStart="10dp"
-                android:text="@string/search_coloring_jpp_partial" />
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.Jyutdict.SearchField"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="1"
+                    app:endIconContentDescription="@string/search_clear"
+                    app:endIconMode="clear_text"
+                    app:hintEnabled="false">
 
-            <cc.ecisr.jyutdict.widget.SwitchCustomized
-                android:id="@+id/switch_reverse_search"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_marginLeft="10dp"
-                android:layout_marginStart="10dp"
-                android:text="@string/search_reversal"
-                android:textColor="?attr/clockTextColor"
-                android:theme="@style/SwitchStyle"
-                app:layout_constraintStart_toEndOf="@+id/switch_select_sheet"
-                app:layout_constraintTop_toTopOf="@+id/switch_select_sheet" />
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/edit_text_input"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:hint="@string/search_tips"
+                        android:imeActionLabel="@string/search_button"
+                        android:imeOptions="actionSearch"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:paddingStart="20dp"
+                        android:paddingEnd="4dp"
+                        android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textColorHint="?attr/colorOnSurfaceVariant" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_query"
+                    style="@style/Widget.Jyutdict.ActionButton"
+                    android:layout_width="64dp"
+                    android:layout_height="56dp"
+                    android:layout_marginStart="@dimen/space_sm"
+                    android:paddingHorizontal="0dp"
+                    android:text="@string/search_button"
+                    android:textColor="?attr/colorPrimary"
+                    app:backgroundTint="?attr/colorPrimaryContainer"
+                    app:cornerRadius="28dp" />
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_md"
+                android:text="@string/search_options_title"
+                android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+            <LinearLayout
+                android:id="@+id/input_switch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <cc.ecisr.jyutdict.widget.SwitchCustomized
+                    android:id="@+id/switch_select_sheet"
+                    style="@style/Widget.Jyutdict.Switch"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/search_common_sheet"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <cc.ecisr.jyutdict.widget.SwitchCustomized
+                    android:id="@+id/switch_reverse_search"
+                    style="@style/Widget.Jyutdict.Switch"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/search_reversal"
+                    android:textColor="?attr/colorOnSurface" />
+
+            </LinearLayout>
 
             <Spinner
                 android:id="@+id/locate_spinner"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:textColor="?attr/clockTextColor"
-                app:layout_constraintEnd_toEndOf="@+id/input_line"
-                app:layout_constraintTop_toTopOf="@+id/switch_select_sheet"
-                android:layout_marginLeft="10dp"
-                android:layout_marginStart="10dp" />
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/touch_target"
+                android:layout_marginTop="@dimen/space_xs"
+                android:dropDownVerticalOffset="4dp"
+                android:popupBackground="?attr/colorSurfaceContainerHigh"
+                android:spinnerMode="dropdown" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_filter_area"
+                    style="@style/Widget.Jyutdict.TextButton"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/touch_target"
+                    android:layout_weight="1"
+                    android:text="@string/search_filtering_area" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_filter_area_pron"
+                    style="@style/Widget.Jyutdict.TextButton"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/touch_target"
+                    android:layout_weight="1"
+                    android:text="@string/search_filtering_area_pron"
+                    android:visibility="gone" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_coloring_jpp_partial"
+                    style="@style/Widget.Jyutdict.TextButton"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/touch_target"
+                    android:layout_weight="1"
+                    android:text="@string/search_coloring_jpp_partial" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/input_advanced_switch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <cc.ecisr.jyutdict.widget.SwitchCustomized
+                    android:id="@+id/switch_use_regex"
+                    style="@style/Widget.Jyutdict.Switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/search_enable_regex"
+                    android:textColor="?attr/colorOnSurface" />
+
+            </LinearLayout>
+
         </LinearLayout>
 
-        <LinearLayout
-            android:id="@+id/input_advanced_switch"
-            android:layout_width="match_parent"
-            android:layout_height="25dp"
-            android:layout_marginTop="10dp"
-            android:paddingHorizontal="15dp"
-            android:orientation="horizontal"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/input_switch">
-
-
-            <cc.ecisr.jyutdict.widget.SwitchCustomized
-                android:id="@+id/switch_use_regex"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:text="@string/search_enable_regex"
-                android:textColor="?attr/clockTextColor"
-                android:theme="@style/SwitchStyle"
-                app:layout_constraintStart_toStartOf="@+id/button_filter_area"
-                app:layout_constraintTop_toBottomOf="@+id/input_line" />
-
-        </LinearLayout>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <LinearLayout
         android:id="@+id/header_loading_status"
         android:layout_width="match_parent"
-        android:layout_height="20dp"
-        android:alpha="0.72"
-        android:background="?attr/clockBackground"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorSurfaceContainer"
         android:clickable="true"
         android:focusable="true"
         android:gravity="center_vertical"
+        android:minHeight="40dp"
         android:orientation="horizontal"
-        android:paddingStart="20dp"
-        android:paddingEnd="12dp"
+        android:paddingStart="@dimen/content_horizontal_padding"
+        android:paddingEnd="@dimen/content_horizontal_padding"
         android:visibility="gone">
 
-        <ProgressBar
+        <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/header_loading_spinner"
-            style="?android:attr/progressBarStyleSmall"
-            android:layout_width="12dp"
-            android:layout_height="12dp"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
             android:indeterminate="true"
-            android:indeterminateTint="?attr/clockTextColorDim" />
+            app:indicatorColor="?attr/colorPrimary"
+            app:indicatorSize="18dp"
+            app:trackThickness="2dp" />
 
         <TextView
             android:id="@+id/header_loading_text"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
+            android:layout_marginStart="@dimen/space_sm"
             android:layout_weight="1"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textColor="?attr/clockTextColorDim"
-            android:textSize="11sp" />
+            android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
     </LinearLayout>
 
-    <ProgressBar
+    <com.google.android.material.progressindicator.LinearProgressIndicator
         android:id="@+id/loading_progress"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="4dp"
         android:indeterminate="true"
-        style="?android:attr/progressBarStyle"
-        android:max="100"
-        android:progress="50"
-        android:layout_gravity="bottom"
-        android:indeterminateTint="@color/colorPrimary"
-        android:background="?attr/clockBackground"
-        android:visibility="gone" />
+        android:visibility="gone"
+        app:indicatorColor="?attr/colorPrimary"
+        app:trackColor="?attr/colorSurfaceContainerHighest"
+        app:trackThickness="4dp" />
 
-    <RelativeLayout
+    <FrameLayout
         android:id="@+id/result_fragment"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="?attr/clockBackground"
-        />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:background="?attr/clockBackground"
-        android:elevation="3dp"/>
+        android:background="?attr/colorSurface" />
 
 </LinearLayout>
