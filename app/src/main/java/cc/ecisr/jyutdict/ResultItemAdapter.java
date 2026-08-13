@@ -8,6 +8,8 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.google.android.material.button.MaterialButton;
+
 import cc.ecisr.jyutdict.widget.SelectableTextView;
 
 import androidx.annotation.NonNull;
@@ -67,8 +69,25 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         holder.tvRightBottom.setVisibility(tvContentLocationVisibility);
         holder.contentDivider.setVisibility(dividerVisibility);
 
+        ResultInfo.CommentTarget commentTarget = ResultInfo.commentTargets.get(position);
+        boolean hasComments = commentTarget != null && !commentTarget.target.isEmpty();
+        holder.commentButton.setVisibility(hasComments ? View.VISIBLE : View.GONE);
+        if (hasComments) {
+            holder.commentButton.setText(commentTarget.count > 0
+                    ? mContext.getString(R.string.comment_button_count, commentTarget.count)
+                    : mContext.getString(R.string.comment_button));
+            holder.commentButton.setOnClickListener(view ->
+                    mListener.onComments(holder, commentTarget.type, commentTarget.target));
+        } else {
+            holder.commentButton.setOnClickListener(null);
+        }
+
         // 短按彈出操作菜單
         holder.itemView.setOnClickListener(v -> mListener.onClick(holder));
+        holder.itemView.setOnLongClickListener(v -> {
+            mListener.onLongClick(holder);
+            return true;
+        });
 
         ViewGroup.LayoutParams layoutParams = holder.itemView.getLayoutParams();
         layoutParams.height = LinearLayout.LayoutParams.WRAP_CONTENT;
@@ -90,6 +109,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         View annotationContainer;
         TextView tvCharaHeader, tvCharaInfo, tvCharaExtra;
         SelectableTextView tvRightTop, tvRightBottom, tvAnnotation;
+        MaterialButton commentButton;
         String expandedAnnotation;
 
         LinearViewHolder(@NonNull View itemView) {
@@ -104,6 +124,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
             contentDivider = itemView.findViewById(R.id.content_divider);
             annotationContainer = itemView.findViewById(R.id.sheet_annotation_container);
             tvAnnotation = itemView.findViewById(R.id.sheet_annotation_text);
+            commentButton = itemView.findViewById(R.id.comment_button);
             if (annotationContainer != null) {
                 annotationContainer.setOnClickListener(view -> collapseAnnotation());
             }
@@ -145,6 +166,8 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
     public interface iOnItemClickListener {
         void onClick(@NonNull ResultItemAdapter.LinearViewHolder holder);
         void onLongClick(@NonNull ResultItemAdapter.LinearViewHolder holder);
+        void onComments(@NonNull ResultItemAdapter.LinearViewHolder holder,
+                        String type, String target);
     }
 
     static class ResultInfo {
@@ -154,6 +177,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 
         static ArrayList<ArrayList<Spanned>> list = new ArrayList<>(0);
         static ArrayList<Integer> types = new ArrayList<>(0);
+        static ArrayList<CommentTarget> commentTargets = new ArrayList<>(0);
 
         ResultInfo() {
         }
@@ -163,6 +187,12 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
          */
         static void addItem(Spanned chara, Spanned leftMiddle, Spanned leftBottom,
                             Spanned rightTop, Spanned rightBottom, int type) {
+            addItem(chara, leftMiddle, leftBottom, rightTop, rightBottom, type, null, null);
+        }
+
+        static void addItem(Spanned chara, Spanned leftMiddle, Spanned leftBottom,
+                            Spanned rightTop, Spanned rightBottom, int type,
+                            String commentType, String commentTarget) {
             ArrayList<Spanned> item = new ArrayList<>(5);
             item.add(chara);
             item.add(leftMiddle);
@@ -171,11 +201,26 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
             item.add(rightBottom);
             list.add(item);
             types.add(type);
+            commentTargets.add(commentType == null || commentTarget == null
+                    ? null
+                    : new CommentTarget(commentType, commentTarget));
         }
 
         static void clearItem() {
             list.clear();
             types.clear();
+            commentTargets.clear();
+        }
+
+        static final class CommentTarget {
+            final String type;
+            final String target;
+            int count;
+
+            CommentTarget(String type, String target) {
+                this.type = type;
+                this.target = target;
+            }
         }
     }
 }

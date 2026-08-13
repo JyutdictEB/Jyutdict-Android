@@ -31,9 +31,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import cc.ecisr.jyutdict.comments.CommentDialogFragment;
+import cc.ecisr.jyutdict.comments.CommentRepository;
 import cc.ecisr.jyutdict.struct.LocationInfo;
 import android.text.SpannableStringBuilder;
 
@@ -51,6 +55,7 @@ public class ResultFragment extends Fragment {
     private static final String TAG = "`ResultFragment";
 
     private RecyclerView mRvMain;
+    private CommentRepository commentRepository;
 
     private String rawReceivedData;
     int receivedMode = QUERYING_CHARA;
@@ -64,6 +69,7 @@ public class ResultFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View selfView = inflater.inflate(R.layout.fragment_result, container, false);
         mRvMain = selfView.findViewById(R.id.result_list);
+        commentRepository = new CommentRepository(requireContext());
         ResultItemAdapter marketItemAdapter = new ResultItemAdapter(getActivity(), new ResultItemAdapter.iOnItemClickListener() {
             @Override
             public void onClick(@NonNull ResultItemAdapter.LinearViewHolder holder) {
@@ -108,6 +114,13 @@ public class ResultFragment extends Fragment {
                     copy(holder.getChara());
                 }
             }
+
+            @Override
+            public void onComments(@NonNull ResultItemAdapter.LinearViewHolder holder,
+                                   String type, String target) {
+                CommentDialogFragment.newInstance(type, target, holder.getChara())
+                        .show(getParentFragmentManager(), "comments");
+            }
         });
         mRvMain.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
         mRvMain.setItemAnimator(new DefaultItemAnimator());
@@ -132,6 +145,13 @@ public class ResultFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         Log.d(TAG, "onViewCreated: " + System.identityHashCode(this));
         super.onViewCreated(view, savedInstanceState);
+        getParentFragmentManager().setFragmentResultListener(
+                CommentDialogFragment.RESULT_KEY,
+                getViewLifecycleOwner(),
+                (requestKey, result) -> updateCommentCount(
+                        result.getString(CommentDialogFragment.RESULT_TYPE, ""),
+                        result.getString(CommentDialogFragment.RESULT_TARGET, ""),
+                        result.getInt(CommentDialogFragment.RESULT_COUNT, 0)));
     }
 
     public void refreshResult() {
@@ -183,6 +203,8 @@ public class ResultFragment extends Fragment {
                 new ArrayList<>(ResultItemAdapter.ResultInfo.list);
         ArrayList<Integer> previousTypes =
                 new ArrayList<>(ResultItemAdapter.ResultInfo.types);
+        ArrayList<ResultItemAdapter.ResultInfo.CommentTarget> previousCommentTargets =
+                new ArrayList<>(ResultItemAdapter.ResultInfo.commentTargets);
         ResultItemAdapter.ResultInfo.clearItem();
 
         try {
@@ -194,6 +216,8 @@ public class ResultFragment extends Fragment {
             ResultItemAdapter.ResultInfo.list.addAll(previousItems);
             ResultItemAdapter.ResultInfo.types.clear();
             ResultItemAdapter.ResultInfo.types.addAll(previousTypes);
+            ResultItemAdapter.ResultInfo.commentTargets.clear();
+            ResultItemAdapter.ResultInfo.commentTargets.addAll(previousCommentTargets);
             publishResultViews();
             throw e;
         }
@@ -219,7 +243,8 @@ public class ResultFragment extends Fragment {
                 for (int i = 0; i<gcm.length(); i++) {
                     Spanned[] spanneds = gcm.printChara(i);
                     addItem(spanneds[0], spanneds[1], spanneds[2], spanneds[3], spanneds[4],
-                            ResultItemAdapter.ResultInfo.TYPE_GENERAL);
+                            ResultItemAdapter.ResultInfo.TYPE_GENERAL,
+                            CommentRepository.TYPE_CHAR, spanneds[0].toString());
                 }
                 break;
             case QUERYING_PRON:
@@ -248,7 +273,9 @@ public class ResultFragment extends Fragment {
                             character.printPronunciation(),
                             character.printMeanings(),
                             character.printLocations(),
-                            ResultItemAdapter.ResultInfo.TYPE_SHEET
+                            ResultItemAdapter.ResultInfo.TYPE_SHEET,
+                            CommentRepository.TYPE_SHEET,
+                            entry.optString("鍵", "")
                     );
                 }
                 break;
@@ -256,6 +283,7 @@ public class ResultFragment extends Fragment {
                 break;
         }
         publishResultViews();
+        loadCommentCounts();
     }
 
     /**
@@ -293,6 +321,12 @@ public class ResultFragment extends Fragment {
      */
     private void addItem(Spanned chara, Spanned leftMiddle, Spanned leftBottom,
                          Spanned rightTop, Spanned rightBottom, int type) {
+        addItem(chara, leftMiddle, leftBottom, rightTop, rightBottom, type, null, null);
+    }
+
+    private void addItem(Spanned chara, Spanned leftMiddle, Spanned leftBottom,
+                         Spanned rightTop, Spanned rightBottom, int type,
+                         String commentType, String commentTarget) {
         if (rightTop.length()!=0 || rightBottom.length()!=0) {
             ResultItemAdapter.ResultInfo.addItem(
                     chara,
@@ -300,8 +334,56 @@ public class ResultFragment extends Fragment {
                     leftBottom,
                     rightTop,
                     rightBottom,
-                    type
+                    type,
+                    commentType,
+                    commentTarget
             );
+        }
+    }
+
+    private void loadCommentCounts() {
+        LinkedHashSet<String> charTargets = new LinkedHashSet<>();
+        LinkedHashSet<String> sheetTargets = new LinkedHashSet<>();
+        for (ResultItemAdapter.ResultInfo.CommentTarget metadata
+                : ResultItemAdapter.ResultInfo.commentTargets) {
+            if (metadata == null || metadata.target.isEmpty()) continue;
+            if (CommentRepository.TYPE_CHAR.equals(metadata.type)) {
+                charTargets.add(metadata.target);
+            } else if (CommentRepository.TYPE_SHEET.equals(metadata.type)) {
+                sheetTargets.add(metadata.target);
+            }
+        }
+        requestCommentCounts(CommentRepository.TYPE_CHAR, new ArrayList<>(charTargets));
+        requestCommentCounts(CommentRepository.TYPE_SHEET, new ArrayList<>(sheetTargets));
+    }
+
+    private void requestCommentCounts(String type, List<String> targets) {
+        if (targets.isEmpty()) return;
+        commentRepository.getCounts(type, targets, (counts, errorMessage) -> {
+            if (!isAdded() || counts == null || mRvMain == null
+                    || mRvMain.getAdapter() == null) return;
+            for (int index = 0; index < ResultItemAdapter.ResultInfo.commentTargets.size(); index++) {
+                ResultItemAdapter.ResultInfo.CommentTarget metadata =
+                        ResultItemAdapter.ResultInfo.commentTargets.get(index);
+                if (metadata == null || !type.equals(metadata.type)) continue;
+                Integer count = counts.get(metadata.target);
+                if (count == null) continue;
+                metadata.count = count;
+                mRvMain.getAdapter().notifyItemChanged(index);
+            }
+        });
+    }
+
+    private void updateCommentCount(String type, String target, int count) {
+        if (mRvMain == null || mRvMain.getAdapter() == null) return;
+        for (int index = 0; index < ResultItemAdapter.ResultInfo.commentTargets.size(); index++) {
+            ResultItemAdapter.ResultInfo.CommentTarget metadata =
+                    ResultItemAdapter.ResultInfo.commentTargets.get(index);
+            if (metadata == null || !type.equals(metadata.type) || !target.equals(metadata.target)) {
+                continue;
+            }
+            metadata.count = count;
+            mRvMain.getAdapter().notifyItemChanged(index);
         }
     }
 
