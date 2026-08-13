@@ -17,12 +17,12 @@ if (semanticVersionCode <= 670) {
 }
 
 android {
-    compileSdkVersion 34
+    compileSdkVersion 36
 
     defaultConfig {
         applicationId "cc.ecisr.jyutdict"
-        minSdkVersion 19
-        targetSdkVersion 34
+        minSdkVersion 23
+        targetSdkVersion 36
         versionCode semanticVersionCode
         versionName semanticVersion
 
