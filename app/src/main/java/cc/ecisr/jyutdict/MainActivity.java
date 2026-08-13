@@ -6,6 +6,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
@@ -28,17 +29,21 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.Spinner;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.color.MaterialColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.button.MaterialButtonToggleGroup;
+import com.google.android.material.radiobutton.MaterialRadioButton;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -53,6 +58,7 @@ import cc.ecisr.jyutdict.struct.FjbHeaderInfo;
 import cc.ecisr.jyutdict.struct.GeneralCharacterManager;
 import cc.ecisr.jyutdict.struct.LocationInfo;
 import cc.ecisr.jyutdict.utils.ApiUrlBuilder;
+import cc.ecisr.jyutdict.utils.ColorUtil;
 import cc.ecisr.jyutdict.utils.DiskTextCache;
 import cc.ecisr.jyutdict.utils.ImmersiveBarUtil;
 import cc.ecisr.jyutdict.utils.JyutpingUtil;
@@ -82,15 +88,16 @@ public class MainActivity extends AppCompatActivity {
     private static final long HEADER_REQUEST_WATCHDOG = 22_000L;
     private static final long HEADER_RETRY_BASE_DELAY = 2_000L;
     private static final long HEADER_RETRY_MAX_DELAY = 30_000L;
+    private static final long HEADER_READY_STATUS_DURATION = 2_500L;
 
     AppCompatEditText inputEditText;
     Button btnQueryConfirm, btnFilterArea, btnFilterAreaPron, btnColoringJppPartial;
-    Spinner spinnerQueryLocation;
-    SwitchCustomized switchQueryOpts1, switchQueryOptsRev, switchQueryOptsRegex;
+    MaterialButtonToggleGroup sheetModeGroup;
+    SwitchCustomized switchQueryOptsRev, switchQueryOptsRegex;
     ResultFragment resultFragment;
     ProgressBar loadingProgressBar, headerLoadingSpinner;
-    View headerLoadingStatus;
-    TextView headerLoadingText;
+    View headerLoadingStatus, locationPicker, locationPickerSwatch;
+    TextView headerLoadingText, locationPickerText;
     Toolbar toolbar;
     LinearLayout lyMain, lyAdvancedSearch;
 
@@ -109,11 +116,18 @@ public class MainActivity extends AppCompatActivity {
     boolean sheetHeaderRetryScheduled = false;
     boolean locationHeaderRetryScheduled = false;
     boolean pendingSearch = false;
+    int selectedLocationPosition = 0;
     int sheetHeaderRetryAttempt = 0;
     int locationHeaderRetryAttempt = 0;
 
     // 下拉選擇框的 Adapter，存放的是可供查詢的查詢地名
-    LocationSpinnerAdapter locationsAdapter;
+    ArrayList<LocationSpinnerAdapter.Option> locationOptions = new ArrayList<>();
+
+    final Runnable hideHeaderReadyStatus = () -> {
+        if (!sheetHeaderNeedsRefresh && !locationHeaderNeedsRefresh) {
+            headerLoadingStatus.setVisibility(View.GONE);
+        }
+    };
 
     // 用於獲取用戶的設置，與存儲各開關的狀態
     SharedPreferences sp;
@@ -155,9 +169,11 @@ public class MainActivity extends AppCompatActivity {
         btnFilterArea = findViewById(R.id.btn_filter_area);
         btnFilterAreaPron = findViewById(R.id.btn_filter_area_pron);
         btnColoringJppPartial = findViewById(R.id.btn_coloring_jpp_partial);
-        spinnerQueryLocation = findViewById(R.id.locate_spinner);
+        locationPicker = findViewById(R.id.locate_picker);
+        locationPickerText = findViewById(R.id.locate_picker_text);
+        locationPickerSwatch = findViewById(R.id.locate_picker_swatch);
         lyAdvancedSearch = findViewById(R.id.input_advanced_switch);
-        switchQueryOpts1 = findViewById(R.id.switch_select_sheet);
+        sheetModeGroup = findViewById(R.id.sheet_mode_group);
         switchQueryOptsRev = findViewById(R.id.switch_reverse_search);
         switchQueryOptsRegex = findViewById(R.id.switch_use_regex);
         loadingProgressBar = findViewById(R.id.loading_progress);
@@ -167,9 +183,12 @@ public class MainActivity extends AppCompatActivity {
         toolbar = findViewById(R.id.tool_bar);
 
         setSupportActionBar(toolbar);
-        locationsAdapter = new LocationSpinnerAdapter(this);
-        spinnerQueryLocation.setAdapter(locationsAdapter);
-        locationsAdapter.setOptions(buildLocationOptions(false));
+        locationOptions = buildLocationOptions(false);
+        selectedLocationPosition = Math.max(0, Math.min(
+                sp.getInt("spinner_selected_position", 0),
+                Math.max(0, locationOptions.size() - 1)));
+        updateLocationPickerPresentation();
+        locationPicker.setOnClickListener(view -> showLocationPickerDialog());
     }
 
 
@@ -264,7 +283,7 @@ public class MainActivity extends AppCompatActivity {
                 objectAnimator.setEvaluator(new ArgbEvaluator());
                 objectAnimator.start();
                 previousColor = presentColor;
-                if (!switchQueryOpts1.isChecked()) {
+                if (!isSheetMode()) {
                     btnFilterArea.setVisibility(isJpp ? View.GONE : View.VISIBLE);
                     btnFilterAreaPron.setVisibility(isJpp ? View.VISIBLE : View.GONE);
                 }
@@ -274,13 +293,16 @@ public class MainActivity extends AppCompatActivity {
                 com.google.android.material.R.attr.colorPrimary);
 
         // 讀取幾個開關之前的狀態
-        switchQueryOpts1.setSetCheckedListener(this::setInputEditTextHint);
         switchQueryOptsRev.setSetCheckedListener(this::setInputEditTextHint);
-        switchQueryOpts1.setChecked(sp.getBoolean("switch_1_is_checked", false));
+        setSheetMode(sp.getBoolean("switch_1_is_checked", false));
         switchQueryOptsRev.setChecked(sp.getBoolean("switch_2_is_checked", false));
         switchQueryOptsRegex.setChecked(sp.getBoolean("switch_3_is_checked", false));
         lyAdvancedSearch.setVisibility(sp.getBoolean("advanced_search", false) ? View.VISIBLE : View.GONE);
-        switchQueryOpts1.setOnCheckedChangeListener((buttonView, isChecked) -> setSearchView());
+        sheetModeGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            if (!isChecked) return;
+            setInputEditTextHint();
+            setSearchView();
+        });
         switchQueryOptsRev.setOnCheckedChangeListener((buttonView, isChecked) -> setSearchView());
         //inputEditText.setOnClickListener(v -> toggleNightTheme());
         GeneralCharacterManager.cityFilter = new HashSet<>(
@@ -289,6 +311,7 @@ public class MainActivity extends AppCompatActivity {
                 sp.getStringSet("querying_filter_city_pron", new HashSet<>()));
         ResultFragment.pronBookFilter = new HashSet<>(
                 sp.getStringSet("querying_filter_book_pron", new HashSet<>()));
+        updateFilterButtonLabels();
 
         queryingModeConfig = sp.getInt("querying_mode_config", 0);
         btnColoringJppPartial.setOnClickListener(view -> {
@@ -396,11 +419,17 @@ public class MainActivity extends AppCompatActivity {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_filter_pron, null);
         LinearLayout container = dialogView.findViewById(R.id.checkbox_container);
         AppCompatEditText filterSearch = dialogView.findViewById(R.id.filter_search);
+        TextView selectionSummary = dialogView.findViewById(R.id.filter_selection_summary);
 
         // 臨時 filter，在確定前不直接修改原始 filter
         HashSet<String> tempFilter = new HashSet<>(filter);
+        tempFilter.retainAll(itemNames);
 
         ArrayList<MaterialCheckBox> checkBoxes = new ArrayList<>();
+        Runnable updateSelectionSummary = () -> selectionSummary.setText(getString(
+                R.string.search_filter_selection_summary,
+                itemNames.size() - tempFilter.size(),
+                itemNames.size()));
         for (int index = 0; index < itemNames.size(); index++) {
             String name = itemNames.get(index);
             MaterialCheckBox cb = new MaterialCheckBox(builder.getContext());
@@ -413,10 +442,12 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     tempFilter.add(name);
                 }
+                updateSelectionSummary.run();
             });
             container.addView(cb);
             checkBoxes.add(cb);
         }
+        updateSelectionSummary.run();
 
         filterSearch.addTextChangedListener(new TextWatcher() {
             @Override
@@ -445,18 +476,107 @@ public class MainActivity extends AppCompatActivity {
             for (MaterialCheckBox cb : checkBoxes) {
                 cb.setChecked(true);
             }
+            updateSelectionSummary.run();
         });
 
-        // 反選按鈕
+        // 清除選取
         dialogView.findViewById(R.id.btn_dialog_invert).setOnClickListener(btn -> {
             for (MaterialCheckBox cb : checkBoxes) {
-                cb.setChecked(!cb.isChecked());
+                cb.setChecked(false);
             }
+            updateSelectionSummary.run();
         });
 
         builder.setView(dialogView);
-        builder.setPositiveButton(R.string.button_confirm, (dialog, which) -> onConfirm.onConfirm(tempFilter));
-        builder.create().show();
+        builder.setNegativeButton(R.string.button_cancel, null);
+        builder.setPositiveButton(R.string.button_confirm, (dialog, which) -> {
+            onConfirm.onConfirm(tempFilter);
+            updateFilterButtonLabels();
+        });
+        AlertDialog dialog = builder.create();
+        dialog.setCanceledOnTouchOutside(true);
+        dialog.show();
+        constrainDialogWidth(dialog, 400);
+    }
+
+    private void showLocationPickerDialog() {
+        if (locationOptions.isEmpty()) return;
+
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_location_picker, null);
+        LinearLayout container = dialogView.findViewById(R.id.location_picker_container);
+        AppCompatEditText search = dialogView.findViewById(R.id.location_picker_search);
+        TextView summary = dialogView.findViewById(R.id.location_picker_summary);
+        ScrollView scroll = dialogView.findViewById(R.id.location_picker_scroll);
+        ArrayList<View> rows = new ArrayList<>();
+
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.search_choose_location)
+                .setView(dialogView)
+                .setNegativeButton(R.string.button_cancel, null);
+        AlertDialog dialog = builder.create();
+
+        for (int index = 0; index < locationOptions.size(); index++) {
+            final int optionIndex = index;
+            LocationSpinnerAdapter.Option option = locationOptions.get(index);
+            View row = getLayoutInflater().inflate(
+                    R.layout.location_picker_item, container, false);
+            View swatch = row.findViewById(R.id.location_picker_item_swatch);
+            MaterialRadioButton radio = row.findViewById(R.id.location_picker_item_radio);
+            swatch.setBackground(ColorUtil.locationColorDrawable(option.colors));
+            radio.setText(option.label);
+            radio.setChecked(index == selectedLocationPosition);
+            row.setOnClickListener(view -> {
+                selectedLocationPosition = optionIndex;
+                updateLocationPickerPresentation();
+                saveLayoutStatus();
+                dialog.dismiss();
+            });
+            container.addView(row);
+            rows.add(row);
+        }
+
+        search.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence text, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence text, int start, int before, int count) {
+                String query = String.valueOf(text).trim().toLowerCase(Locale.ROOT);
+                int visibleCount = 0;
+                for (int index = 0; index < locationOptions.size(); index++) {
+                    boolean visible = locationOptions.get(index).label
+                            .toLowerCase(Locale.ROOT).contains(query);
+                    rows.get(index).setVisibility(visible ? View.VISIBLE : View.GONE);
+                    if (visible) visibleCount++;
+                }
+                summary.setText(getString(R.string.search_location_picker_summary,
+                        visibleCount, locationOptions.size()));
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+            }
+        });
+        summary.setText(getString(R.string.search_location_picker_summary,
+                locationOptions.size(), locationOptions.size()));
+
+        dialog.setCanceledOnTouchOutside(true);
+        dialog.show();
+        constrainDialogWidth(dialog, 340);
+        scroll.post(() -> scroll.scrollTo(0,
+                selectedLocationPosition * getResources().getDimensionPixelSize(
+                        R.dimen.compact_touch_target)));
+    }
+
+    private void constrainDialogWidth(AlertDialog dialog, int maxWidthDp) {
+        Window window = dialog.getWindow();
+        if (window == null) return;
+        int horizontalMargin = getResources().getDimensionPixelSize(R.dimen.space_xl);
+        int maxWidth = Math.round(maxWidthDp * getResources().getDisplayMetrics().density);
+        int availableWidth = getResources().getDisplayMetrics().widthPixels - horizontalMargin * 2;
+        window.setLayout(Math.min(maxWidth, availableWidth),
+                WindowManager.LayoutParams.WRAP_CONTENT);
     }
 
     private interface FilterResultListener {
@@ -594,13 +714,25 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateLocationsAdapter() {
         if (!FjbHeaderInfo.isLoaded) return;
-        int selectedLocation = locationsAdapter.getCount() > 2
-                ? spinnerQueryLocation.getSelectedItemPosition()
+        int selectedLocation = locationOptions.size() > 2
+                ? selectedLocationPosition
                 : sp.getInt("spinner_selected_position", 0);
-        locationsAdapter.setOptions(buildLocationOptions(true));
-        int lastLocation = Math.max(0, locationsAdapter.getCount() - 1);
-        spinnerQueryLocation.setSelection(
-                Math.max(0, Math.min(selectedLocation, lastLocation)));
+        locationOptions = buildLocationOptions(true);
+        int lastLocation = Math.max(0, locationOptions.size() - 1);
+        selectedLocationPosition = Math.max(0, Math.min(selectedLocation, lastLocation));
+        updateLocationPickerPresentation();
+    }
+
+    private void updateLocationPickerPresentation() {
+        if (locationPickerText == null || locationPickerSwatch == null
+                || locationOptions.isEmpty()) return;
+        selectedLocationPosition = Math.max(0, Math.min(
+                selectedLocationPosition, locationOptions.size() - 1));
+        LocationSpinnerAdapter.Option option = locationOptions.get(selectedLocationPosition);
+        locationPickerText.setText(option.label);
+        locationPickerSwatch.setBackground(ColorUtil.locationColorDrawable(option.colors));
+        locationPicker.setContentDescription(
+                getString(R.string.search_choose_location) + "：" + option.label);
     }
 
     private void rebuildGeneralLocationList() {
@@ -609,6 +741,7 @@ public class MainActivity extends AppCompatActivity {
         for (LocationInfo.Location location : LocationInfo.getAll()) {
             GeneralCharacterManager.cityList.add(location.displayName());
         }
+        updateFilterButtonLabels();
     }
 
     private void finishHeaderRequest(boolean sheet, String raw) {
@@ -688,8 +821,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateHeaderLoadingStatus() {
-        if (!headerLoadingInitialized || (!sheetHeaderNeedsRefresh && !locationHeaderNeedsRefresh)) {
+        if (!headerLoadingInitialized) {
             headerLoadingStatus.setVisibility(View.GONE);
+            return;
+        }
+
+        mainHandler.removeCallbacks(hideHeaderReadyStatus);
+        if (!sheetHeaderNeedsRefresh && !locationHeaderNeedsRefresh) {
+            headerLoadingSpinner.setVisibility(View.GONE);
+            headerLoadingText.setText(R.string.header_sync_ready);
+            headerLoadingStatus.setVisibility(View.VISIBLE);
+            mainHandler.postDelayed(hideHeaderReadyStatus, HEADER_READY_STATUS_DURATION);
             return;
         }
 
@@ -717,11 +859,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean isRequiredHeaderReady() {
-        return switchQueryOpts1.isChecked() ? FjbHeaderInfo.isLoaded : LocationInfo.isLoaded;
+        return isSheetMode() ? FjbHeaderInfo.isLoaded : LocationInfo.isLoaded;
     }
 
     private void requestRequiredHeaderNow() {
-        if (switchQueryOpts1.isChecked()) {
+        if (isSheetMode()) {
             sheetHeaderNeedsRefresh = true;
             startHeaderRequest(true, true);
         } else {
@@ -794,32 +936,63 @@ public class MainActivity extends AppCompatActivity {
         return options;
     }
 
+    private void updateFilterButtonLabels() {
+        if (btnFilterArea == null || btnFilterAreaPron == null) return;
+
+        int generalTotal = GeneralCharacterManager.cityList.size();
+        int generalHidden = 0;
+        for (String name : GeneralCharacterManager.cityList) {
+            if (GeneralCharacterManager.cityFilter.contains(name)) generalHidden++;
+        }
+        int generalSelected = generalTotal - generalHidden;
+        btnFilterArea.setText(getString(R.string.search_filtering_area_summary,
+                selectionCountLabel(generalSelected, generalTotal)));
+
+        int pronunciationTotal = LocationInfo.getAll().size() + 2;
+        int pronunciationHidden = Math.min(pronunciationTotal,
+                ResultFragment.pronCityFilter.size()
+                        + ResultFragment.pronBookFilter.size());
+        int pronunciationSelected = Math.max(0,
+                pronunciationTotal - pronunciationHidden);
+        btnFilterAreaPron.setText(getString(R.string.search_filtering_area_pron_summary,
+                selectionCountLabel(pronunciationSelected, pronunciationTotal)));
+    }
+
+    private String selectionCountLabel(int selected, int total) {
+        return total == 0 || selected == total
+                ? getString(R.string.search_filter_all)
+                : getString(R.string.search_filter_count, selected, total);
+    }
+
     /**
      * 設置幾個開關的顯示與隱藏
      */
     private void setSearchView() {
-        boolean is1Checked = switchQueryOpts1.isChecked();
+        boolean is1Checked = isSheetMode();
         boolean is2Checked = switchQueryOptsRev.isChecked();
-        String switch1Text;
         if (is1Checked) {
-            switch1Text = getString(R.string.search_jyut_sheet);
             switchQueryOptsRev.setVisibility(View.VISIBLE);
-            int spinnerVisibility = is2Checked ? View.GONE : View.VISIBLE;
-            spinnerQueryLocation.setVisibility(spinnerVisibility);
+            locationPicker.setVisibility(is2Checked ? View.GONE : View.VISIBLE);
             btnFilterArea.setVisibility(View.GONE);
             btnFilterAreaPron.setVisibility(View.GONE);
             btnColoringJppPartial.setVisibility(View.GONE);
         } else {
-            switch1Text = getString(R.string.search_common_sheet);
             switchQueryOptsRev.setVisibility(View.GONE);
-            spinnerQueryLocation.setVisibility(View.GONE);
+            locationPicker.setVisibility(View.GONE);
             boolean isJpp = inputEditText.getText() != null && StringUtil.isJyutpingInput(inputEditText.getText().toString());
             btnFilterArea.setVisibility(isJpp ? View.GONE : View.VISIBLE);
             btnFilterAreaPron.setVisibility(isJpp ? View.VISIBLE : View.GONE);
             btnColoringJppPartial.setVisibility(View.VISIBLE);
         }
-        switchQueryOpts1.setText(switch1Text);
         switchQueryOptsRegex.setEnabled(is1Checked);
+    }
+
+    private boolean isSheetMode() {
+        return sheetModeGroup.getCheckedButtonId() == R.id.btn_jyut_sheet;
+    }
+
+    private void setSheetMode(boolean sheetMode) {
+        sheetModeGroup.check(sheetMode ? R.id.btn_jyut_sheet : R.id.btn_common_sheet);
     }
 
     /**
@@ -857,10 +1030,10 @@ public class MainActivity extends AppCompatActivity {
      */
     private void saveLayoutStatus() {
         SharedPreferences.Editor editor = sp.edit();
-        editor.putBoolean("switch_1_is_checked", switchQueryOpts1.isChecked());
+        editor.putBoolean("switch_1_is_checked", isSheetMode());
         editor.putBoolean("switch_2_is_checked", switchQueryOptsRev.isChecked());
         editor.putBoolean("switch_3_is_checked", switchQueryOptsRegex.isChecked());
-        editor.putInt("spinner_selected_position", spinnerQueryLocation.getSelectedItemPosition());
+        editor.putInt("spinner_selected_position", selectedLocationPosition);
         editor.putInt("querying_mode_config", queryingModeConfig);
         editor.putStringSet("querying_filter_city", GeneralCharacterManager.cityFilter);
         editor.putStringSet("querying_filter_city_pron", ResultFragment.pronCityFilter);
@@ -893,10 +1066,10 @@ public class MainActivity extends AppCompatActivity {
         switch (mode & QUERYING_MODE_MASK) { // 爲了方便以後增加不同的查詢模式，這裏 switch 不能化簡
             case QUERYING_CHARA:
             case QUERYING_PRON:
-                switchQueryOpts1.setChecked(false);
+                setSheetMode(false);
                 break;
             case QUERYING_SHEET:
-                switchQueryOpts1.setChecked(true);
+                setSheetMode(true);
                 break;
         }
         switchQueryOptsRev.setChecked(false);
@@ -919,7 +1092,7 @@ public class MainActivity extends AppCompatActivity {
         }
         pendingSearch = false;
         setInputString(inputEditText.getText().toString()); // 必须放在最前面
-        if ("".equals(inputString) && !(switchQueryOpts1.isChecked() && !switchQueryOptsRev.isChecked())) {
+        if ("".equals(inputString) && !(isSheetMode() && !switchQueryOptsRev.isChecked())) {
             return;
         } // 搜索欄爲空時不檢索
 
@@ -927,7 +1100,7 @@ public class MainActivity extends AppCompatActivity {
         btnColoringJppPartial.setEnabled(false);
         ApiUrlBuilder url;
         int modeSnapshot;
-        if (switchQueryOpts1.isChecked()) { // 檢索泛粵字表
+        if (isSheetMode()) { // 檢索泛粵字表
             modeSnapshot = QUERYING_SHEET;
             url = ApiUrlBuilder.from(URL_API_ROOT, "sheet");
             if (inputString.isEmpty() && !switchQueryOptsRev.isChecked()) {
@@ -949,7 +1122,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 url.add("mode", sheetMode);
 
-                int selectedColumn = spinnerQueryLocation.getSelectedItemPosition();
+                int selectedColumn = selectedLocationPosition;
 
                 // 漢字必須交由 API 自動選擇字頭列；只有查音纔傳讀音列。
                 if (pronunciationInput && selectedColumn >= 2) {
@@ -1026,7 +1199,7 @@ public class MainActivity extends AppCompatActivity {
     /****************************************************************************************/
 
     private void setInputEditTextHint() {
-        if (switchQueryOpts1.isChecked()) {
+        if (isSheetMode()) {
             if (switchQueryOptsRev.isChecked()) {
                 inputEditText.setHint(R.string.search_tips_backward);
             } else {

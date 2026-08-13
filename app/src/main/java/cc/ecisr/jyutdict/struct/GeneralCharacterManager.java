@@ -154,7 +154,7 @@ public class GeneralCharacterManager {
 
         SpannableStringBuilder contentCharaInfo = new SpannableStringBuilder("");
         for (int i = 0; i < chara.books.kwangun.size(); i++) {
-            if (i!=0) contentCharaInfo.append("\n");
+            if (i!=0) contentCharaInfo.append(" · ");
             contentCharaInfo.append(chara.books.kwangun.get(i));
         }
         if (contentCharaInfo.length()!=0) {

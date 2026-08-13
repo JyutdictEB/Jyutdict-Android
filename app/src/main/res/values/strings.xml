@@ -12,6 +12,8 @@
     <string name="button_confirm">確定</string>
     <string name="button_all_check">全選</string>
     <string name="button_all_uncheck">反選</string>
+    <string name="button_none_check">清除</string>
+    <string name="button_cancel">取消</string>
 
     <!-- MainActivity -->
     <string name="menu_options">選項</string>
@@ -32,6 +34,10 @@
     <string name="search_enable_regex">使用正則</string>
     <string name="search_filtering_area">篩選地點</string>
     <string name="search_filtering_area_pron">篩選查音地點</string>
+    <string name="search_filtering_area_summary">篩選地點 · %1$s</string>
+    <string name="search_filtering_area_pron_summary">查音地點 · %1$s</string>
+    <string name="search_filter_all">全部</string>
+    <string name="search_filter_count">%1$d/%2$d</string>
     <string name="search_filter_book_item">韻書 · %1$s</string>
     <string name="search_coloring_jpp_partial">音節高亮</string>
     <string name="search_options_title">檢索選項</string>
@@ -43,6 +49,7 @@
     <string name="header_sync_retrying">連線不穩，稍後重試 · 點按立即重試</string>
     <string name="header_sync_stale">查詢資料暫未更新 · 點按重試</string>
     <string name="header_sync_required">查詢資料仍在載入，完成後會自動查詢</string>
+    <string name="header_sync_ready">查詢資料已就緒</string>
 
     <!-- EntryMenu -->
     <string name="entry_menu_copy_chara">複製字項內容</string>
@@ -50,6 +57,9 @@
     <string name="entry_menu_search_special">在泛粵字表檢索：%1$s</string>
     <string name="select_drop_down_standard">綜合音</string>
     <string name="select_drop_down_convenience">檢索音</string>
+    <string name="search_choose_location">選擇查詢地點</string>
+    <string name="search_location_picker_summary">顯示 %1$d / %2$d 個地點</string>
+    <string name="search_filter_selection_summary">已選 %1$d / %2$d</string>
 
     <!-- Toast Message-->
     <string name="error_tips_network">網絡或服務器錯誤，錯誤碼：%1$s</string>

@@ -53,7 +53,9 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         int tvContentExtraVisibility = (extra.length()!=0) ? View.VISIBLE : View.GONE;
         int tvContentWanshyuVisibility = (wanshyu.length()!=0) ? View.VISIBLE : View.GONE;
         int tvContentLocationVisibility = (location.length()!=0) ? View.VISIBLE : View.GONE;
-        int dividerVisibility = (wanshyu.length() != 0 && location.length() != 0)
+        boolean hasTopContent = wanshyu.length() != 0
+                || (getItemViewType(position) == ResultInfo.TYPE_GENERAL && extra.length() != 0);
+        int dividerVisibility = (hasTopContent && location.length() != 0)
                 ? View.VISIBLE : View.GONE;
         holder.lyChara.setVisibility(lyCharaVisibility);
         holder.tvCharaInfo.setVisibility(tvContentInfoVisibility);

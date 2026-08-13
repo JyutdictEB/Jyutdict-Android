@@ -16,7 +16,7 @@
         app:endIconMode="clear_text">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/filter_search"
+            android:id="@+id/location_picker_search"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:imeOptions="actionDone"
@@ -27,45 +27,23 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
-    <LinearLayout
+    <TextView
+        android:id="@+id/location_picker_summary"
         android:layout_width="match_parent"
-        android:layout_height="44dp"
+        android:layout_height="32dp"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <TextView
-            android:id="@+id/filter_selection_summary"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-            android:textColor="?attr/colorOnSurfaceVariant" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_dialog_select_all"
-            style="@style/Widget.Jyutdict.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/compact_touch_target"
-            android:text="@string/button_all_check" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_dialog_invert"
-            style="@style/Widget.Jyutdict.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/compact_touch_target"
-            android:text="@string/button_none_check" />
-
-    </LinearLayout>
+        android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+        android:textColor="?attr/colorOnSurfaceVariant" />
 
     <ScrollView
+        android:id="@+id/location_picker_scroll"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:fillViewport="true"
+        android:layout_height="280dp"
+        android:fadeScrollbars="false"
         android:scrollbarStyle="outsideOverlay">
 
         <LinearLayout
-            android:id="@+id/checkbox_container"
+            android:id="@+id/location_picker_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"

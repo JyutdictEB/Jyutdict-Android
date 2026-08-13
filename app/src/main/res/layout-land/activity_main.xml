@@ -23,7 +23,7 @@
 
         <androidx.core.widget.NestedScrollView
             android:id="@+id/search_panel"
-            android:layout_width="360dp"
+            android:layout_width="400dp"
             android:layout_height="0dp"
             android:clipToPadding="false"
             android:fillViewport="false"
@@ -53,14 +53,14 @@
                     <LinearLayout
                         android:id="@+id/input_line"
                         android:layout_width="match_parent"
-                        android:layout_height="48dp"
+                        android:layout_height="52dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
                         <com.google.android.material.textfield.TextInputLayout
                             style="@style/Widget.Jyutdict.SearchField"
                             android:layout_width="0dp"
-                            android:layout_height="48dp"
+                            android:layout_height="52dp"
                             android:layout_weight="1"
                             app:endIconContentDescription="@string/search_clear"
                             app:endIconMode="clear_text"
@@ -74,7 +74,10 @@
                                 android:imeActionLabel="@string/search_button"
                                 android:imeOptions="actionSearch"
                                 android:inputType="text"
+                                android:gravity="center_vertical"
                                 android:maxLines="1"
+                                android:paddingTop="0dp"
+                                android:paddingBottom="0dp"
                                 android:paddingStart="16dp"
                                 android:paddingEnd="4dp"
                                 android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
@@ -87,8 +90,10 @@
                             android:id="@+id/btn_query"
                             style="@style/Widget.Jyutdict.ActionButton"
                             android:layout_width="56dp"
-                            android:layout_height="48dp"
+                            android:layout_height="52dp"
                             android:layout_marginStart="6dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
                             android:paddingHorizontal="0dp"
                             android:text="@string/search_button"
                             android:textColor="?attr/colorPrimary"
@@ -113,34 +118,94 @@
                             android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
                             android:textColor="?attr/colorOnSurfaceVariant" />
 
-                        <cc.ecisr.jyutdict.widget.SwitchCustomized
-                            android:id="@+id/switch_select_sheet"
-                            style="@style/Widget.Jyutdict.Switch"
-                            android:layout_width="0dp"
+                        <com.google.android.material.button.MaterialButtonToggleGroup
+                            android:id="@+id/sheet_mode_group"
+                            android:layout_width="176dp"
                             android:layout_height="match_parent"
-                            android:layout_weight="1"
-                            android:text="@string/search_common_sheet"
-                            android:textColor="?attr/colorOnSurface" />
+                            app:checkedButton="@id/btn_common_sheet"
+                            app:selectionRequired="true"
+                            app:singleSelection="true">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_common_sheet"
+                                style="@style/Widget.Jyutdict.SegmentedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:text="@string/search_common_sheet" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_jyut_sheet"
+                                style="@style/Widget.Jyutdict.SegmentedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:text="@string/search_jyut_sheet" />
+
+                        </com.google.android.material.button.MaterialButtonToggleGroup>
 
                         <cc.ecisr.jyutdict.widget.SwitchCustomized
                             android:id="@+id/switch_reverse_search"
                             style="@style/Widget.Jyutdict.Switch"
-                            android:layout_width="0dp"
+                            android:layout_width="wrap_content"
                             android:layout_height="match_parent"
-                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
                             android:text="@string/search_reversal"
-                            android:textColor="?attr/colorOnSurface" />
+                            android:textColor="?attr/colorOnSurface"
+                            android:visibility="gone" />
 
                     </LinearLayout>
 
-                    <Spinner
-                        android:id="@+id/locate_spinner"
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/locate_picker"
+                        style="@style/Widget.Material3.CardView.Outlined"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/compact_touch_target"
+                        android:layout_height="44dp"
                         android:layout_marginTop="2dp"
-                        android:dropDownVerticalOffset="4dp"
-                        android:popupBackground="?attr/colorSurfaceContainerHigh"
-                        android:spinnerMode="dropdown" />
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        app:cardBackgroundColor="?attr/colorSurfaceContainerLowest"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="?attr/colorOutlineVariant"
+                        app:strokeWidth="1dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="8dp">
+
+                            <View
+                                android:id="@+id/locate_picker_swatch"
+                                android:layout_width="4dp"
+                                android:layout_height="24dp"
+                                android:layout_marginEnd="10dp" />
+
+                            <TextView
+                                android:id="@+id/locate_picker_text"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:ellipsize="end"
+                                android:gravity="center_vertical"
+                                android:maxLines="1"
+                                android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                                android:textColor="?attr/colorOnSurface" />
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:contentDescription="@string/search_choose_location"
+                                android:src="@drawable/ic_arrow_drop_down_24"
+                                app:tint="?attr/colorOnSurfaceVariant" />
+
+                        </LinearLayout>
+
+                    </com.google.android.material.card.MaterialCardView>
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -178,14 +243,15 @@
 
                     <LinearLayout
                         android:id="@+id/input_advanced_switch"
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginStart="64dp"
                         android:orientation="vertical">
 
                         <cc.ecisr.jyutdict.widget.SwitchCustomized
                             android:id="@+id/switch_use_regex"
                             style="@style/Widget.Jyutdict.Switch"
-                            android:layout_width="match_parent"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/search_enable_regex"
                             android:textColor="?attr/colorOnSurface" />
