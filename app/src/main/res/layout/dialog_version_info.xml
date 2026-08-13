@@ -20,14 +20,6 @@
             android:textColor="?attr/colorOnSurface" />
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="@string/version_description"
-            android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-            android:textColor="?attr/colorOnSurfaceVariant" />
-
-        <TextView
             android:id="@+id/version_check_status"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

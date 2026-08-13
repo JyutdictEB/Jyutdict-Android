@@ -1,10 +1,10 @@
 <resources>
     <string name="app_name">泛粵典</string>
-    <string name="app_version">%1$d.%2$d.%3$d</string>
+    <string name="app_version">当前版本：%1$d.%2$d.%3$d</string>
     <string name="app_version_0">0</string>
     <string name="app_version_1">7</string>
     <string name="app_version_2">7</string>
-    <string name="app_about">泛粵大典附屬應用 by EcisRhetha\nwww.jyutdict.org</string>
+    <string name="app_about">泛粵大典附屬應用 by EcisralHetha杋糖\nwww.jyutdict.org</string>
 
     <string name="syllable_initial">聲母</string>
     <string name="syllable_final">韻母</string>
@@ -97,7 +97,6 @@
     <string name="settings_supporting_text">外觀、檢索與本機資料</string>
     <string name="version_dialog_title">版本與下載</string>
     <string name="version_current_value">泛粵典 %1$d.%2$d.%3$d</string>
-    <string name="version_description">泛粵大典 Android 客戶端。可在此檢查服務器上的最新版本，或選擇下載來源。</string>
     <string name="version_status_not_checked">尚未檢查更新</string>
     <string name="version_status_checking">正在檢查更新…</string>
     <string name="version_status_current">目前已是最新版本</string>

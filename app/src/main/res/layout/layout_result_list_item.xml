@@ -53,6 +53,7 @@
                     android:textAppearance="@style/TextAppearance.Material3.DisplaySmall"
                     android:textSize="34sp"
                     android:textColor="?attr/colorOnPrimaryContainer"
+                    android:paddingBottom="2dp"
                     tools:ignore="HardcodedText" />
 
                 <TextView
