@@ -5,10 +5,10 @@
     style="@style/Widget.Material3.CardView.Outlined"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginStart="@dimen/space_md"
-    android:layout_marginTop="@dimen/space_xs"
-    android:layout_marginEnd="@dimen/space_md"
-    android:layout_marginBottom="@dimen/space_xs"
+    android:layout_marginStart="@dimen/space_sm"
+    android:layout_marginTop="2dp"
+    android:layout_marginEnd="@dimen/space_sm"
+    android:layout_marginBottom="2dp"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?attr/selectableItemBackground"
@@ -23,18 +23,18 @@
         android:layout_height="wrap_content"
         android:baselineAligned="false"
         android:orientation="horizontal"
-        android:padding="@dimen/space_lg">
+        android:padding="10dp">
 
         <LinearLayout
             android:id="@+id/item_chara"
-            android:layout_width="84dp"
+            android:layout_width="72dp"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_character_block"
             android:gravity="center"
-            android:minHeight="104dp"
+            android:minHeight="88dp"
             android:orientation="vertical"
-            android:paddingHorizontal="@dimen/space_sm"
-            android:paddingVertical="@dimen/space_sm">
+            android:paddingHorizontal="@dimen/space_xs"
+            android:paddingVertical="6dp">
 
             <TextView
                 android:id="@+id/chara_header"
@@ -44,13 +44,14 @@
                 android:includeFontPadding="false"
                 android:text="@string/result_list_chara"
                 android:textAppearance="@style/TextAppearance.Material3.DisplaySmall"
+                android:textSize="34sp"
                 android:textColor="?attr/colorOnPrimaryContainer" />
 
             <TextView
                 android:id="@+id/chara_info"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_xs"
+                android:layout_marginTop="2dp"
                 android:gravity="center"
                 android:text="@string/result_list_info"
                 android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
@@ -71,7 +72,7 @@
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/space_lg"
+            android:layout_marginStart="10dp"
             android:layout_weight="1"
             android:orientation="vertical">
 
@@ -79,25 +80,29 @@
                 android:id="@+id/content_wanshyu"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:lineSpacingExtra="3dp"
+                android:includeFontPadding="false"
+                android:lineSpacingExtra="1dp"
                 android:text="@string/result_list_upper"
                 android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                android:textSize="13sp"
                 android:textColor="?attr/colorOnSurface" />
 
             <View
                 android:id="@+id/content_divider"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:layout_marginVertical="@dimen/space_md"
+                android:layout_marginVertical="6dp"
                 android:background="?attr/colorOutlineVariant" />
 
             <cc.ecisr.jyutdict.widget.SelectableTextView
                 android:id="@+id/content_location"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:lineSpacingExtra="4dp"
+                android:includeFontPadding="false"
+                android:lineSpacingExtra="1dp"
                 android:text="@string/result_list_bottom"
                 android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                android:textSize="13sp"
                 android:textColor="?attr/colorOnSurface" />
 
         </LinearLayout>

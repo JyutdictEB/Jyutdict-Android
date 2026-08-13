@@ -10,8 +10,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:maxHeight="480dp"
-        android:paddingHorizontal="@dimen/space_xl"
-        android:paddingVertical="@dimen/space_lg"
+        android:paddingHorizontal="@dimen/space_lg"
+        android:paddingVertical="@dimen/space_md"
         android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
         android:textColor="?attr/colorOnSurface"
         android:textIsSelectable="true" />

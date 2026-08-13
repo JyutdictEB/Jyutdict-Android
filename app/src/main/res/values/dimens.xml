@@ -7,7 +7,8 @@
     <dimen name="space_xl">24dp</dimen>
     <dimen name="content_horizontal_padding">16dp</dimen>
     <dimen name="touch_target">48dp</dimen>
-    <dimen name="top_app_bar_height">64dp</dimen>
-    <dimen name="card_corner_radius">20dp</dimen>
+    <dimen name="compact_touch_target">40dp</dimen>
+    <dimen name="top_app_bar_height">56dp</dimen>
+    <dimen name="card_corner_radius">16dp</dimen>
     <dimen name="dialog_corner_radius">28dp</dimen>
 </resources>

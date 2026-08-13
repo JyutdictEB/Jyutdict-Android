@@ -1,4 +1,5 @@
-<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
 <!--    <PreferenceCategory app:title="@string/messages_header">-->
 
@@ -17,8 +18,11 @@
 
 <!--    </PreferenceCategory>-->
 
-    <PreferenceCategory app:title="@string/search_header">
+    <PreferenceCategory
+        android:layout="@layout/preference_category_compact"
+        app:title="@string/search_header">
         <SwitchPreferenceCompat
+            android:layout="@layout/preference_compact"
             app:key="advanced_search"
             app:title="@string/search_title_advanced_options"
             app:defaultValue="false"
@@ -26,15 +30,19 @@
 
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="@string/display_header">
+    <PreferenceCategory
+        android:layout="@layout/preference_category_compact"
+        app:title="@string/display_header">
 
         <SwitchPreferenceCompat
+            android:layout="@layout/preference_compact"
             app:key="area_coloring"
             app:title="@string/display_title_area_coloring"
             app:defaultValue="true"
             app:iconSpaceReserved="false" />
 
         <EditTextPreference
+            android:layout="@layout/preference_compact"
             app:key="area_coloring_darken_ratio"
             app:dependency="area_coloring"
             app:title="@string/display_title_area_coloring_ratio"
@@ -50,17 +58,20 @@
 <!--            app:title="@string/attachment_title" />-->
 
         <SwitchPreferenceCompat
+            android:layout="@layout/preference_compact"
             app:key="phrase_meaning_domain"
             app:title="@string/display_title_phrase_meaning_domain"
             app:defaultValue="false"
             app:iconSpaceReserved="false" />
 
         <SwitchPreferenceCompat
+            android:layout="@layout/preference_compact"
             app:key="ipa_presence"
             app:title="@string/display_title_ipa_present"
             app:defaultValue="true"
             app:iconSpaceReserved="false" />
         <ListPreference
+            android:layout="@layout/preference_compact"
             app:key="theme_mode"
             app:title="@string/display_title_theme_mode"
             app:entries="@array/theme_mode_entries"
@@ -71,9 +82,12 @@
 
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="@string/cache_header">
+    <PreferenceCategory
+        android:layout="@layout/preference_category_compact"
+        app:title="@string/cache_header">
 
         <Preference
+            android:layout="@layout/preference_compact"
             app:key="clear_cache"
             app:title="@string/cache_clear_title"
             app:summary="@string/cache_clear_summary"

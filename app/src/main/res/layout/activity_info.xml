@@ -19,7 +19,7 @@
         android:id="@+id/tab_layout"
         style="@style/Widget.Material3.TabLayout.Secondary"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="44dp"
         android:background="?attr/colorSurface"
         app:tabIndicatorColor="?attr/colorPrimary"
         app:tabIndicatorFullWidth="false"

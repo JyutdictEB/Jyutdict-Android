@@ -9,8 +9,8 @@
         android:layout_height="match_parent"
         android:background="?attr/colorSurface"
         android:clipToPadding="false"
-        android:paddingTop="@dimen/space_xs"
-        android:paddingBottom="@dimen/space_md"
+        android:paddingTop="2dp"
+        android:paddingBottom="@dimen/space_sm"
         android:scrollbarSize="2dp"
         android:scrollbarThumbVertical="?attr/colorOutline"
         android:scrollbars="vertical" />

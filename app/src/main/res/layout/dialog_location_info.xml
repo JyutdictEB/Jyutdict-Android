@@ -15,7 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="@dimen/space_xl">
+        android:padding="@dimen/space_lg">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -33,11 +33,11 @@
 
             <androidx.appcompat.widget.AppCompatImageButton
                 android:id="@+id/location_close"
-                android:layout_width="@dimen/touch_target"
-                android:layout_height="@dimen/touch_target"
+                android:layout_width="@dimen/compact_touch_target"
+                android:layout_height="@dimen/compact_touch_target"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/location_close"
-                android:padding="14dp"
+                android:padding="10dp"
                 android:src="@drawable/ic_close_20"
                 app:tint="?attr/colorOnSurfaceVariant" />
 
@@ -57,7 +57,7 @@
             style="@style/Widget.Material3.CardView.Filled"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_lg"
+            android:layout_marginTop="@dimen/space_md"
             app:cardBackgroundColor="?attr/colorSurfaceContainerLowest"
             app:cardCornerRadius="16dp"
             app:cardElevation="0dp">
@@ -71,15 +71,15 @@
                     android:id="@+id/location_metadata_accent"
                     android:layout_width="5dp"
                     android:layout_height="match_parent"
-                    android:minHeight="104dp" />
+                    android:minHeight="80dp" />
 
                 <TextView
                     android:id="@+id/location_metadata"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:minHeight="104dp"
-                    android:padding="@dimen/space_lg"
+                    android:minHeight="80dp"
+                    android:padding="@dimen/space_md"
                     android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                     android:textColor="?attr/colorOnSurface"
                     android:textIsSelectable="true" />
@@ -92,7 +92,7 @@
             android:id="@+id/location_article_checking"
             android:layout_width="match_parent"
             android:layout_height="4dp"
-            android:layout_marginTop="@dimen/space_md"
+            android:layout_marginTop="@dimen/space_sm"
             android:indeterminate="true"
             app:indicatorColor="?attr/colorPrimary"
             app:trackColor="?attr/colorSurfaceContainerHighest"
@@ -101,14 +101,14 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_md"
+            android:layout_marginTop="@dimen/space_sm"
             android:orientation="horizontal">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/location_article"
                 style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/touch_target"
+                android:layout_height="44dp"
                 android:layout_weight="1"
                 android:enabled="false"
                 android:minWidth="0dp"
@@ -121,7 +121,7 @@
                 android:id="@+id/location_phonology"
                 style="@style/Widget.Material3.Button"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/touch_target"
+                android:layout_height="44dp"
                 android:layout_marginStart="@dimen/space_sm"
                 android:layout_weight="1"
                 android:minWidth="0dp"

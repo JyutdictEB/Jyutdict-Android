@@ -405,7 +405,7 @@ public class MainActivity extends AppCompatActivity {
             String name = itemNames.get(index);
             MaterialCheckBox cb = new MaterialCheckBox(builder.getContext());
             cb.setText(name);
-            cb.setMinHeight(getResources().getDimensionPixelSize(R.dimen.touch_target));
+            cb.setMinHeight(getResources().getDimensionPixelSize(R.dimen.compact_touch_target));
             cb.setChecked(!tempFilter.contains(name));
             cb.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 if (isChecked) {

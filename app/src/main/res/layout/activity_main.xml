@@ -21,31 +21,31 @@
         style="@style/Widget.Material3.CardView.Filled"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/space_md"
-        android:layout_marginTop="@dimen/space_sm"
-        android:layout_marginEnd="@dimen/space_md"
-        android:layout_marginBottom="@dimen/space_sm"
+        android:layout_marginStart="@dimen/space_sm"
+        android:layout_marginTop="2dp"
+        android:layout_marginEnd="@dimen/space_sm"
+        android:layout_marginBottom="@dimen/space_xs"
         app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
-        app:cardCornerRadius="24dp"
+        app:cardCornerRadius="18dp"
         app:cardElevation="0dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="@dimen/space_lg">
+            android:padding="10dp">
 
             <LinearLayout
                 android:id="@+id/input_line"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
+                android:layout_height="48dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
                 <com.google.android.material.textfield.TextInputLayout
                     style="@style/Widget.Jyutdict.SearchField"
                     android:layout_width="0dp"
-                    android:layout_height="56dp"
+                    android:layout_height="48dp"
                     android:layout_weight="1"
                     app:endIconContentDescription="@string/search_clear"
                     app:endIconMode="clear_text"
@@ -60,7 +60,7 @@
                         android:imeOptions="actionSearch"
                         android:inputType="text"
                         android:maxLines="1"
-                        android:paddingStart="20dp"
+                        android:paddingStart="16dp"
                         android:paddingEnd="4dp"
                         android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
                         android:textColor="?attr/colorOnSurface"
@@ -71,37 +71,38 @@
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_query"
                     style="@style/Widget.Jyutdict.ActionButton"
-                    android:layout_width="64dp"
-                    android:layout_height="56dp"
-                    android:layout_marginStart="@dimen/space_sm"
+                    android:layout_width="56dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="6dp"
                     android:paddingHorizontal="0dp"
                     android:text="@string/search_button"
                     android:textColor="?attr/colorPrimary"
                     app:backgroundTint="?attr/colorPrimaryContainer"
-                    app:cornerRadius="28dp" />
+                    app:cornerRadius="24dp" />
 
             </LinearLayout>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_md"
-                android:text="@string/search_options_title"
-                android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
-                android:textColor="?attr/colorOnSurfaceVariant" />
 
             <LinearLayout
                 android:id="@+id/input_switch"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="@dimen/compact_touch_target"
+                android:layout_marginTop="@dimen/space_xs"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="72dp"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:text="@string/search_options_title"
+                    android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
 
                 <cc.ecisr.jyutdict.widget.SwitchCustomized
                     android:id="@+id/switch_select_sheet"
                     style="@style/Widget.Jyutdict.Switch"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:text="@string/search_common_sheet"
                     android:textColor="?attr/colorOnSurface" />
@@ -110,7 +111,7 @@
                     android:id="@+id/switch_reverse_search"
                     style="@style/Widget.Jyutdict.Switch"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:text="@string/search_reversal"
                     android:textColor="?attr/colorOnSurface" />
@@ -120,8 +121,8 @@
             <Spinner
                 android:id="@+id/locate_spinner"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/touch_target"
-                android:layout_marginTop="@dimen/space_xs"
+                android:layout_height="@dimen/compact_touch_target"
+                android:layout_marginTop="2dp"
                 android:dropDownVerticalOffset="4dp"
                 android:popupBackground="?attr/colorSurfaceContainerHigh"
                 android:spinnerMode="dropdown" />
@@ -129,7 +130,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_xs"
+                android:layout_marginTop="2dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -137,7 +138,7 @@
                     android:id="@+id/btn_filter_area"
                     style="@style/Widget.Jyutdict.TextButton"
                     android:layout_width="0dp"
-                    android:layout_height="@dimen/touch_target"
+                    android:layout_height="@dimen/compact_touch_target"
                     android:layout_weight="1"
                     android:text="@string/search_filtering_area" />
 
@@ -145,7 +146,7 @@
                     android:id="@+id/btn_filter_area_pron"
                     style="@style/Widget.Jyutdict.TextButton"
                     android:layout_width="0dp"
-                    android:layout_height="@dimen/touch_target"
+                    android:layout_height="@dimen/compact_touch_target"
                     android:layout_weight="1"
                     android:text="@string/search_filtering_area_pron"
                     android:visibility="gone" />
@@ -154,7 +155,7 @@
                     android:id="@+id/btn_coloring_jpp_partial"
                     style="@style/Widget.Jyutdict.TextButton"
                     android:layout_width="0dp"
-                    android:layout_height="@dimen/touch_target"
+                    android:layout_height="@dimen/compact_touch_target"
                     android:layout_weight="1"
                     android:text="@string/search_coloring_jpp_partial" />
 
@@ -188,7 +189,7 @@
         android:clickable="true"
         android:focusable="true"
         android:gravity="center_vertical"
-        android:minHeight="40dp"
+        android:minHeight="32dp"
         android:orientation="horizontal"
         android:paddingStart="@dimen/content_horizontal_padding"
         android:paddingEnd="@dimen/content_horizontal_padding"
@@ -196,11 +197,11 @@
 
         <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/header_loading_spinner"
-            android:layout_width="18dp"
-            android:layout_height="18dp"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
             android:indeterminate="true"
             app:indicatorColor="?attr/colorPrimary"
-            app:indicatorSize="18dp"
+            app:indicatorSize="16dp"
             app:trackThickness="2dp" />
 
         <TextView
