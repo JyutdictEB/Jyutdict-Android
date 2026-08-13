@@ -62,6 +62,8 @@ public class HttpUtil {
     private final Boolean mode;
     private int messageWhat = REQUEST_CONTENT_SUCCESSFULLY;
     private int failureWhat = REQUEST_CONTENT_FAIL;
+    private int connectTimeoutMillis = 5000;
+    private int readTimeoutMillis = 5000;
 
     private int generation = 0;
     private volatile GetThread getThread;
@@ -97,6 +99,12 @@ public class HttpUtil {
         return this;
     }
 
+    public synchronized HttpUtil setTimeouts(int connectTimeoutMillis, int readTimeoutMillis) {
+        this.connectTimeoutMillis = Math.max(1000, connectTimeoutMillis);
+        this.readTimeoutMillis = Math.max(1000, readTimeoutMillis);
+        return this;
+    }
+
     public synchronized void start() {
         cancelActiveLocked();
         final int requestGeneration = ++generation;
@@ -104,6 +112,8 @@ public class HttpUtil {
         final Handler requestHandler = handler;
         final int successWhat = messageWhat;
         final int requestFailureWhat = failureWhat;
+        final int requestConnectTimeout = connectTimeoutMillis;
+        final int requestReadTimeout = readTimeoutMillis;
 
         if (mode != GET || requestUrl == null || requestUrl.isEmpty() || requestHandler == null) {
             if (requestHandler != null) {
@@ -118,7 +128,9 @@ public class HttpUtil {
                 requestUrl,
                 requestHandler,
                 successWhat,
-                requestFailureWhat
+                requestFailureWhat,
+                requestConnectTimeout,
+                requestReadTimeout
         );
         getThread = thread;
         thread.start();
@@ -163,14 +175,19 @@ public class HttpUtil {
         private final Handler requestHandler;
         private final int successWhat;
         private final int failureWhat;
+        private final int connectTimeoutMillis;
+        private final int readTimeoutMillis;
 
         GetThread(int requestGeneration, String requestUrl, Handler requestHandler,
-                  int successWhat, int failureWhat) {
+                  int successWhat, int failureWhat, int connectTimeoutMillis,
+                  int readTimeoutMillis) {
             this.requestGeneration = requestGeneration;
             this.requestUrl = requestUrl;
             this.requestHandler = requestHandler;
             this.successWhat = successWhat;
             this.failureWhat = failureWhat;
+            this.connectTimeoutMillis = connectTimeoutMillis;
+            this.readTimeoutMillis = readTimeoutMillis;
         }
 
         @Override
@@ -187,8 +204,8 @@ public class HttpUtil {
                 }
 
                 connection.setRequestMethod("GET");
-                connection.setConnectTimeout(5000);
-                connection.setReadTimeout(5000);
+                connection.setConnectTimeout(connectTimeoutMillis);
+                connection.setReadTimeout(readTimeoutMillis);
                 connection.setUseCaches(false);
                 connection.setRequestProperty("Accept", "application/json");
 

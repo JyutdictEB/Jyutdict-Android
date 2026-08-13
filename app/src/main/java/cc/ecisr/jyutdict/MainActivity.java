@@ -35,6 +35,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -49,6 +50,7 @@ import cc.ecisr.jyutdict.struct.FjbHeaderInfo;
 import cc.ecisr.jyutdict.struct.GeneralCharacterManager;
 import cc.ecisr.jyutdict.struct.LocationInfo;
 import cc.ecisr.jyutdict.utils.ApiUrlBuilder;
+import cc.ecisr.jyutdict.utils.DiskTextCache;
 import cc.ecisr.jyutdict.utils.ImmersiveBarUtil;
 import cc.ecisr.jyutdict.utils.JyutpingUtil;
 import cc.ecisr.jyutdict.utils.StringUtil;
@@ -71,13 +73,21 @@ public class MainActivity extends AppCompatActivity {
     private static final int SEARCH_SUCCESS_MASK = 0xFF00;
     private static final int SEARCH_MODE_MASK = 0x00FF;
     private static final int SEARCH_FAIL = 0x5100;
+    private static final String SHEET_HEADER_CACHE_KEY = "main_sheet_header_v1";
+    private static final String LOCATION_HEADER_CACHE_KEY = "main_location_header_v1";
+    private static final long HEADER_CACHE_MAX_AGE = 24L * 60L * 60L * 1000L;
+    private static final long HEADER_REQUEST_WATCHDOG = 22_000L;
+    private static final long HEADER_RETRY_BASE_DELAY = 2_000L;
+    private static final long HEADER_RETRY_MAX_DELAY = 30_000L;
 
     AppCompatEditText inputEditText;
     Button btnQueryConfirm, btnQueryClear, btnFilterArea, btnFilterAreaPron, btnColoringJppPartial;
     Spinner spinnerQueryLocation;
     SwitchCustomized switchQueryOpts1, switchQueryOptsRev, switchQueryOptsRegex;
     ResultFragment resultFragment;
-    ProgressBar loadingProgressBar;
+    ProgressBar loadingProgressBar, headerLoadingSpinner;
+    View headerLoadingStatus;
+    TextView headerLoadingText;
     Toolbar toolbar;
     LinearLayout lyMain, lyAdvancedSearch;
 
@@ -87,11 +97,17 @@ public class MainActivity extends AppCompatActivity {
     // 查詢按鈕字體的顏色，僅用於功能測試
     int previousColor;
 
-    // 是否已成功獲取到泛粵字表表頭並且完成初始化步驟
-    boolean isPrepared = false;
-
-    // 指示是否剛初始化完畢，當點擊過查詢按鈕時纔變 False
-    boolean isJustInitialized = true;
+    boolean headerLoadingInitialized = false;
+    boolean headerRetriesEnabled = false;
+    boolean sheetHeaderNeedsRefresh = true;
+    boolean locationHeaderNeedsRefresh = true;
+    boolean sheetHeaderInFlight = false;
+    boolean locationHeaderInFlight = false;
+    boolean sheetHeaderRetryScheduled = false;
+    boolean locationHeaderRetryScheduled = false;
+    boolean pendingSearch = false;
+    int sheetHeaderRetryAttempt = 0;
+    int locationHeaderRetryAttempt = 0;
 
     // 下拉選擇框的 Adapter，存放的是可供查詢的查詢地名
     LocationSpinnerAdapter locationsAdapter;
@@ -105,6 +121,17 @@ public class MainActivity extends AppCompatActivity {
     final HttpUtil headerQuery = new HttpUtil(HttpUtil.GET);
     final HttpUtil searchQuery = new HttpUtil(HttpUtil.GET);
     final HttpUtil locationQuery = new HttpUtil(HttpUtil.GET);
+
+    final Runnable sheetHeaderRetry = () -> {
+        sheetHeaderRetryScheduled = false;
+        startHeaderRequest(true, false);
+    };
+    final Runnable locationHeaderRetry = () -> {
+        locationHeaderRetryScheduled = false;
+        startHeaderRequest(false, false);
+    };
+    final Runnable sheetHeaderWatchdog = () -> handleHeaderWatchdog(true);
+    final Runnable locationHeaderWatchdog = () -> handleHeaderWatchdog(false);
 
     // 指示搜索模式，查通用表字/查通用表音/查泛粵表
     // 在按下查詢按鈕時更新
@@ -132,6 +159,9 @@ public class MainActivity extends AppCompatActivity {
         switchQueryOptsRev = findViewById(R.id.switch_reverse_search);
         switchQueryOptsRegex = findViewById(R.id.switch_use_regex);
         loadingProgressBar = findViewById(R.id.loading_progress);
+        headerLoadingStatus = findViewById(R.id.header_loading_status);
+        headerLoadingSpinner = findViewById(R.id.header_loading_spinner);
+        headerLoadingText = findViewById(R.id.header_loading_text);
         toolbar = findViewById(R.id.tool_bar);
 
         setSupportActionBar(toolbar);
@@ -172,40 +202,16 @@ public class MainActivity extends AppCompatActivity {
 
             switch (msg.what) {
                 case INITIALIZE_LOCATIONS: // 初始化泛粵字表表頭
-                    try {
-                        // v1.0: 返回 {"columns": [...]}，v0.9 返回 {"__valid_options": [...]}
-                        JSONObject headerObj = new JSONObject(msg.obj.toString());
-                        JSONArray headerArray = headerObj.getJSONArray("columns");
-                        FjbHeaderInfo.load(headerArray);
-                        setLocationsAdapter();
-                        if (!isJustInitialized  && inputEditText.getText()!=null && inputEditText.getText().length() != 0) search();
-                    } catch (JSONException | RuntimeException e) {
-                        Log.e(TAG, "Unable to parse sheet header", e);
-                        ToastUtil.msg(this, getString(R.string.error_tips_data));
-                    }
+                    finishHeaderRequest(true, msg.obj == null ? "" : msg.obj.toString());
                     break;
                 case INITIALIZE_DETAIL_LOCATIONS: // 初始化通用字表地點列表
-                    try {
-                        JSONArray locationArray = new JSONArray(msg.obj.toString());
-                        LocationInfo.load(locationArray);
-                        // 用地點列表構建篩選城市列表（替代原來從結果動態構建的方式）
-                        GeneralCharacterManager.cityList = new ArrayList<>();
-                        GeneralCharacterManager.cityList.add("韻書");  // 保留韻書作為可篩選項
-                        for (LocationInfo.Location loc : LocationInfo.getAll()) {
-                            GeneralCharacterManager.cityList.add(loc.displayName());
-                        }
-                    } catch (JSONException | RuntimeException e) {
-                        Log.e(TAG, "Unable to parse location metadata", e);
-                        ToastUtil.msg(this, getString(R.string.error_tips_data));
-                    }
+                    finishHeaderRequest(false, msg.obj == null ? "" : msg.obj.toString());
                     break;
                 case INITIALIZE_LOCATIONS_FAIL:
-                    isPrepared = false;
-                    showRequestError(msg.obj);
-                    btnQueryConfirm.setEnabled(true);
+                    handleHeaderFailure(true, msg.obj);
                     break;
                 case INITIALIZE_DETAIL_LOCATIONS_FAIL:
-                    showRequestError(msg.obj);
+                    handleHeaderFailure(false, msg.obj);
                     break;
                 case SEARCH_FAIL:
                     showRequestError(msg.obj);
@@ -217,15 +223,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // 查詢按鈕
-        btnQueryConfirm.setOnClickListener(v -> {
-            isJustInitialized = false;
-            if (!isPrepared) {
-                ToastUtil.msg(this, "正在獲取地方信息，請稍候");
-                headerQuery.start(); // 重新向服務器發送請求
-                return;
-            }
-            search();
-        });
+        btnQueryConfirm.setOnClickListener(v -> search());
         btnQueryClear.setOnClickListener(v -> inputEditText.setText(""));
 
         // 監聽焦點在輸入框內的軟鍵盤的確認按鈕
@@ -376,13 +374,10 @@ public class MainActivity extends AppCompatActivity {
         });
         setSearchView();
 
-        // 獲取泛粵字表的表頭
-        setLocationsAdapter();
+        initializeHeaderLoading();
 
         boolean hadCheckedInfoActivity = sp.getBoolean("had_checked_info_activity_2", false);
-        if (hadCheckedInfoActivity) {
-            if (!isPrepared) { headerQuery.start(); }
-        } else {
+        if (!hadCheckedInfoActivity) {
             displayTipsMessageBox();
         }
     }
@@ -512,35 +507,269 @@ public class MainActivity extends AppCompatActivity {
         ToastUtil.msg(this, getString(R.string.error_tips_network, errorCode));
     }
 
-    private void setLocationsAdapter() {
-        if (isPrepared) return;
-        if (FjbHeaderInfo.isLoaded) {
-            locationsAdapter.setOptions(buildLocationOptions(true));
-            int savedLocation = sp.getInt("spinner_selected_position", 0);
-            int lastLocation = Math.max(0, locationsAdapter.getCount() - 1);
-            spinnerQueryLocation.setSelection(
-                    Math.max(0, Math.min(savedLocation, lastLocation)));
-            isPrepared = true;
-            // 在泛粵字表表頭初始化完成後，啟動地點列表請求（如果尚未加載）
-            if (!LocationInfo.isLoaded) {
-                locationQuery.setUrl(ApiUrlBuilder.from(URL_API_ROOT, "detail")
-                                .add("chara", "")
-                                .build())
-                        .setHandler(
-                                mainHandler,
-                                INITIALIZE_DETAIL_LOCATIONS,
-                                INITIALIZE_DETAIL_LOCATIONS_FAIL
-                        )
-                        .start();
-            }
-        } else {
-            headerQuery.setUrl(ApiUrlBuilder.from(URL_API_ROOT, "sheet").build())
-                    .setHandler(
-                            mainHandler,
-                            INITIALIZE_LOCATIONS,
-                            INITIALIZE_LOCATIONS_FAIL
-                    );
+    private void initializeHeaderLoading() {
+        headerQuery.setUrl(ApiUrlBuilder.from(URL_API_ROOT, "sheet").build())
+                .setHandler(mainHandler, INITIALIZE_LOCATIONS, INITIALIZE_LOCATIONS_FAIL)
+                .setTimeouts(8_000, 12_000);
+        locationQuery.setUrl(ApiUrlBuilder.from(URL_API_ROOT, "detail")
+                        .add("chara", "")
+                        .build())
+                .setHandler(mainHandler,
+                        INITIALIZE_DETAIL_LOCATIONS,
+                        INITIALIZE_DETAIL_LOCATIONS_FAIL)
+                .setTimeouts(8_000, 12_000);
+
+        sheetHeaderNeedsRefresh = !restoreCachedHeader(true);
+        locationHeaderNeedsRefresh = !restoreCachedHeader(false);
+        headerLoadingInitialized = true;
+        headerLoadingStatus.setOnClickListener(view -> retryHeadersNow());
+        updateHeaderLoadingStatus();
+    }
+
+    /**
+     * 優先讀取一天內的快取；舊快取仍可立即恢復查詢，但會在背景更新。
+     * 返回值表示快取是否仍然新鮮，而不是是否成功恢復了資料。
+     */
+    private boolean restoreCachedHeader(boolean sheet) {
+        String key = sheet ? SHEET_HEADER_CACHE_KEY : LOCATION_HEADER_CACHE_KEY;
+        String cached = DiskTextCache.readFresh(this, key, HEADER_CACHE_MAX_AGE);
+        boolean fresh = cached != null;
+        if (cached == null) cached = DiskTextCache.readAny(this, key);
+        if (cached != null && !applyHeader(sheet, cached, false)) {
+            Log.w(TAG, "Ignoring invalid cached " + (sheet ? "sheet" : "location") + " header");
+            fresh = false;
         }
+        return fresh;
+    }
+
+    private boolean applyHeader(boolean sheet, String raw, boolean cacheResponse) {
+        try {
+            if (sheet) {
+                JSONObject headerObject = new JSONObject(raw);
+                JSONArray headerArray = headerObject.optJSONArray("columns");
+                if (!hasValidSheetHeader(headerArray)) return false;
+                FjbHeaderInfo.load(headerArray);
+                updateLocationsAdapter();
+            } else {
+                JSONArray locationArray = new JSONArray(raw);
+                if (!hasValidLocationHeader(locationArray)) return false;
+                LocationInfo.load(locationArray);
+                rebuildGeneralLocationList();
+            }
+            if (cacheResponse) {
+                DiskTextCache.write(this,
+                        sheet ? SHEET_HEADER_CACHE_KEY : LOCATION_HEADER_CACHE_KEY,
+                        raw);
+            }
+            return true;
+        } catch (JSONException | RuntimeException exception) {
+            Log.e(TAG, "Unable to parse " + (sheet ? "sheet" : "location") + " header", exception);
+            return false;
+        }
+    }
+
+    private boolean hasValidSheetHeader(JSONArray array) {
+        if (array == null || array.length() == 0) return false;
+        boolean hasCharacterColumn = false;
+        boolean hasPronunciationColumn = false;
+        for (int index = 0; index < array.length(); index++) {
+            JSONObject item = array.optJSONObject(index);
+            if (item != null && item.optInt("index", -1) >= 0
+                    && !item.optString("col", "").isEmpty()) {
+                String column = item.optString("col", "");
+                hasCharacterColumn |= FjbHeaderInfo.COLUMN_NAME_CHARACTER.equals(column);
+                hasPronunciationColumn |= FjbHeaderInfo.COLUMN_NAME_PRONUNCIATION.equals(column);
+            }
+        }
+        return hasCharacterColumn && hasPronunciationColumn;
+    }
+
+    private boolean hasValidLocationHeader(JSONArray array) {
+        if (array == null || array.length() == 0) return false;
+        for (int index = 0; index < array.length(); index++) {
+            JSONObject item = array.optJSONObject(index);
+            if (item != null && item.optInt("id", -1) >= 0) return true;
+        }
+        return false;
+    }
+
+    private void updateLocationsAdapter() {
+        if (!FjbHeaderInfo.isLoaded) return;
+        int selectedLocation = locationsAdapter.getCount() > 2
+                ? spinnerQueryLocation.getSelectedItemPosition()
+                : sp.getInt("spinner_selected_position", 0);
+        locationsAdapter.setOptions(buildLocationOptions(true));
+        int lastLocation = Math.max(0, locationsAdapter.getCount() - 1);
+        spinnerQueryLocation.setSelection(
+                Math.max(0, Math.min(selectedLocation, lastLocation)));
+    }
+
+    private void rebuildGeneralLocationList() {
+        GeneralCharacterManager.cityList = new ArrayList<>();
+        GeneralCharacterManager.cityList.add("韻書");
+        for (LocationInfo.Location location : LocationInfo.getAll()) {
+            GeneralCharacterManager.cityList.add(location.displayName());
+        }
+    }
+
+    private void finishHeaderRequest(boolean sheet, String raw) {
+        clearHeaderWatchdog(sheet);
+        setHeaderInFlight(sheet, false);
+        if (!applyHeader(sheet, raw, true)) {
+            handleHeaderFailure(sheet, null);
+            return;
+        }
+
+        setHeaderNeedsRefresh(sheet, false);
+        setHeaderRetryAttempt(sheet, 0);
+        clearHeaderRetry(sheet);
+        updateHeaderLoadingStatus();
+        maybeRunPendingSearch();
+    }
+
+    private void handleHeaderFailure(boolean sheet, Object error) {
+        clearHeaderWatchdog(sheet);
+        setHeaderInFlight(sheet, false);
+        setHeaderNeedsRefresh(sheet, true);
+        if (error != null) {
+            Log.w(TAG, (sheet ? "Sheet" : "Location") + " header request failed: " + error);
+        }
+        scheduleHeaderRetry(sheet);
+        updateHeaderLoadingStatus();
+    }
+
+    private void handleHeaderWatchdog(boolean sheet) {
+        if (!isHeaderInFlight(sheet)) return;
+        if (sheet) headerQuery.cancel(); else locationQuery.cancel();
+        handleHeaderFailure(sheet, "timeout");
+    }
+
+    private void startHeaderRequest(boolean sheet, boolean resetBackoff) {
+        if (!headerLoadingInitialized || !headerRetriesEnabled
+                || !headerNeedsRefresh(sheet) || isHeaderInFlight(sheet)) {
+            return;
+        }
+        clearHeaderRetry(sheet);
+        if (resetBackoff) setHeaderRetryAttempt(sheet, 0);
+        setHeaderInFlight(sheet, true);
+        updateHeaderLoadingStatus();
+        if (sheet) {
+            headerQuery.start();
+            mainHandler.postDelayed(sheetHeaderWatchdog, HEADER_REQUEST_WATCHDOG);
+        } else {
+            locationQuery.start();
+            mainHandler.postDelayed(locationHeaderWatchdog, HEADER_REQUEST_WATCHDOG);
+        }
+    }
+
+    private void scheduleHeaderRetry(boolean sheet) {
+        if (!headerRetriesEnabled || !headerNeedsRefresh(sheet)) return;
+        clearHeaderRetry(sheet);
+        int attempt = headerRetryAttempt(sheet);
+        long multiplier = 1L << Math.min(attempt, 4);
+        long delay = Math.min(HEADER_RETRY_MAX_DELAY, HEADER_RETRY_BASE_DELAY * multiplier);
+        setHeaderRetryAttempt(sheet, attempt + 1);
+        if (sheet) {
+            sheetHeaderRetryScheduled = true;
+            mainHandler.postDelayed(sheetHeaderRetry, delay);
+        } else {
+            locationHeaderRetryScheduled = true;
+            mainHandler.postDelayed(locationHeaderRetry, delay);
+        }
+    }
+
+    private void retryHeadersNow() {
+        startHeaderRequest(true, true);
+        startHeaderRequest(false, true);
+    }
+
+    private void requestNeededHeaders() {
+        startHeaderRequest(true, false);
+        startHeaderRequest(false, false);
+    }
+
+    private void updateHeaderLoadingStatus() {
+        if (!headerLoadingInitialized || (!sheetHeaderNeedsRefresh && !locationHeaderNeedsRefresh)) {
+            headerLoadingStatus.setVisibility(View.GONE);
+            return;
+        }
+
+        int readyCount = (FjbHeaderInfo.isLoaded ? 1 : 0) + (LocationInfo.isLoaded ? 1 : 0);
+        boolean loading = sheetHeaderInFlight || locationHeaderInFlight;
+        boolean waitingToRetry = sheetHeaderRetryScheduled || locationHeaderRetryScheduled;
+        headerLoadingSpinner.setVisibility(loading || !waitingToRetry
+                ? View.VISIBLE : View.INVISIBLE);
+        if (loading || !waitingToRetry) {
+            headerLoadingText.setText(readyCount == 2
+                    ? getString(R.string.header_sync_updating)
+                    : getString(R.string.header_sync_preparing, readyCount));
+        } else {
+            headerLoadingText.setText(readyCount == 2
+                    ? getString(R.string.header_sync_stale)
+                    : getString(R.string.header_sync_retrying));
+        }
+        headerLoadingStatus.setVisibility(View.VISIBLE);
+    }
+
+    private void maybeRunPendingSearch() {
+        if (!pendingSearch || !isRequiredHeaderReady()) return;
+        pendingSearch = false;
+        search();
+    }
+
+    private boolean isRequiredHeaderReady() {
+        return switchQueryOpts1.isChecked() ? FjbHeaderInfo.isLoaded : LocationInfo.isLoaded;
+    }
+
+    private void requestRequiredHeaderNow() {
+        if (switchQueryOpts1.isChecked()) {
+            sheetHeaderNeedsRefresh = true;
+            startHeaderRequest(true, true);
+        } else {
+            locationHeaderNeedsRefresh = true;
+            startHeaderRequest(false, true);
+        }
+        updateHeaderLoadingStatus();
+    }
+
+    private boolean headerNeedsRefresh(boolean sheet) {
+        return sheet ? sheetHeaderNeedsRefresh : locationHeaderNeedsRefresh;
+    }
+
+    private void setHeaderNeedsRefresh(boolean sheet, boolean value) {
+        if (sheet) sheetHeaderNeedsRefresh = value; else locationHeaderNeedsRefresh = value;
+    }
+
+    private boolean isHeaderInFlight(boolean sheet) {
+        return sheet ? sheetHeaderInFlight : locationHeaderInFlight;
+    }
+
+    private void setHeaderInFlight(boolean sheet, boolean value) {
+        if (sheet) sheetHeaderInFlight = value; else locationHeaderInFlight = value;
+    }
+
+    private int headerRetryAttempt(boolean sheet) {
+        return sheet ? sheetHeaderRetryAttempt : locationHeaderRetryAttempt;
+    }
+
+    private void setHeaderRetryAttempt(boolean sheet, int value) {
+        if (sheet) sheetHeaderRetryAttempt = value; else locationHeaderRetryAttempt = value;
+    }
+
+    private void clearHeaderRetry(boolean sheet) {
+        if (mainHandler == null) return;
+        if (sheet) {
+            mainHandler.removeCallbacks(sheetHeaderRetry);
+            sheetHeaderRetryScheduled = false;
+        } else {
+            mainHandler.removeCallbacks(locationHeaderRetry);
+            locationHeaderRetryScheduled = false;
+        }
+    }
+
+    private void clearHeaderWatchdog(boolean sheet) {
+        if (mainHandler == null) return;
+        mainHandler.removeCallbacks(sheet ? sheetHeaderWatchdog : locationHeaderWatchdog);
     }
 
     private ArrayList<LocationSpinnerAdapter.Option> buildLocationOptions(boolean includeCities) {
@@ -683,13 +912,15 @@ public class MainActivity extends AppCompatActivity {
      */
     private void search() {
         if (inputEditText.getText() == null) { return; }
-        if (!isPrepared) {
-            ToastUtil.msg(this, "正在獲取地方信息，請稍候");
-            headerQuery.start();
+        if (!isRequiredHeaderReady()) {
+            pendingSearch = true;
+            requestRequiredHeaderNow();
+            ToastUtil.msg(this, getString(R.string.header_sync_required));
             return;
         }
+        pendingSearch = false;
         setInputString(inputEditText.getText().toString()); // 必须放在最前面
-        if (isPrepared && "".equals(inputString) && !(switchQueryOpts1.isChecked() && !switchQueryOptsRev.isChecked())) {
+        if ("".equals(inputString) && !(switchQueryOpts1.isChecked() && !switchQueryOptsRev.isChecked())) {
             return;
         } // 搜索欄爲空時不檢索
 
@@ -871,6 +1102,32 @@ public class MainActivity extends AppCompatActivity {
         public interface IHandleMessageProcessor {
             void handleMessage(Message msg);
         }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        headerRetriesEnabled = true;
+        requestNeededHeaders();
+    }
+
+    @Override
+    protected void onStop() {
+        headerRetriesEnabled = false;
+        clearHeaderRetry(true);
+        clearHeaderRetry(false);
+        clearHeaderWatchdog(true);
+        clearHeaderWatchdog(false);
+        if (sheetHeaderInFlight) {
+            headerQuery.cancel();
+            sheetHeaderInFlight = false;
+        }
+        if (locationHeaderInFlight) {
+            locationQuery.cancel();
+            locationHeaderInFlight = false;
+        }
+        updateHeaderLoadingStatus();
+        super.onStop();
     }
 
     @Override

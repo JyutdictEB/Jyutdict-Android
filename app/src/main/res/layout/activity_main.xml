@@ -190,6 +190,41 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <LinearLayout
+        android:id="@+id/header_loading_status"
+        android:layout_width="match_parent"
+        android:layout_height="20dp"
+        android:alpha="0.72"
+        android:background="?attr/clockBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="20dp"
+        android:paddingEnd="12dp"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:id="@+id/header_loading_spinner"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:indeterminate="true"
+            android:indeterminateTint="?attr/clockTextColorDim" />
+
+        <TextView
+            android:id="@+id/header_loading_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="?attr/clockTextColorDim"
+            android:textSize="11sp" />
+
+    </LinearLayout>
+
     <ProgressBar
         android:id="@+id/loading_progress"
         android:layout_width="match_parent"
