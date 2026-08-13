@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">泛粵典</string>
-    <string name="app_version">當前版本：%1$d.%2$d.%3$d\n長按此處檢測新版本</string>
+    <string name="app_version">%1$d.%2$d.%3$d</string>
     <string name="app_version_0">0</string>
     <string name="app_version_1">7</string>
     <string name="app_version_2">7</string>
@@ -67,9 +67,6 @@
     <string name="error_tips_network">網絡或服務器錯誤，錯誤碼：%1$s</string>
     <string name="error_tips_network_out_of_time">未能連接服務器</string>
     <string name="error_tips_data">資料格式已更新，暫時無法顯示</string>
-    <string name="tips_version_checking">正在檢測更新版本</string>
-    <string name="tips_version_checked">已为最新</string>
-    <string name="tips_version_detected">有新版本，請於「幫助」頁面底部進入下載地址</string>
     <string name="permission_requesting">本應用需要通過網絡提供查詢服務，故還請允許相關的權限</string>
     <string name="tips_no_result">無結果</string>
     <string name="tips_chara_copied">已複製：%1$s</string>
@@ -97,6 +94,21 @@
     <!-- SettingActivity -->
     <string name="title_activity_settings">設置</string>
     <string name="settings_supporting_text">外觀、檢索與本機資料</string>
+    <string name="version_dialog_title">版本與下載</string>
+    <string name="version_current_value">泛粵典 %1$d.%2$d.%3$d</string>
+    <string name="version_description">泛粵大典 Android 客戶端。可在此檢查服務器上的最新版本，或選擇下載來源。</string>
+    <string name="version_status_not_checked">尚未檢查更新</string>
+    <string name="version_status_checking">正在檢查更新…</string>
+    <string name="version_status_current">目前已是最新版本</string>
+    <string name="version_status_update_available">發現新版本 %1$d.%2$d.%3$d</string>
+    <string name="version_status_invalid">服務器返回的版本資料無法識別</string>
+    <string name="version_status_failed">暫時無法連接版本服務</string>
+    <string name="version_check_action">檢查新版本</string>
+    <string name="version_download_title">下載地址</string>
+    <string name="version_download_baidu">百度網盤 · 提取碼 djms</string>
+    <string name="version_download_tianyi">天翼雲盤</string>
+    <string name="version_download_github">GitHub Releases</string>
+    <string name="version_link_unavailable">沒有可開啟此連結的應用</string>
     <string name="search_header">檢索</string>
     <string name="search_title_advanced_options">進階檢索選項 (beta)</string>
     <string name="display_header">顯示</string>

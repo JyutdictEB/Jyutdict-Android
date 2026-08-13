@@ -1,19 +1,21 @@
 package cc.ecisr.jyutdict;
 
 import android.annotation.SuppressLint;
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.text.InputType;
 import android.widget.Button;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.preference.EditTextPreference;
@@ -22,10 +24,11 @@ import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SwitchPreferenceCompat;
 
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.util.Locale;
 
 import cc.ecisr.jyutdict.utils.DiskTextCache;
 import cc.ecisr.jyutdict.utils.EnumConst;
@@ -39,6 +42,9 @@ public class SettingsActivity extends AppCompatActivity {
     private static final String EXTRA_THEME_CHANGED = "theme_changed";
 
     Button btnCheckVersion;
+    MaterialButton dialogCheckVersion;
+    TextView dialogVersionStatus;
+    AlertDialog versionDialog;
     SettingHandler mHandler;
     final HttpUtil versionQuery = new HttpUtil(HttpUtil.GET);
 
@@ -76,31 +82,26 @@ public class SettingsActivity extends AppCompatActivity {
             switch (msg.what) {
                 case EnumConst.CHECKING_VERSION:
                     try {
-                        JSONArray version = new JSONObject(
-                                msg.obj.toString()
-                        ).getJSONArray("app_version");
+                        JSONObject response = new JSONObject(msg.obj.toString());
+                        JSONArray version = response.optJSONArray("app_version");
+                        if (version == null) version = response.getJSONArray("version");
                         int v0 = version.getInt(0); // 服務器記錄的最新版本號
                         int v1 = version.getInt(1);
                         int v2 = version.getInt(2);
-                        if (v0>v0This || v1>v1This || v2>v2This) { // 如果有更新
-                            ToastUtil.msg(SettingsActivity.this, getResources().getString(R.string.tips_version_detected));
-                            String downloadUrl = String.format(Locale.CHINA,
-                                    "https://jyutdict.org/release/%d-%d-%d.apk", v0, v1, v2);
-                            ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                            ClipData mClipData = ClipData.newPlainText("泛粤典下载", downloadUrl);
-                            if (cm != null) {
-                                cm.setPrimaryClip(mClipData);
-                            } // else {}
+                        if (isNewerVersion(v0, v1, v2)) {
+                            setVersionStatus(getString(
+                                    R.string.version_status_update_available, v0, v1, v2));
                         } else {
-                            ToastUtil.msg(SettingsActivity.this, getResources().getString(R.string.tips_version_checked));
+                            setVersionStatus(getString(R.string.version_status_current));
                         }
-                    } catch (Exception ignored) {}
-                    btnCheckVersion.setEnabled(true);
+                    } catch (Exception ignored) {
+                        setVersionStatus(getString(R.string.version_status_invalid));
+                    }
+                    setVersionCheckEnabled(true);
                     break;
                 case HttpUtil.REQUEST_CONTENT_FAIL:
-                    ToastUtil.msg(SettingsActivity.this,
-                            getString(R.string.error_tips_network, msg.obj.toString()));
-                    btnCheckVersion.setEnabled(true);
+                    setVersionStatus(getString(R.string.version_status_failed));
+                    setVersionCheckEnabled(true);
                     break;
                 default:
                     break;
@@ -110,14 +111,67 @@ public class SettingsActivity extends AppCompatActivity {
 
         btnCheckVersion = findViewById(R.id.btn_check_version);
         btnCheckVersion.setText(getResources().getString(R.string.app_version, v0This, v1This, v2This));
-        btnCheckVersion.setOnLongClickListener(v -> { // 獲取地名列表
-            versionQuery.setUrl("https://jyutdict.org/api/")
-                    .setHandler(mHandler, EnumConst.CHECKING_VERSION)
-                    .start();
-            ToastUtil.msg(SettingsActivity.this, getResources().getString(R.string.tips_version_checking));
-            v.setEnabled(false);
-            return true;
+        btnCheckVersion.setOnClickListener(v -> showVersionDialog());
+    }
+
+    private void showVersionDialog() {
+        if (versionDialog != null && versionDialog.isShowing()) return;
+        android.view.View content = getLayoutInflater().inflate(
+                R.layout.dialog_version_info, null);
+        TextView currentVersion = content.findViewById(R.id.version_current);
+        currentVersion.setText(getString(
+                R.string.version_current_value, v0This, v1This, v2This));
+        dialogVersionStatus = content.findViewById(R.id.version_check_status);
+        dialogCheckVersion = content.findViewById(R.id.version_check_action);
+        dialogCheckVersion.setOnClickListener(view -> checkVersion());
+        content.findViewById(R.id.version_download_baidu).setOnClickListener(view ->
+                openUrl("https://pan.baidu.com/s/1r7mo35tEwZ0zAjQHIacf8w"));
+        content.findViewById(R.id.version_download_tianyi).setOnClickListener(view ->
+                openUrl("https://cloud.189.cn/t/yA7FVnUzQZj2"));
+        content.findViewById(R.id.version_download_github).setOnClickListener(view ->
+                openUrl("https://github.com/EcRal5t/Jyutdict-Android/releases"));
+
+        versionDialog = new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.version_dialog_title)
+                .setView(content)
+                .setNegativeButton(R.string.location_close, null)
+                .create();
+        versionDialog.setOnDismissListener(dialog -> {
+            versionDialog = null;
+            dialogVersionStatus = null;
+            dialogCheckVersion = null;
         });
+        versionDialog.show();
+    }
+
+    private void checkVersion() {
+        setVersionStatus(getString(R.string.version_status_checking));
+        setVersionCheckEnabled(false);
+        versionQuery.setUrl("https://jyutdict.org/api/")
+                .setHandler(mHandler, EnumConst.CHECKING_VERSION)
+                .start();
+    }
+
+    private boolean isNewerVersion(int major, int minor, int patch) {
+        if (major != v0This) return major > v0This;
+        if (minor != v1This) return minor > v1This;
+        return patch > v2This;
+    }
+
+    private void setVersionStatus(String status) {
+        if (dialogVersionStatus != null) dialogVersionStatus.setText(status);
+    }
+
+    private void setVersionCheckEnabled(boolean enabled) {
+        if (dialogCheckVersion != null) dialogCheckVersion.setEnabled(enabled);
+    }
+
+    private void openUrl(String url) {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+        } catch (Exception exception) {
+            ToastUtil.msg(this, getString(R.string.version_link_unavailable));
+        }
     }
 
     @Override
@@ -136,6 +190,7 @@ public class SettingsActivity extends AppCompatActivity {
     protected void onDestroy() {
         versionQuery.cancel();
         if (mHandler != null) mHandler.removeCallbacksAndMessages(null);
+        if (versionDialog != null) versionDialog.dismiss();
         super.onDestroy();
     }
 
