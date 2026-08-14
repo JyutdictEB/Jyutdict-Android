@@ -46,6 +46,7 @@ android {
     namespace = 'cc.ecisr.jyutdict'
     buildFeatures {
         buildConfig = true
+        viewBinding = true
     }
 
 }

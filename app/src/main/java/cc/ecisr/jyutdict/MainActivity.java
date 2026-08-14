@@ -57,6 +57,7 @@ import java.util.Locale;
 import java.util.Set;
 
 import cc.ecisr.jyutdict.auth.AuthRepository;
+import cc.ecisr.jyutdict.databinding.ActivityMainBinding;
 import cc.ecisr.jyutdict.struct.FjbHeaderInfo;
 import cc.ecisr.jyutdict.struct.GeneralCharacterManager;
 import cc.ecisr.jyutdict.struct.LocationInfo;
@@ -104,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String EXTRA_THEME_TRANSITION = "theme_transition";
 
     AppCompatEditText inputEditText;
+    private ActivityMainBinding binding;
     Button btnQueryConfirm, btnFilterArea, btnFilterAreaPron, btnColoringJppPartial;
     MaterialButton switchQueryOptsRev, switchQueryOptsRegex;
     MaterialButtonToggleGroup sheetModeGroup;
@@ -179,25 +181,25 @@ public class MainActivity extends AppCompatActivity {
      * 初始化界面，獲取界面上各物件的視圖
      */
     void getView() {
-        lyMain = findViewById(R.id.whole_main_layout);
-        inputEditText = findViewById(R.id.edit_text_input);
-        btnQueryConfirm = findViewById(R.id.btn_query);
-        btnFilterArea = findViewById(R.id.btn_filter_area);
-        btnFilterAreaPron = findViewById(R.id.btn_filter_area_pron);
-        btnColoringJppPartial = findViewById(R.id.btn_coloring_jpp_partial);
-        locationPicker = findViewById(R.id.locate_picker);
-        sheetQueryOptions = findViewById(R.id.sheet_query_options);
-        locationPickerText = findViewById(R.id.locate_picker_text);
-        locationPickerSwatch = findViewById(R.id.locate_picker_swatch);
-        lyAdvancedSearch = findViewById(R.id.input_advanced_switch);
-        sheetModeGroup = findViewById(R.id.sheet_mode_group);
-        switchQueryOptsRev = findViewById(R.id.switch_reverse_search);
-        switchQueryOptsRegex = findViewById(R.id.switch_use_regex);
-        loadingProgressBar = findViewById(R.id.loading_progress);
-        headerLoadingStatus = findViewById(R.id.header_loading_status);
-        headerLoadingSpinner = findViewById(R.id.header_loading_spinner);
-        headerLoadingText = findViewById(R.id.header_loading_text);
-        toolbar = findViewById(R.id.tool_bar);
+        lyMain = binding.wholeMainLayout;
+        inputEditText = binding.editTextInput;
+        btnQueryConfirm = binding.btnQuery;
+        btnFilterArea = binding.btnFilterArea;
+        btnFilterAreaPron = binding.btnFilterAreaPron;
+        btnColoringJppPartial = binding.btnColoringJppPartial;
+        locationPicker = binding.locatePicker;
+        sheetQueryOptions = binding.sheetQueryOptions;
+        locationPickerText = binding.locatePickerText;
+        locationPickerSwatch = binding.locatePickerSwatch;
+        lyAdvancedSearch = binding.inputAdvancedSwitch;
+        sheetModeGroup = binding.sheetModeGroup;
+        switchQueryOptsRev = binding.switchReverseSearch;
+        switchQueryOptsRegex = binding.switchUseRegex;
+        loadingProgressBar = binding.loadingProgress;
+        headerLoadingStatus = binding.headerLoadingStatus;
+        headerLoadingSpinner = binding.headerLoadingSpinner;
+        headerLoadingText = binding.headerLoadingText;
+        toolbar = binding.toolBar;
 
         setSupportActionBar(toolbar);
         locationOptions = buildLocationOptions(false);
@@ -214,7 +216,8 @@ public class MainActivity extends AppCompatActivity {
         applyLightDarkTheme();
         super.onCreate(savedInstanceState);
         sp = getSharedPreferences("settings", MODE_PRIVATE);
-        setContentView(R.layout.activity_main);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
         if (savedInstanceState != null
                 && getIntent().getBooleanExtra(EXTRA_THEME_TRANSITION, false)) {
             View content = findViewById(android.R.id.content);
