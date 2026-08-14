@@ -28,7 +28,7 @@
             android:paddingHorizontal="4dp"
             android:paddingVertical="4dp">
 
-            <TextView
+            <cc.ecisr.jyutdict.widget.SelectableTextView
                 android:id="@+id/chara_header"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -38,7 +38,7 @@
                 android:textColor="?attr/clockTextColor"
                 android:textSize="34sp" />
 
-            <TextView
+            <cc.ecisr.jyutdict.widget.SelectableTextView
                 android:id="@+id/chara_info"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -49,7 +49,7 @@
                 android:textSize="11sp"
                 android:visibility="gone" />
 
-            <TextView
+            <cc.ecisr.jyutdict.widget.SelectableTextView
                 android:id="@+id/chara_extra"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -91,7 +91,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:includeFontPadding="false"
-                android:lineSpacingExtra="1dp"
+                android:lineSpacingExtra="6dp"
                 android:text="@string/result_list_bottom"
                 android:textColor="?attr/clockTextColor"
                 android:textSize="13sp" />

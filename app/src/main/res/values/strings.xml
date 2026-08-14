@@ -92,7 +92,6 @@
     <string name="permission_requesting">本應用需要通過網絡提供查詢服務，故還請允許相關的權限</string>
     <string name="tips_no_result">無結果</string>
     <string name="tips_chara_copied">已複製：%1$s</string>
-    <string name="tips_content_copied">已複製條目內容</string>
 
     <!-- InfoActivity -->
     <string name="info_loading">加載中...</string>

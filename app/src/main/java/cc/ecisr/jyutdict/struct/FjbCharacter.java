@@ -187,15 +187,16 @@ public class FjbCharacter {
 
             String[] fullName = FjbHeaderInfo.getFullName(key);
             sb.delete(0, sb.length());
-            sb.append(fullName[0]).append(fullName[1]).append(": ");
+            sb.append(fullName[0]).append(fullName[1]).append("\u2003: ");
             presentStringBeginPosition = ssb.length();
             ssb.append(sb);
             int locationNameEnd = presentStringBeginPosition
                     + fullName[0].length() + fullName[1].length();
+            int locationButtonEnd = ssb.length();
             ssb.setSpan(
                     new LocationClickSpan(fullName[0] + fullName[1]),
                     presentStringBeginPosition,
-                    locationNameEnd,
+                    locationButtonEnd,
                     Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
             );
 
@@ -292,7 +293,7 @@ public class FjbCharacter {
                 }
 
                 sb.delete(0, sb.length());
-                sb.append(key).append(": ");
+                sb.append(key).append("\u2003: ");
                 presentStringBeginPosition = ssb.length();
                 ssb.append(sb);
                 int locationNameEnd = presentStringBeginPosition + key.length();

@@ -2,8 +2,6 @@ package cc.ecisr.jyutdict;
 
 import static cc.ecisr.jyutdict.utils.EnumConst.*;
 
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -127,14 +125,6 @@ public class ResultFragment extends Fragment {
                 }
             }
             @Override
-            public void onLongClick(@NonNull ResultItemAdapter.LinearViewHolder holder) {
-                String content = holder.printContent().trim();
-                if (!content.isEmpty() && getActivity()!=null) {
-                    copy(content);
-                }
-            }
-
-            @Override
             public void onComments(@NonNull ResultItemAdapter.LinearViewHolder holder,
                                    String type, String target) {
                 CommentDialogFragment.newInstance(type, target, holder.getChara())
@@ -212,16 +202,6 @@ public class ResultFragment extends Fragment {
         mRvMain = null;
         binding = null;
         super.onDestroyView();
-    }
-
-    private void copy(String chara) {
-        if (getActivity() == null) return;
-        ClipboardManager cm = (ClipboardManager) getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
-        ClipData mClipData = ClipData.newPlainText("jyut_chara", chara);
-        if (cm != null) {
-            cm.setPrimaryClip(mClipData);
-            ToastUtil.msg(getContext(), getString(R.string.tips_content_copied));
-        }
     }
 
     /**

@@ -1,12 +1,12 @@
 package cc.ecisr.jyutdict;
 
 import android.content.Context;
+import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import cc.ecisr.jyutdict.widget.SelectableTextView;
 import cc.ecisr.jyutdict.utils.MotionUtil;
@@ -46,11 +46,14 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         Spanned wanshyu = item.rightTop;
         Spanned location = item.rightBottom;
 
-        holder.tvCharaHeader.setText(header);
-        holder.tvCharaInfo.setText(info);
-        holder.tvCharaExtra.setText(extra);
+        holder.tvCharaHeader.setSelectableText(header);
+        holder.tvCharaInfo.setSelectableText(info);
+        boolean isSheetEntry = getItemViewType(position) == ResultInfo.TYPE_SHEET;
+        holder.tvCharaExtra.setSelectableText(extra);
         holder.tvRightTop.setSelectableText(wanshyu);
-        holder.tvRightBottom.setSelectableText(location);
+        holder.tvRightBottom.setSelectableText(isSheetEntry
+                ? joinTextSections(wanshyu, location)
+                : location);
         holder.collapseAnnotation(false);
         holder.tvRightBottom.setOnAnnotationClickListener(holder::toggleAnnotation);
         int lyCharaVisibility = (!header.isEmpty() || !info.isEmpty()) ? View.VISIBLE : View.GONE;
@@ -65,24 +68,23 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         holder.lyChara.setVisibility(lyCharaVisibility);
         holder.tvCharaInfo.setVisibility(tvContentInfoVisibility);
         holder.tvCharaExtra.setVisibility(tvContentExtraVisibility);
-        holder.tvRightTop.setVisibility(tvContentWanshyuVisibility);
-        holder.tvRightBottom.setVisibility(tvContentLocationVisibility);
-        holder.contentDivider.setVisibility(dividerVisibility);
+        holder.tvRightTop.setVisibility(isSheetEntry ? View.GONE : tvContentWanshyuVisibility);
+        holder.tvRightBottom.setVisibility(isSheetEntry
+                ? (wanshyu.isEmpty() && location.isEmpty() ? View.GONE : View.VISIBLE)
+                : tvContentLocationVisibility);
+        holder.contentDivider.setVisibility(isSheetEntry ? View.GONE : dividerVisibility);
+        holder.contentMerged = isSheetEntry;
 
         holder.commentTarget = item.commentTarget;
 
         // 短按彈出操作菜單
-        holder.itemView.setOnClickListener(v -> mListener.onClick(holder));
-        View.OnLongClickListener copyFullEntry = v -> {
-            mListener.onLongClick(holder);
-            return true;
-        };
-        holder.itemView.setOnLongClickListener(copyFullEntry);
-        holder.tvCharaHeader.setOnLongClickListener(copyFullEntry);
-        holder.tvCharaInfo.setOnLongClickListener(copyFullEntry);
-        holder.tvCharaExtra.setOnLongClickListener(copyFullEntry);
-        holder.tvRightTop.setOnLongClickListener(copyFullEntry);
-        holder.tvRightBottom.setOnLongClickListener(copyFullEntry);
+        View.OnClickListener showItemMenu = v -> mListener.onClick(holder);
+        holder.itemView.setOnClickListener(showItemMenu);
+        holder.tvCharaHeader.setOnNonLinkClickListener(showItemMenu);
+        holder.tvCharaInfo.setOnNonLinkClickListener(showItemMenu);
+        holder.tvCharaExtra.setOnNonLinkClickListener(showItemMenu);
+        holder.tvRightTop.setOnNonLinkClickListener(showItemMenu);
+        holder.tvRightBottom.setOnNonLinkClickListener(showItemMenu);
 
         ViewGroup.LayoutParams layoutParams = holder.itemView.getLayoutParams();
         layoutParams.height = LinearLayout.LayoutParams.WRAP_CONTENT;
@@ -107,14 +109,29 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         return items.get(position);
     }
 
+    private static Spanned joinTextSections(Spanned first, Spanned second) {
+        SpannableStringBuilder combined = new SpannableStringBuilder();
+        if (first != null && !first.isEmpty()) {
+            combined.append(first);
+        }
+        if (first != null && !first.isEmpty() && second != null && !second.isEmpty()) {
+            combined.append("\n\n");
+        }
+        if (second != null && !second.isEmpty()) {
+            combined.append(second);
+        }
+        return combined;
+    }
+
     public static class LinearViewHolder extends RecyclerView.ViewHolder {
         LinearLayout lyChara;
         View contentDivider;
         View annotationContainer;
-        TextView tvCharaHeader, tvCharaInfo, tvCharaExtra;
-        SelectableTextView tvRightTop, tvRightBottom, tvAnnotation;
+        SelectableTextView tvCharaHeader, tvCharaInfo, tvCharaExtra,
+                tvRightTop, tvRightBottom, tvAnnotation;
         ResultInfo.CommentTarget commentTarget;
         String expandedAnnotation;
+        boolean contentMerged;
 
         LinearViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -169,20 +186,19 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         }
 
         String getChara() {
-            return tvCharaHeader.getText().toString();
+            return tvCharaHeader.getSelectablePlainText();
         }
         String printContent() {
-            return tvCharaHeader.getText().toString() + "\n" +
-                    tvCharaInfo.getText().toString() + "\n" +
-                    tvCharaExtra.getText().toString() + "\n" +
-                    tvRightTop.getSelectablePlainText() + "\n" +
+            return tvCharaHeader.getSelectablePlainText() + "\n" +
+                    tvCharaInfo.getSelectablePlainText() + "\n" +
+                    tvCharaExtra.getSelectablePlainText() + "\n" +
+                    (contentMerged ? "" : tvRightTop.getSelectablePlainText() + "\n") +
                     tvRightBottom.getSelectablePlainText() + "\n";
         }
     }
 
     public interface iOnItemClickListener {
         void onClick(@NonNull ResultItemAdapter.LinearViewHolder holder);
-        void onLongClick(@NonNull ResultItemAdapter.LinearViewHolder holder);
         void onComments(@NonNull ResultItemAdapter.LinearViewHolder holder,
                         String type, String target);
     }

@@ -12,6 +12,7 @@ import android.text.SpannedString;
 import android.text.style.ClickableSpan;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
+import android.view.View;
 import android.widget.TextView;
 
 import androidx.appcompat.widget.AppCompatTextView;
@@ -35,6 +36,7 @@ public class SelectableTextView extends AppCompatTextView {
     private CharSequence mSourceText;
     private int mRenderedContentWidth = -1;
     private OnAnnotationClickListener mAnnotationClickListener;
+    private View.OnClickListener mOnNonLinkClickListener;
 
     public SelectableTextView(Context context) {
         super(context);
@@ -80,6 +82,10 @@ public class SelectableTextView extends AppCompatTextView {
 
     public void setOnAnnotationClickListener(OnAnnotationClickListener listener) {
         mAnnotationClickListener = listener;
+    }
+
+    public void setOnNonLinkClickListener(View.OnClickListener listener) {
+        mOnNonLinkClickListener = listener;
     }
 
     void dispatchAnnotationClick(String annotation) {
@@ -210,6 +216,7 @@ public class SelectableTextView extends AppCompatTextView {
                 break;
 
             case MotionEvent.ACTION_UP:
+                boolean wasPressedOnLink = mIsPressedOnLink;
                 if (mIsPressedOnLink) {
                     if (!mHasPerformedLongPress && mPressedSpan != null) {
                         mPressedSpan.onClick(this);
@@ -225,6 +232,10 @@ public class SelectableTextView extends AppCompatTextView {
                     }
                     mIsPressedOnLink = false;
                     mPressedSpan = null;
+                }
+                if (!wasPressedOnLink && !mHasPerformedLongPress
+                        && mOnNonLinkClickListener != null) {
+                    mOnNonLinkClickListener.onClick(this);
                 }
                 break;
 
