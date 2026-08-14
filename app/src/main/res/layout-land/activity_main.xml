@@ -50,25 +50,37 @@
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <androidx.appcompat.widget.AppCompatEditText
-                        android:id="@+id/edit_text_input"
+                    <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:backgroundTint="@color/colorPrimary"
-                        android:ems="10"
-                        android:hint="@string/search_tips"
-                        android:imeActionLabel="@string/search_button"
-                        android:imeOptions="actionSearch"
-                        android:inputType="text"
-                        android:maxLines="1"
-                        android:paddingHorizontal="8dp"
-                        android:paddingVertical="0dp"
-                        android:singleLine="true"
-                        android:textColor="?attr/clockTextColor"
-                        android:textColorHint="?attr/clockTextColorDim"
-                        android:textSize="16sp"
-                        android:theme="@style/MyEditText" />
+                        app:boxBackgroundMode="none"
+                        app:endIconContentDescription="@string/search_clear"
+                        app:endIconMode="clear_text"
+                        app:endIconTint="?attr/clockTextColorDim"
+                        app:hintEnabled="false">
+
+                        <androidx.appcompat.widget.AppCompatEditText
+                            android:id="@+id/edit_text_input"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:backgroundTint="@color/colorPrimary"
+                            android:ems="10"
+                            android:hint="@string/search_tips"
+                            android:imeActionLabel="@string/search_button"
+                            android:imeOptions="actionSearch"
+                            android:inputType="text"
+                            android:maxLines="1"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="0dp"
+                            android:paddingVertical="0dp"
+                            android:singleLine="true"
+                            android:textColor="?attr/clockTextColor"
+                            android:textColorHint="?attr/clockTextColorDim"
+                            android:textSize="16sp"
+                            android:theme="@style/MyEditText" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
 
                     <Button
                         android:id="@+id/btn_query"
@@ -159,9 +171,7 @@
                         android:visibility="gone"
                         app:backgroundTint="@color/btn_toggle_chip_bg"
                         app:cornerRadius="0dp"
-                        app:elevation="0dp"
-                        app:strokeColor="@color/btn_toggle_chip_stroke"
-                        app:strokeWidth="1dp" />
+                        app:elevation="0dp" />
 
                 </LinearLayout>
 
@@ -236,9 +246,7 @@
                             android:textSize="12sp"
                             app:backgroundTint="@color/btn_toggle_chip_bg"
                             app:cornerRadius="0dp"
-                            app:elevation="0dp"
-                            app:strokeColor="@color/btn_toggle_chip_stroke"
-                            app:strokeWidth="1dp" />
+                            app:elevation="0dp" />
 
                     </LinearLayout>
 
