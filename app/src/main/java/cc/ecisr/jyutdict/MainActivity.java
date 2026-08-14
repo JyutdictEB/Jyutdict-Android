@@ -37,12 +37,12 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import androidx.appcompat.widget.AppCompatCheckBox;
 import androidx.core.content.ContextCompat;
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.button.MaterialButtonToggleGroup;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -107,11 +107,11 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     Button btnQueryConfirm, btnFilterArea, btnFilterAreaPron, btnColoringJppPartial;
     MaterialButton switchQueryOptsRev, switchQueryOptsRegex;
-    MaterialButtonToggleGroup sheetModeGroup;
+    RadioGroup sheetModeGroup;
     ResultFragment resultFragment;
     ProgressBar loadingProgressBar, headerLoadingSpinner;
     View headerLoadingStatus, locationPicker, locationPickerSwatch, sheetQueryOptions;
-    TextView headerLoadingText, locationPickerText;
+    TextView btnClearInput, headerLoadingText, locationPickerText;
     Toolbar toolbar;
     LinearLayout lyMain, lyAdvancedSearch;
     AuthRepository authRepository;
@@ -182,6 +182,7 @@ public class MainActivity extends AppCompatActivity {
     void getView() {
         lyMain = binding.wholeMainLayout;
         inputEditText = binding.editTextInput;
+        btnClearInput = binding.btnClearInput;
         btnQueryConfirm = binding.btnQuery;
         btnFilterArea = binding.btnFilterArea;
         btnFilterAreaPron = binding.btnFilterAreaPron;
@@ -260,6 +261,10 @@ public class MainActivity extends AppCompatActivity {
 
         // 查詢按鈕
         btnQueryConfirm.setOnClickListener(v -> search());
+        btnClearInput.setOnClickListener(v -> {
+            inputEditText.setText("");
+            inputEditText.requestFocus();
+        });
 
         // 監聽焦點在輸入框內的軟鍵盤的確認按鈕
         inputEditText.setOnEditorActionListener((v, actionId, event) -> {
@@ -284,6 +289,7 @@ public class MainActivity extends AppCompatActivity {
             }
             @Override
             public void afterTextChanged(Editable s) {
+                btnClearInput.setVisibility(s.length() == 0 ? View.GONE : View.VISIBLE);
                 boolean isJpp = StringUtil.isJyutpingInput(s.toString());
 
                 int presentColor = isJpp ?
@@ -301,14 +307,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         previousColor = ContextCompat.getColor(this, R.color.colorPrimary);
+        btnClearInput.setVisibility(inputEditText.length() == 0 ? View.GONE : View.VISIBLE);
 
         // 讀取幾個開關之前的狀態
         setSheetMode(sp.getBoolean("switch_1_is_checked", false));
         switchQueryOptsRev.setChecked(sp.getBoolean("switch_2_is_checked", false));
         switchQueryOptsRegex.setChecked(sp.getBoolean("switch_3_is_checked", false));
         lyAdvancedSearch.setVisibility(sp.getBoolean("advanced_search", false) ? View.VISIBLE : View.GONE);
-        sheetModeGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
-            if (!isChecked) return;
+        sheetModeGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId == -1) return;
             setInputEditTextHint();
             setSearchView();
         });
@@ -1202,7 +1209,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean isSheetMode() {
-        return sheetModeGroup.getCheckedButtonId() == R.id.btn_jyut_sheet;
+        return sheetModeGroup.getCheckedRadioButtonId() == R.id.btn_jyut_sheet;
     }
 
     private void setSheetMode(boolean sheetMode) {

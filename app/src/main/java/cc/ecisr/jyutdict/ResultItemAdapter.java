@@ -52,16 +52,15 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         holder.tvRightTop.setSelectableText(wanshyu);
         holder.tvRightBottom.setSelectableText(location);
         holder.collapseAnnotation(false);
-        holder.tvRightBottom.setOnAnnotationClickListener(annotation ->
-                holder.toggleAnnotation(annotation));
-        int lyCharaVisibility = (header.length()!=0 || info.length()!=0) ? View.VISIBLE : View.GONE;
-        int tvContentInfoVisibility = (info.length()!=0) ? View.VISIBLE : View.GONE;
-        int tvContentExtraVisibility = (extra.length()!=0) ? View.VISIBLE : View.GONE;
-        int tvContentWanshyuVisibility = (wanshyu.length()!=0) ? View.VISIBLE : View.GONE;
-        int tvContentLocationVisibility = (location.length()!=0) ? View.VISIBLE : View.GONE;
-        boolean hasTopContent = wanshyu.length() != 0
-                || (getItemViewType(position) == ResultInfo.TYPE_GENERAL && extra.length() != 0);
-        int dividerVisibility = (hasTopContent && location.length() != 0)
+        holder.tvRightBottom.setOnAnnotationClickListener(holder::toggleAnnotation);
+        int lyCharaVisibility = (!header.isEmpty() || !info.isEmpty()) ? View.VISIBLE : View.GONE;
+        int tvContentInfoVisibility = (!info.isEmpty()) ? View.VISIBLE : View.GONE;
+        int tvContentExtraVisibility = (!extra.isEmpty()) ? View.VISIBLE : View.GONE;
+        int tvContentWanshyuVisibility = (!wanshyu.isEmpty()) ? View.VISIBLE : View.GONE;
+        int tvContentLocationVisibility = (!location.isEmpty()) ? View.VISIBLE : View.GONE;
+        boolean hasTopContent = !wanshyu.isEmpty()
+                || (getItemViewType(position) == ResultInfo.TYPE_GENERAL && !extra.isEmpty());
+        int dividerVisibility = (hasTopContent && !location.isEmpty())
                 ? View.VISIBLE : View.GONE;
         holder.lyChara.setVisibility(lyCharaVisibility);
         holder.tvCharaInfo.setVisibility(tvContentInfoVisibility);
@@ -74,10 +73,16 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 
         // 短按彈出操作菜單
         holder.itemView.setOnClickListener(v -> mListener.onClick(holder));
-        holder.itemView.setOnLongClickListener(v -> {
+        View.OnLongClickListener copyFullEntry = v -> {
             mListener.onLongClick(holder);
             return true;
-        });
+        };
+        holder.itemView.setOnLongClickListener(copyFullEntry);
+        holder.tvCharaHeader.setOnLongClickListener(copyFullEntry);
+        holder.tvCharaInfo.setOnLongClickListener(copyFullEntry);
+        holder.tvCharaExtra.setOnLongClickListener(copyFullEntry);
+        holder.tvRightTop.setOnLongClickListener(copyFullEntry);
+        holder.tvRightBottom.setOnLongClickListener(copyFullEntry);
 
         ViewGroup.LayoutParams layoutParams = holder.itemView.getLayoutParams();
         layoutParams.height = LinearLayout.LayoutParams.WRAP_CONTENT;

@@ -128,8 +128,9 @@ public class ResultFragment extends Fragment {
             }
             @Override
             public void onLongClick(@NonNull ResultItemAdapter.LinearViewHolder holder) {
-                if (!holder.getChara().isEmpty() && getActivity()!=null) {
-                    copy(holder.getChara());
+                String content = holder.printContent().trim();
+                if (!content.isEmpty() && getActivity()!=null) {
+                    copy(content);
                 }
             }
 
@@ -175,7 +176,7 @@ public class ResultFragment extends Fragment {
     public void refreshResult() {
         if (rawReceivedData==null || rawReceivedData.isEmpty()) return;
         try {
-            parseJson(rawReceivedData, receivedMode);
+            parseJson(rawReceivedData, receivedMode, false);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -219,7 +220,7 @@ public class ResultFragment extends Fragment {
         ClipData mClipData = ClipData.newPlainText("jyut_chara", chara);
         if (cm != null) {
             cm.setPrimaryClip(mClipData);
-            ToastUtil.msg(getContext(), getString(R.string.tips_chara_copied, chara));
+            ToastUtil.msg(getContext(), getString(R.string.tips_content_copied));
         }
     }
 
@@ -235,6 +236,11 @@ public class ResultFragment extends Fragment {
      * @see cc.ecisr.jyutdict.utils.EnumConst
      */
     void parseJson(String jsonString, int queryObjectWhat) throws JSONException {
+        parseJson(jsonString, queryObjectWhat, true);
+    }
+
+    private void parseJson(String jsonString, int queryObjectWhat, boolean revealNewResult)
+            throws JSONException {
         if (getActivity()==null) return;
         if (resultAdapter == null) return;
 
@@ -250,7 +256,7 @@ public class ResultFragment extends Fragment {
         resultAdapter.replaceItems(parsedItems);
         rawReceivedData = jsonString;
         receivedMode = queryObjectWhat;
-        publishResultViews();
+        publishResultViews(revealNewResult);
         loadCommentCounts();
     }
 
@@ -324,14 +330,21 @@ public class ResultFragment extends Fragment {
      * 同模式再次查詢若只 notifyDataSetChanged，重綁後的文字可能再也無法長按選取；
      * 發佈一批新結果時丟棄舊 holder，確保每次查詢都使用全新的選取狀態。
      */
-    private void publishResultViews() {
-        RecyclerView.Adapter<?> adapter = mRvMain.getAdapter();
-        if (adapter == null) return;
+    private void publishResultViews(boolean revealNewResult) {
+        if (mRvMain == null || resultAdapter == null) return;
         mRvMain.stopScroll();
-        mRvMain.setAdapter(null);
-        mRvMain.getRecycledViewPool().clear();
-        mRvMain.setAdapter(adapter);
-        if (adapter.getItemCount() > 0) {
+        if (mRvMain.getItemAnimator() != null) {
+            mRvMain.getItemAnimator().endAnimations();
+        }
+        resultAdapter.notifyDataSetChanged();
+        if (!revealNewResult) {
+            resultRevealRunning = false;
+            mRvMain.animate().cancel();
+            mRvMain.setAlpha(1f);
+            mRvMain.setTranslationY(0f);
+            return;
+        }
+        if (resultAdapter.getItemCount() > 0) {
             mRvMain.scrollToPosition(0);
         }
         resultRevealRunning = true;

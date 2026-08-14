@@ -35,15 +35,10 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <com.google.android.material.textfield.TextInputLayout
+            <FrameLayout
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
-                app:boxBackgroundMode="none"
-                app:endIconContentDescription="@string/search_clear"
-                app:endIconMode="clear_text"
-                app:endIconTint="?attr/clockTextColorDim"
-                app:hintEnabled="false">
+                android:layout_weight="1">
 
                 <androidx.appcompat.widget.AppCompatEditText
                     android:id="@+id/edit_text_input"
@@ -57,7 +52,7 @@
                     android:inputType="text"
                     android:maxLines="1"
                     android:paddingStart="8dp"
-                    android:paddingEnd="0dp"
+                    android:paddingEnd="36dp"
                     android:paddingVertical="0dp"
                     android:singleLine="true"
                     android:textColor="?attr/clockTextColor"
@@ -65,7 +60,22 @@
                     android:textSize="16sp"
                     android:theme="@style/MyEditText" />
 
-            </com.google.android.material.textfield.TextInputLayout>
+                <TextView
+                    android:id="@+id/btn_clear_input"
+                    android:layout_width="36dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="end"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:contentDescription="@string/search_clear_description"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:text="@string/search_clear"
+                    android:textColor="?attr/clockTextColorDim"
+                    android:textSize="18sp"
+                    android:visibility="gone" />
+
+            </FrameLayout>
 
             <Button
                 android:id="@+id/btn_query"
@@ -89,55 +99,49 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <com.google.android.material.button.MaterialButtonToggleGroup
+            <RadioGroup
                 android:id="@+id/sheet_mode_group"
-                android:layout_width="168dp"
+                android:layout_width="196dp"
                 android:layout_height="match_parent"
-                android:background="@drawable/bg_segmented_container"
-                app:checkedButton="@id/btn_common_sheet"
-                app:cornerRadius="0dp"
-                app:selectionRequired="true"
-                app:singleSelection="true">
+                android:checkedButton="@id/btn_common_sheet"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-                <com.google.android.material.button.MaterialButton
+                <RadioButton
                     android:id="@+id/btn_common_sheet"
-                    style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
-                    android:paddingHorizontal="4dp"
+                    android:buttonTint="@color/btn_mode_radio_tint"
+                    android:gravity="center_vertical"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:paddingStart="0dp"
+                    android:paddingEnd="2dp"
+                    android:singleLine="true"
                     android:text="@string/search_common_sheet"
                     android:textAllCaps="false"
-                    android:textColor="@color/btn_segmented_text"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    app:backgroundTint="@color/btn_segmented_bg"
-                    app:cornerRadius="0dp"
-                    app:elevation="0dp"
-                    app:strokeWidth="0dp" />
+                    android:textColor="@color/btn_mode_radio_tint"
+                    android:textSize="12sp" />
 
-                <com.google.android.material.button.MaterialButton
+                <RadioButton
                     android:id="@+id/btn_jyut_sheet"
-                    style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
-                    android:paddingHorizontal="4dp"
+                    android:buttonTint="@color/btn_mode_radio_tint"
+                    android:gravity="center_vertical"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:paddingStart="0dp"
+                    android:paddingEnd="0dp"
+                    android:singleLine="true"
                     android:text="@string/search_jyut_sheet"
                     android:textAllCaps="false"
-                    android:textColor="@color/btn_segmented_text"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    app:backgroundTint="@color/btn_segmented_bg"
-                    app:cornerRadius="0dp"
-                    app:elevation="0dp"
-                    app:strokeWidth="0dp" />
+                    android:textColor="@color/btn_mode_radio_tint"
+                    android:textSize="12sp" />
 
-            </com.google.android.material.button.MaterialButtonToggleGroup>
+            </RadioGroup>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/switch_reverse_search"
@@ -174,7 +178,7 @@
                 android:layout_width="0dp"
                 android:layout_height="36dp"
                 android:layout_weight="1"
-                android:background="@drawable/bg_locate_picker_field"
+                android:background="@android:color/transparent"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
