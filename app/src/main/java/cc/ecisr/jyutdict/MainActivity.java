@@ -13,8 +13,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
-import android.animation.ArgbEvaluator;
-import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -66,6 +64,7 @@ import cc.ecisr.jyutdict.utils.ColorUtil;
 import cc.ecisr.jyutdict.utils.DiskTextCache;
 import cc.ecisr.jyutdict.utils.ImmersiveBarUtil;
 import cc.ecisr.jyutdict.utils.JyutpingUtil;
+import cc.ecisr.jyutdict.utils.MotionUtil;
 import cc.ecisr.jyutdict.utils.StringUtil;
 import cc.ecisr.jyutdict.utils.HttpUtil;
 import cc.ecisr.jyutdict.utils.ThemeUtil;
@@ -138,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
 
     final Runnable hideHeaderReadyStatus = () -> {
         if (!sheetHeaderNeedsRefresh && !locationHeaderNeedsRefresh) {
+            MotionUtil.beginLayoutTransition(lyMain);
             headerLoadingStatus.setVisibility(View.GONE);
         }
     };
@@ -295,13 +295,11 @@ public class MainActivity extends AppCompatActivity {
                         MaterialColors.getColor(btnQueryConfirm,
                                 androidx.appcompat.R.attr.colorPrimary);
                 if (previousColor == presentColor) return;
-                ObjectAnimator objectAnimator;
-                objectAnimator = ObjectAnimator.ofInt(btnQueryConfirm,"textColor", previousColor, presentColor);
-                objectAnimator.setDuration(500);
-                objectAnimator.setEvaluator(new ArgbEvaluator());
-                objectAnimator.start();
+                MotionUtil.animateTextColor(
+                        (TextView) btnQueryConfirm, previousColor, presentColor);
                 previousColor = presentColor;
                 if (!isSheetMode()) {
+                    MotionUtil.beginLayoutTransition(lyMain);
                     btnFilterArea.setVisibility(isJpp ? View.GONE : View.VISIBLE);
                     btnFilterAreaPron.setVisibility(isJpp ? View.VISIBLE : View.GONE);
                 }
@@ -512,6 +510,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence text, int start, int before, int count) {
                 String query = String.valueOf(text).trim().toLowerCase(Locale.ROOT);
+                MotionUtil.beginLayoutTransition(container);
                 for (int index = 0; index < checkBoxes.size(); index++) {
                     String item = itemNames.get(index).toLowerCase(Locale.ROOT);
                     checkBoxes.get(index).setVisibility(
@@ -619,6 +618,7 @@ public class MainActivity extends AppCompatActivity {
             public void onTextChanged(CharSequence text, int start, int before, int count) {
                 String query = String.valueOf(text).trim().toLowerCase(Locale.ROOT);
                 int visibleCount = 0;
+                MotionUtil.beginLayoutTransition(container);
                 for (int index = 0; index < listedOptions.size(); index++) {
                     boolean visible = listedOptions.get(index).label
                             .toLowerCase(Locale.ROOT).contains(query);
@@ -704,9 +704,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void finishSearchUi() {
+        MotionUtil.beginLayoutTransition(lyMain);
         loadingProgressBar.setVisibility(View.GONE);
         btnColoringJppPartial.setEnabled(true);
         btnQueryConfirm.setEnabled(true);
+        if (resultFragment != null) resultFragment.finishLoading();
     }
 
     private void showRequestError(Object errorObject) {
@@ -965,6 +967,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateHeaderLoadingStatus(boolean announceReady, boolean usingFreshCache) {
+        MotionUtil.beginLayoutTransition(lyMain);
         if (!headerLoadingInitialized) {
             headerLoadingStatus.setVisibility(View.GONE);
             return;
@@ -1144,6 +1147,7 @@ public class MainActivity extends AppCompatActivity {
      * 設置幾個開關的顯示與隱藏
      */
     private void setSearchView() {
+        MotionUtil.beginLayoutTransition(lyMain);
         boolean is1Checked = isSheetMode();
         boolean is2Checked = switchQueryOptsRev.isChecked();
         boolean advancedSearchVisible = lyAdvancedSearch.getVisibility() == View.VISIBLE;
@@ -1281,7 +1285,9 @@ public class MainActivity extends AppCompatActivity {
             return;
         } // 搜索欄爲空時不檢索
 
+        MotionUtil.beginLayoutTransition(lyMain);
         loadingProgressBar.setVisibility(View.VISIBLE);
+        if (resultFragment != null) resultFragment.beginLoading();
         btnColoringJppPartial.setEnabled(false);
         ApiUrlBuilder url;
         int modeSnapshot;
@@ -1371,6 +1377,7 @@ public class MainActivity extends AppCompatActivity {
             result -> {
                 int resultCode = result.getResultCode();
                 boolean isEnableAdvancedSearch = (resultCode&0b1) != 0;
+                MotionUtil.beginLayoutTransition(lyMain);
                 lyAdvancedSearch.setVisibility(isEnableAdvancedSearch ? View.VISIBLE : View.GONE);
                 if (!isEnableAdvancedSearch) switchQueryOptsRegex.setChecked(false);
                 setSearchView();

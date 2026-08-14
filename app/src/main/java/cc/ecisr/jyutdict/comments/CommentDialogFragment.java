@@ -4,6 +4,7 @@ import android.app.Dialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -21,6 +22,7 @@ import java.util.Collections;
 
 import cc.ecisr.jyutdict.R;
 import cc.ecisr.jyutdict.auth.AuthRepository;
+import cc.ecisr.jyutdict.utils.MotionUtil;
 import cc.ecisr.jyutdict.utils.ToastUtil;
 
 /** Public comment viewer plus authenticated create/delete controls. */
@@ -42,6 +44,7 @@ public final class CommentDialogFragment extends DialogFragment {
     private TextView empty;
     private TextInputEditText input;
     private MaterialButton submit;
+    private ViewGroup stateContainer;
     private String type;
     private String target;
 
@@ -70,6 +73,7 @@ public final class CommentDialogFragment extends DialogFragment {
         View view = LayoutInflater.from(requireContext())
                 .inflate(R.layout.dialog_comments, null, false);
         list = view.findViewById(R.id.comment_list);
+        stateContainer = view.findViewById(R.id.comment_state_container);
         progress = view.findViewById(R.id.comment_loading);
         empty = view.findViewById(R.id.comment_empty);
         input = view.findViewById(R.id.comment_input);
@@ -90,15 +94,18 @@ public final class CommentDialogFragment extends DialogFragment {
 
     private void updateAuthControls() {
         boolean loggedIn = authRepository.isLoggedIn();
+        MotionUtil.beginLayoutTransition(stateContainer);
         input.setVisibility(loggedIn ? View.VISIBLE : View.GONE);
         submit.setVisibility(loggedIn ? View.VISIBLE : View.GONE);
     }
 
     private void loadComments() {
+        MotionUtil.beginLayoutTransition(stateContainer);
         progress.setVisibility(View.VISIBLE);
         empty.setVisibility(View.GONE);
         repository.getComments(type, target, (comments, errorMessage) -> {
             if (!isAdded()) return;
+            MotionUtil.beginLayoutTransition(stateContainer);
             progress.setVisibility(View.GONE);
             if (comments == null) {
                 adapter.submit(Collections.emptyList(), authRepository.getCurrentUser(),

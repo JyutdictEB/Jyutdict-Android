@@ -46,6 +46,7 @@ import cc.ecisr.jyutdict.struct.FjbHeaderInfo;
 import cc.ecisr.jyutdict.struct.EntrySetting;
 import cc.ecisr.jyutdict.struct.GeneralCharacterManager;
 import cc.ecisr.jyutdict.utils.ColorUtil;
+import cc.ecisr.jyutdict.utils.MotionUtil;
 import cc.ecisr.jyutdict.utils.ThemeUtil;
 import cc.ecisr.jyutdict.utils.ToastUtil;
 import cc.ecisr.jyutdict.widget.LocationClickSpan;
@@ -55,6 +56,7 @@ public class ResultFragment extends Fragment {
     private static final String TAG = "`ResultFragment";
 
     private RecyclerView mRvMain;
+    private boolean resultRevealRunning;
     private CommentRepository commentRepository;
 
     private String rawReceivedData;
@@ -179,6 +181,22 @@ public class ResultFragment extends Fragment {
     public void refreshResult(int receivedModeConfig) {
         receivedMode = (receivedMode&QUERYING_MODE_MASK) | receivedModeConfig;
         refreshResult();
+    }
+
+    public void beginLoading() {
+        if (mRvMain == null) return;
+        resultRevealRunning = false;
+        MotionUtil.fadeTo(mRvMain, 0.55f);
+    }
+
+    public void finishLoading() {
+        if (mRvMain == null) return;
+        if (resultRevealRunning) {
+            resultRevealRunning = false;
+            return;
+        }
+        mRvMain.setTranslationY(0f);
+        MotionUtil.fadeTo(mRvMain, 1f);
     }
 
     private void copy(String chara) {
@@ -315,6 +333,8 @@ public class ResultFragment extends Fragment {
         if (adapter.getItemCount() > 0) {
             mRvMain.scrollToPosition(0);
         }
+        resultRevealRunning = true;
+        MotionUtil.reveal(mRvMain);
     }
 
 

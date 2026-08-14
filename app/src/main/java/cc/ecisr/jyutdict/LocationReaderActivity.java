@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
+import android.view.ViewGroup;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -24,6 +25,7 @@ import cc.ecisr.jyutdict.utils.DiskTextCache;
 import cc.ecisr.jyutdict.utils.HttpUtil;
 import cc.ecisr.jyutdict.utils.ImmersiveBarUtil;
 import cc.ecisr.jyutdict.utils.MarkdownUtil;
+import cc.ecisr.jyutdict.utils.MotionUtil;
 import cc.ecisr.jyutdict.utils.PhonologyHtmlRenderer;
 import cc.ecisr.jyutdict.utils.ThemeUtil;
 
@@ -44,6 +46,7 @@ public class LocationReaderActivity extends AppCompatActivity {
 
     private Toolbar toolbar;
     private WebView webView;
+    private ViewGroup stateContainer;
     private ProgressBar progressBar;
     private TextView errorText;
     private final HttpUtil request = new HttpUtil(HttpUtil.GET);
@@ -84,6 +87,7 @@ public class LocationReaderActivity extends AppCompatActivity {
         if (sheetStatistic == null) sheetStatistic = "";
 
         toolbar = findViewById(R.id.toolbar);
+        stateContainer = findViewById(R.id.reader_state_container);
         webView = findViewById(R.id.reader_web_view);
         progressBar = findViewById(R.id.reader_progress);
         errorText = findViewById(R.id.reader_error);
@@ -146,9 +150,7 @@ public class LocationReaderActivity extends AppCompatActivity {
     }
 
     private void load(boolean forceNetwork) {
-        progressBar.setVisibility(View.VISIBLE);
-        errorText.setVisibility(View.GONE);
-        webView.setVisibility(View.GONE);
+        MotionUtil.showOnly(stateContainer, progressBar, progressBar, errorText, webView);
 
         if (!forceNetwork) {
             long maxAge = MODE_PHONOLOGY.equals(mode)
@@ -212,19 +214,15 @@ public class LocationReaderActivity extends AppCompatActivity {
                     "UTF-8",
                     null
             );
-            progressBar.setVisibility(View.GONE);
-            errorText.setVisibility(View.GONE);
-            webView.setVisibility(View.VISIBLE);
+            MotionUtil.showOnly(stateContainer, webView, progressBar, errorText, webView);
         } catch (JSONException e) {
             showError(R.string.error_tips_data);
         }
     }
 
     private void showError(int message) {
-        progressBar.setVisibility(View.GONE);
-        webView.setVisibility(View.GONE);
         errorText.setText(message);
-        errorText.setVisibility(View.VISIBLE);
+        MotionUtil.showOnly(stateContainer, errorText, progressBar, errorText, webView);
     }
 
     @Override

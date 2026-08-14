@@ -20,6 +20,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import cc.ecisr.jyutdict.struct.LocationInfo;
 import cc.ecisr.jyutdict.utils.ColorUtil;
 import cc.ecisr.jyutdict.utils.LocationArticleRepository;
+import cc.ecisr.jyutdict.utils.MotionUtil;
 
 /** 網站端地名懸浮卡在 Android 上的觸控版。 */
 public final class LocationDetailsDialog {
@@ -68,6 +69,7 @@ public final class LocationDetailsDialog {
 
         LocationArticleRepository.lookup(context, requestedName, result -> {
             Runnable update = () -> {
+                MotionUtil.beginLayoutTransition((ViewGroup) view);
                 checking.setVisibility(View.INVISIBLE);
                 LocationInfo.Location resolvedLocation = result.location != null
                         ? result.location

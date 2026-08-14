@@ -31,6 +31,7 @@ import cc.ecisr.jyutdict.utils.ApiUrlBuilder;
 import cc.ecisr.jyutdict.utils.DiskTextCache;
 import cc.ecisr.jyutdict.utils.HttpUtil;
 import cc.ecisr.jyutdict.utils.MarkdownUtil;
+import cc.ecisr.jyutdict.utils.MotionUtil;
 import cc.ecisr.jyutdict.utils.ThemeUtil;
 
 /**
@@ -44,6 +45,7 @@ public class ArticleFragment extends Fragment {
     private static final long CACHE_MAX_AGE = 7L * 24L * 60L * 60L * 1000L;
 
     private WebView webView;
+    private ViewGroup stateContainer;
     private ProgressBar progressBar;
     private TextView errorText;
     private String articleId;
@@ -77,6 +79,7 @@ public class ArticleFragment extends Fragment {
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_article, container, false);
+        stateContainer = view.findViewById(R.id.article_state_container);
         webView = view.findViewById(R.id.web_view);
         progressBar = view.findViewById(R.id.progress_bar);
         errorText = view.findViewById(R.id.error_text);
@@ -152,9 +155,7 @@ public class ArticleFragment extends Fragment {
                     "UTF-8",
                     null
             );
-            progressBar.setVisibility(View.GONE);
-            errorText.setVisibility(View.GONE);
-            webView.setVisibility(View.VISIBLE);
+            MotionUtil.showOnly(stateContainer, webView, progressBar, errorText, webView);
         } catch (IOException | RuntimeException e) {
             showError();
         }
@@ -170,9 +171,7 @@ public class ArticleFragment extends Fragment {
         if (cached != null && applyResponse(cached)) return;
 
         isLoading = true;
-        progressBar.setVisibility(View.VISIBLE);
-        webView.setVisibility(View.GONE);
-        errorText.setVisibility(View.GONE);
+        MotionUtil.showOnly(stateContainer, progressBar, progressBar, errorText, webView);
 
         final int requestViewGeneration = viewGeneration;
         if (contentRequest != null) contentRequest.cancel();
@@ -280,16 +279,12 @@ public class ArticleFragment extends Fragment {
         String html = MarkdownUtil.toHtml(markdown, imagesBase, isDarkMode);
         webView.loadDataWithBaseURL(imagesBase, html, "text/html", "UTF-8", null);
 
-        progressBar.setVisibility(View.GONE);
-        errorText.setVisibility(View.GONE);
-        webView.setVisibility(View.VISIBLE);
+        MotionUtil.showOnly(stateContainer, webView, progressBar, errorText, webView);
     }
 
     private void showError() {
         if (progressBar == null) return;
-        progressBar.setVisibility(View.GONE);
-        webView.setVisibility(View.GONE);
-        errorText.setVisibility(View.VISIBLE);
+        MotionUtil.showOnly(stateContainer, errorText, progressBar, errorText, webView);
         errorText.setText(R.string.info_load_error_retry);
     }
 
@@ -311,6 +306,7 @@ public class ArticleFragment extends Fragment {
             webView.destroy();
         }
         webView = null;
+        stateContainer = null;
         progressBar = null;
         errorText = null;
         super.onDestroyView();

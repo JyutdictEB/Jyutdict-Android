@@ -34,6 +34,7 @@
         <item name="android:windowBackground">@color/md_theme_light_surface</item>
         <item name="materialAlertDialogTheme">@style/ThemeOverlay.Jyutdict.MaterialAlertDialog</item>
         <item name="toolbarStyle">@style/Widget.Jyutdict.Toolbar</item>
+        <item name="android:windowAnimationStyle">@style/Animation.Jyutdict.Activity</item>
     </style>
 
     <style name="DarkTheme" parent="Theme.Material3.Dark.NoActionBar">
@@ -69,6 +70,7 @@
         <item name="android:windowBackground">@color/md_theme_dark_surface</item>
         <item name="materialAlertDialogTheme">@style/ThemeOverlay.Jyutdict.MaterialAlertDialog</item>
         <item name="toolbarStyle">@style/Widget.Jyutdict.Toolbar</item>
+        <item name="android:windowAnimationStyle">@style/Animation.Jyutdict.Activity</item>
     </style>
 
     <style name="DarkSettingsTheme" parent="DarkTheme" />
@@ -76,6 +78,19 @@
     <style name="ThemeOverlay.Jyutdict.MaterialAlertDialog"
         parent="ThemeOverlay.Material3.MaterialAlertDialog">
         <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.Jyutdict.Dialog</item>
+        <item name="android:windowAnimationStyle">@style/Animation.Jyutdict.Dialog</item>
+    </style>
+
+    <style name="Animation.Jyutdict.Activity" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/activity_open_enter</item>
+        <item name="android:activityOpenExitAnimation">@anim/activity_open_exit</item>
+        <item name="android:activityCloseEnterAnimation">@anim/activity_close_enter</item>
+        <item name="android:activityCloseExitAnimation">@anim/activity_close_exit</item>
+    </style>
+
+    <style name="Animation.Jyutdict.Dialog" parent="@android:style/Animation.Dialog">
+        <item name="android:windowEnterAnimation">@anim/dialog_enter</item>
+        <item name="android:windowExitAnimation">@anim/dialog_exit</item>
     </style>
 
     <style name="ShapeAppearanceOverlay.Jyutdict.Dialog" parent="">

@@ -42,6 +42,7 @@ import cc.ecisr.jyutdict.utils.EnumConst;
 import cc.ecisr.jyutdict.utils.HttpUtil;
 import cc.ecisr.jyutdict.utils.LocationArticleRepository;
 import cc.ecisr.jyutdict.utils.ImmersiveBarUtil;
+import cc.ecisr.jyutdict.utils.MotionUtil;
 import cc.ecisr.jyutdict.utils.ThemeUtil;
 import cc.ecisr.jyutdict.utils.ToastUtil;
 
@@ -224,7 +225,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void setVersionStatus(String status) {
-        if (dialogVersionStatus != null) dialogVersionStatus.setText(status);
+        if (dialogVersionStatus != null) MotionUtil.setText(dialogVersionStatus, status);
     }
 
     private void setVersionCheckEnabled(boolean enabled) {
