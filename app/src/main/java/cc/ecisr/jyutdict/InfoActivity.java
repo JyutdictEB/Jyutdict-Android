@@ -2,20 +2,16 @@ package cc.ecisr.jyutdict;
 
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.viewpager2.widget.ViewPager2;
 
-import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import cc.ecisr.jyutdict.adapter.ArticlePagerAdapter;
+import cc.ecisr.jyutdict.databinding.ActivityInfoBinding;
 import cc.ecisr.jyutdict.struct.ArticleInfo;
 import cc.ecisr.jyutdict.utils.ImmersiveBarUtil;
 import cc.ecisr.jyutdict.utils.ThemeUtil;
@@ -29,17 +25,12 @@ public class InfoActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(ThemeUtil.isNightMode(this) ? R.style.DarkTheme : R.style.AppTheme);
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_info);
+        ActivityInfoBinding binding = ActivityInfoBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
         boolean lightSystemBars = !ThemeUtil.isNightMode(this);
         ImmersiveBarUtil.setImmersiveBar(this, lightSystemBars, lightSystemBars);
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        TabLayout tabLayout = findViewById(R.id.tab_layout);
-        ViewPager2 viewPager = findViewById(R.id.view_pager);
-        ProgressBar progressBar = findViewById(R.id.progress_bar);
-        TextView errorText = findViewById(R.id.error_text);
-
-        setSupportActionBar(toolbar);
+        setSupportActionBar(binding.toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
@@ -53,23 +44,23 @@ public class InfoActivity extends AppCompatActivity {
         articleList.add(article("tone", "聲調總表"));
 
         ArticlePagerAdapter pagerAdapter = new ArticlePagerAdapter(this, articleList);
-        viewPager.setAdapter(pagerAdapter);
-        viewPager.setUserInputEnabled(false);
-        viewPager.setPageTransformer((page, position) -> {
+        binding.viewPager.setAdapter(pagerAdapter);
+        binding.viewPager.setUserInputEnabled(false);
+        binding.viewPager.setPageTransformer((page, position) -> {
             float distance = Math.min(1f, Math.abs(position));
             page.setAlpha(1f - 0.18f * distance);
             page.setScaleX(1f - 0.015f * distance);
             page.setScaleY(1f - 0.015f * distance);
             page.setTranslationX(-position * page.getWidth() * 0.06f);
         });
-        progressBar.setVisibility(View.GONE);
-        errorText.setVisibility(View.GONE);
-        viewPager.setVisibility(View.VISIBLE);
-        tabLayout.setVisibility(View.VISIBLE);
+        binding.progressBar.setVisibility(View.GONE);
+        binding.errorText.setVisibility(View.GONE);
+        binding.viewPager.setVisibility(View.VISIBLE);
+        binding.tabLayout.setVisibility(View.VISIBLE);
 
         tabMediator = new TabLayoutMediator(
-                tabLayout,
-                viewPager,
+                binding.tabLayout,
+                binding.viewPager,
                 (tab, position) -> tab.setText(articleList.get(position).title)
         );
         tabMediator.attach();

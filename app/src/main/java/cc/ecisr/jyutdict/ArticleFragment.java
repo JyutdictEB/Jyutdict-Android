@@ -28,6 +28,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
 import cc.ecisr.jyutdict.utils.ApiUrlBuilder;
+import cc.ecisr.jyutdict.databinding.FragmentArticleBinding;
 import cc.ecisr.jyutdict.utils.DiskTextCache;
 import cc.ecisr.jyutdict.utils.HttpUtil;
 import cc.ecisr.jyutdict.utils.MarkdownUtil;
@@ -45,6 +46,7 @@ public class ArticleFragment extends Fragment {
     private static final long CACHE_MAX_AGE = 7L * 24L * 60L * 60L * 1000L;
 
     private WebView webView;
+    private FragmentArticleBinding binding;
     private ViewGroup stateContainer;
     private ProgressBar progressBar;
     private TextView errorText;
@@ -78,11 +80,11 @@ public class ArticleFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_article, container, false);
-        stateContainer = view.findViewById(R.id.article_state_container);
-        webView = view.findViewById(R.id.web_view);
-        progressBar = view.findViewById(R.id.progress_bar);
-        errorText = view.findViewById(R.id.error_text);
+        binding = FragmentArticleBinding.inflate(inflater, container, false);
+        stateContainer = binding.articleStateContainer;
+        webView = binding.webView;
+        progressBar = binding.progressBar;
+        errorText = binding.errorText;
         viewGeneration++;
         errorText.setOnClickListener(v -> loadContent());
 
@@ -90,7 +92,7 @@ public class ArticleFragment extends Fragment {
 
         if (BUNDLED_INFO_ID.equals(articleId)) {
             loadBundledInfo();
-            return view;
+            return binding.getRoot();
         }
 
         // 如果已加载过，直接显示
@@ -99,7 +101,7 @@ public class ArticleFragment extends Fragment {
         } else {
             loadContent();
         }
-        return view;
+        return binding.getRoot();
     }
 
     private void configureWebView() {
@@ -309,6 +311,7 @@ public class ArticleFragment extends Fragment {
         stateContainer = null;
         progressBar = null;
         errorText = null;
+        binding = null;
         super.onDestroyView();
     }
 }

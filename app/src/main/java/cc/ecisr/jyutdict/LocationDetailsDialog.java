@@ -5,18 +5,17 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Looper;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
+import cc.ecisr.jyutdict.databinding.DialogLocationInfoBinding;
 import cc.ecisr.jyutdict.struct.LocationInfo;
 import cc.ecisr.jyutdict.utils.ColorUtil;
 import cc.ecisr.jyutdict.utils.LocationArticleRepository;
@@ -37,26 +36,22 @@ public final class LocationDetailsDialog {
 
     private static void showInternal(Context context, String requestedName,
                                      LocationInfo.Location initialLocation) {
-        View view = LayoutInflater.from(context).inflate(R.layout.dialog_location_info, null);
-        TextView title = view.findViewById(R.id.location_title);
-        TextView redirect = view.findViewById(R.id.location_redirect);
-        TextView metadata = view.findViewById(R.id.location_metadata);
-        View metadataAccent = view.findViewById(R.id.location_metadata_accent);
-        ProgressBar checking = view.findViewById(R.id.location_article_checking);
-        Button article = view.findViewById(R.id.location_article);
-        Button phonology = view.findViewById(R.id.location_phonology);
+        DialogLocationInfoBinding binding = DialogLocationInfoBinding.inflate(
+                android.view.LayoutInflater.from(context));
 
-        renderLocation(context, requestedName, initialLocation, title, metadata,
-                metadataAccent, phonology);
-        article.setEnabled(false);
-        article.setText(R.string.location_article_checking);
+        renderLocation(context, requestedName, initialLocation, binding.locationTitle,
+                binding.locationMetadata, binding.locationMetadataAccent,
+                binding.locationPhonology);
+        binding.locationArticle.setEnabled(false);
+        binding.locationArticle.setText(R.string.location_article_checking);
 
         AlertDialog dialog = new MaterialAlertDialogBuilder(context)
-                .setView(view)
+                .setView(binding.getRoot())
                 .create();
-        view.findViewById(R.id.location_close).setOnClickListener(v -> dialog.dismiss());
-        phonology.setOnClickListener(v -> {
-            LocationInfo.Location target = (LocationInfo.Location) phonology.getTag();
+        binding.locationClose.setOnClickListener(v -> dialog.dismiss());
+        binding.locationPhonology.setOnClickListener(v -> {
+            LocationInfo.Location target =
+                    (LocationInfo.Location) binding.locationPhonology.getTag();
             if (target == null || !target.hasPhonology) return;
             context.startActivity(LocationReaderActivity.phonologyIntent(
                     context,
@@ -69,8 +64,8 @@ public final class LocationDetailsDialog {
 
         LocationArticleRepository.lookup(context, requestedName, result -> {
             Runnable update = () -> {
-                MotionUtil.beginLayoutTransition((ViewGroup) view);
-                checking.setVisibility(View.INVISIBLE);
+                MotionUtil.beginLayoutTransition((ViewGroup) binding.getRoot());
+                binding.locationArticleChecking.setVisibility(View.INVISIBLE);
                 LocationInfo.Location resolvedLocation = result.location != null
                         ? result.location
                         : initialLocation;
@@ -78,26 +73,26 @@ public final class LocationDetailsDialog {
                         context,
                         result.resolvedName,
                         resolvedLocation,
-                        title,
-                        metadata,
-                        metadataAccent,
-                        phonology
+                        binding.locationTitle,
+                        binding.locationMetadata,
+                        binding.locationMetadataAccent,
+                        binding.locationPhonology
                 );
                 if (result.redirected()) {
-                    MotionUtil.setText(redirect, context.getString(
+                    MotionUtil.setText(binding.locationRedirect, context.getString(
                             R.string.location_article_redirected,
                             result.resolvedName
                     ));
-                    redirect.setVisibility(View.VISIBLE);
+                    binding.locationRedirect.setVisibility(View.VISIBLE);
                 } else {
-                    redirect.setVisibility(View.INVISIBLE);
+                    binding.locationRedirect.setVisibility(View.INVISIBLE);
                 }
-                article.setEnabled(result.articleAvailable);
-                MotionUtil.setText((TextView) article, context.getString(
+                binding.locationArticle.setEnabled(result.articleAvailable);
+                MotionUtil.setText(binding.locationArticle, context.getString(
                         result.articleAvailable
                                 ? R.string.location_article
                                 : R.string.location_article_unavailable_button));
-                article.setOnClickListener(v -> {
+                binding.locationArticle.setOnClickListener(v -> {
                     if (!result.articleAvailable) return;
                     context.startActivity(LocationReaderActivity.articleIntent(
                             context,
@@ -109,7 +104,7 @@ public final class LocationDetailsDialog {
             if (Looper.myLooper() == Looper.getMainLooper()) {
                 update.run();
             } else {
-                view.post(update);
+                binding.getRoot().post(update);
             }
         });
 

@@ -6,21 +6,17 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.view.View;
-import android.view.ViewGroup;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import cc.ecisr.jyutdict.utils.ApiUrlBuilder;
+import cc.ecisr.jyutdict.databinding.ActivityLocationReaderBinding;
 import cc.ecisr.jyutdict.utils.DiskTextCache;
 import cc.ecisr.jyutdict.utils.HttpUtil;
 import cc.ecisr.jyutdict.utils.ImmersiveBarUtil;
@@ -44,11 +40,7 @@ public class LocationReaderActivity extends AppCompatActivity {
     private static final long PHONOLOGY_CACHE_FALLBACK_MAX_AGE =
             7L * 24L * 60L * 60L * 1000L;
 
-    private Toolbar toolbar;
-    private WebView webView;
-    private ViewGroup stateContainer;
-    private ProgressBar progressBar;
-    private TextView errorText;
+    private ActivityLocationReaderBinding binding;
     private final HttpUtil request = new HttpUtil(HttpUtil.GET);
     private Handler handler;
     private String mode;
@@ -75,7 +67,8 @@ public class LocationReaderActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(ThemeUtil.isNightMode(this) ? R.style.DarkTheme : R.style.AppTheme);
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_location_reader);
+        binding = ActivityLocationReaderBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
         boolean lightSystemBars = !ThemeUtil.isNightMode(this);
         ImmersiveBarUtil.setImmersiveBar(this, lightSystemBars, lightSystemBars);
 
@@ -86,13 +79,7 @@ public class LocationReaderActivity extends AppCompatActivity {
         if (locationName == null) locationName = "";
         if (sheetStatistic == null) sheetStatistic = "";
 
-        toolbar = findViewById(R.id.toolbar);
-        stateContainer = findViewById(R.id.reader_state_container);
-        webView = findViewById(R.id.reader_web_view);
-        progressBar = findViewById(R.id.reader_progress);
-        errorText = findViewById(R.id.reader_error);
-
-        setSupportActionBar(toolbar);
+        setSupportActionBar(binding.toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setTitle(
@@ -103,7 +90,7 @@ public class LocationReaderActivity extends AppCompatActivity {
         }
 
         configureWebView();
-        errorText.setOnClickListener(v -> load(true));
+        binding.readerError.setOnClickListener(v -> load(true));
         handler = new Handler(Looper.getMainLooper(), msg -> {
             if (isFinishing() || isDestroyed()) return true;
             if (msg.what == LOAD_SUCCESS) {
@@ -124,7 +111,7 @@ public class LocationReaderActivity extends AppCompatActivity {
     }
 
     private void configureWebView() {
-        WebSettings settings = webView.getSettings();
+        WebSettings settings = binding.readerWebView.getSettings();
         settings.setJavaScriptEnabled(MODE_PHONOLOGY.equals(mode));
         settings.setDomStorageEnabled(false);
         settings.setBuiltInZoomControls(true);
@@ -135,7 +122,7 @@ public class LocationReaderActivity extends AppCompatActivity {
         settings.setTextZoom(105);
         settings.setAllowFileAccess(false);
         settings.setAllowContentAccess(false);
-        webView.setWebViewClient(new WebViewClient() {
+        binding.readerWebView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 Uri uri = Uri.parse(url);
@@ -150,7 +137,8 @@ public class LocationReaderActivity extends AppCompatActivity {
     }
 
     private void load(boolean forceNetwork) {
-        MotionUtil.showOnly(stateContainer, progressBar, progressBar, errorText, webView);
+        MotionUtil.showOnly(binding.readerStateContainer, binding.readerProgress,
+                binding.readerProgress, binding.readerError, binding.readerWebView);
 
         if (!forceNetwork) {
             long maxAge = MODE_PHONOLOGY.equals(mode)
@@ -207,22 +195,24 @@ public class LocationReaderActivity extends AppCompatActivity {
                         ThemeUtil.isNightMode(this)
                 );
             }
-            webView.loadDataWithBaseURL(
+            binding.readerWebView.loadDataWithBaseURL(
                     "https://jyutdict.org/",
                     html,
                     "text/html",
                     "UTF-8",
                     null
             );
-            MotionUtil.showOnly(stateContainer, webView, progressBar, errorText, webView);
+            MotionUtil.showOnly(binding.readerStateContainer, binding.readerWebView,
+                    binding.readerProgress, binding.readerError, binding.readerWebView);
         } catch (JSONException e) {
             showError(R.string.error_tips_data);
         }
     }
 
     private void showError(int message) {
-        errorText.setText(message);
-        MotionUtil.showOnly(stateContainer, errorText, progressBar, errorText, webView);
+        binding.readerError.setText(message);
+        MotionUtil.showOnly(binding.readerStateContainer, binding.readerError,
+                binding.readerProgress, binding.readerError, binding.readerWebView);
     }
 
     @Override
@@ -235,10 +225,11 @@ public class LocationReaderActivity extends AppCompatActivity {
     protected void onDestroy() {
         request.cancel();
         if (handler != null) handler.removeCallbacksAndMessages(null);
-        if (webView != null) {
-            webView.stopLoading();
-            webView.setWebViewClient(null);
-            webView.destroy();
+        if (binding != null) {
+            binding.readerWebView.stopLoading();
+            binding.readerWebView.setWebViewClient(null);
+            binding.readerWebView.destroy();
+            binding = null;
         }
         super.onDestroy();
     }

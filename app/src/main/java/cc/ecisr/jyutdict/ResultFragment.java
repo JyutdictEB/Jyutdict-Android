@@ -12,7 +12,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -37,6 +36,8 @@ import java.util.regex.Pattern;
 
 import cc.ecisr.jyutdict.comments.CommentDialogFragment;
 import cc.ecisr.jyutdict.comments.CommentRepository;
+import cc.ecisr.jyutdict.databinding.FragmentResultBinding;
+import cc.ecisr.jyutdict.databinding.LayoutCopyAlertdialogBinding;
 import cc.ecisr.jyutdict.struct.LocationInfo;
 import android.text.SpannableStringBuilder;
 
@@ -55,6 +56,7 @@ public class ResultFragment extends Fragment {
     private static final String TAG = "`ResultFragment";
 
     private RecyclerView mRvMain;
+    private FragmentResultBinding binding;
     private ResultItemAdapter resultAdapter;
     private boolean resultRevealRunning;
     private CommentRepository commentRepository;
@@ -69,8 +71,8 @@ public class ResultFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View selfView = inflater.inflate(R.layout.fragment_result, container, false);
-        mRvMain = selfView.findViewById(R.id.result_list);
+        binding = FragmentResultBinding.inflate(inflater, container, false);
+        mRvMain = binding.resultList;
         commentRepository = new CommentRepository(requireContext());
         resultAdapter = new ResultItemAdapter(getActivity(), new ResultItemAdapter.iOnItemClickListener() {
             @Override
@@ -104,11 +106,13 @@ public class ResultFragment extends Fragment {
                     new MaterialAlertDialogBuilder(getContext())
                             .setItems(selections, (dialogInterface, i) -> {
                                 if (i == 0) {
-                                    View view = inflater.inflate(R.layout.layout_copy_alertdialog, null);
-                                    TextView tv = view.findViewById(R.id.dialog_box_tv);
-                                    tv.setText(holder.printContent());
+                                    LayoutCopyAlertdialogBinding dialogBinding =
+                                            LayoutCopyAlertdialogBinding.inflate(inflater);
+                                    dialogBinding.dialogBoxTv.setText(holder.printContent());
                                     new MaterialAlertDialogBuilder(getContext())
-                                            .setView(view).setPositiveButton(R.string.button_confirm, null).show();
+                                            .setView(dialogBinding.getRoot())
+                                            .setPositiveButton(R.string.button_confirm, null)
+                                            .show();
                                 } else if (i == commentOptionIndex) {
                                     onComments(holder, commentTarget.type, commentTarget.target);
                                 } else {
@@ -146,7 +150,7 @@ public class ResultFragment extends Fragment {
             receivedMode = savedInstanceState.getInt("received_mode");
         }
         if (rawReceivedData != null && !rawReceivedData.isEmpty()) refreshResult();
-        return selfView;
+        return binding.getRoot();
     }
 
     @Override
@@ -207,6 +211,7 @@ public class ResultFragment extends Fragment {
         }
         resultAdapter = null;
         mRvMain = null;
+        binding = null;
         super.onDestroyView();
     }
 
