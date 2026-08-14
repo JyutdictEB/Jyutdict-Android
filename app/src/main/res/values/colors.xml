@@ -1,19 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- 主色調：經典朱紅 -->
     <color name="colorPrimary">#D32913</color>
     <color name="colorPrimaryDark">#A22C29</color>
     <color name="colorAccent">#721121</color>
-<!--    <color name="colorSecondary">#3AB795</color>-->
     <color name="colorSecondary">#721121</color>
-    <color name="colorGray">#3d3b4f</color>
-    <color name="colorUnavailable">#B9BAA3</color>
-    <color name="colorHover">#E9E7EF</color>
-    <color name="colorBackground">#FAFAFA</color>
-    <color name="colorWhite">#FFFFFF</color>
-    <color name="colorBlack">#0F110C</color>
+    <color name="colorSecondaryVariant">#530C18</color>
+    <color name="colorOnPrimary">#FFFFFF</color>
+    <color name="colorOnSecondary">#FFFFFF</color>
 
-    <color name="colorGrayDark">#ABAAB1</color>
-    <color name="colorUnavailableDark">#5A5A49</color>
-    <color name="colorHoverDark">#332C47</color>
-    <color name="colorBackgroundDark">#202020</color>
+    <!-- 亮色主題中性色（徹底摒棄偏綠色相，使用純淨高級的中性灰） -->
+    <color name="colorBackground">#FAFAFA</color>
+    <color name="colorSurface">#FFFFFF</color>
+    <color name="colorHover">#ECEBF0</color>
+    <color name="colorUnavailable">#D0CFD8</color>
+    <color name="colorUnavailableText">#9594A0</color>
+    <color name="colorGray">#3D3C46</color>
+    <color name="colorBlack">#121215</color>
+    <color name="colorWhite">#FFFFFF</color>
+
+    <!-- 暗色主題中性色 -->
+    <color name="colorBackgroundDark">#1E1E22</color>
+    <color name="colorSurfaceDark">#26262C</color>
+    <color name="colorHoverDark">#2F2F37</color>
+    <color name="colorUnavailableDark">#44434D</color>
+    <color name="colorUnavailableTextDark">#72717D</color>
+    <color name="colorGrayDark">#9E9CA8</color>
 </resources>

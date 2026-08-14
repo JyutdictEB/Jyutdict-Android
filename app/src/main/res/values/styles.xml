@@ -5,13 +5,14 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
-        <item name="colorSecondary">@color/colorSecondary</item>
+        <item name="colorSecondary">@color/colorPrimary</item>
+        <item name="colorSecondaryVariant">@color/colorSecondaryVariant</item>
         <item name="colorSurface">@color/colorBackground</item>
         <item name="colorOnSurface">@color/colorBlack</item>
         <item name="clockBackground">@color/colorBackground</item>
         <item name="clockHover">@color/colorHover</item>
         <item name="clockTextColor">@color/colorBlack</item>
-        <item name="clockTextColorDim">@color/colorGrayDark</item>
+        <item name="clockTextColorDim">@color/colorGray</item>
         <item name="android:windowBackground">@color/colorBackground</item>
         <item name="android:colorBackground">@color/colorBackground</item>
         <item name="android:windowAnimationStyle">@style/Animation.Jyutdict.Activity</item>
@@ -20,13 +21,17 @@
         <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Jyutdict.Straight</item>
         <item name="alertDialogTheme">@style/Theme.Jyutdict.Light.Dialog.Alert</item>
         <item name="materialAlertDialogTheme">@style/Theme.Jyutdict.Light.Dialog.Alert</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.Jyutdict.ButtonBar.Button</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.Jyutdict.ButtonBar.Button</item>
+        <item name="buttonBarNeutralButtonStyle">@style/Widget.Jyutdict.ButtonBar.Button</item>
     </style>
 
     <style name="DarkTheme" parent="Theme.MaterialComponents.NoActionBar.Bridge">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
-        <item name="colorSecondary">@color/colorSecondary</item>
+        <item name="colorSecondary">@color/colorPrimary</item>
+        <item name="colorSecondaryVariant">@color/colorSecondaryVariant</item>
         <item name="colorSurface">@color/colorBackgroundDark</item>
         <item name="colorOnSurface">@color/colorHover</item>
         <item name="clockBackground">@color/colorBackgroundDark</item>
@@ -41,13 +46,17 @@
         <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Jyutdict.Straight</item>
         <item name="alertDialogTheme">@style/Theme.Jyutdict.Dark.Dialog.Alert</item>
         <item name="materialAlertDialogTheme">@style/Theme.Jyutdict.Dark.Dialog.Alert</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.Jyutdict.ButtonBar.Button</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.Jyutdict.ButtonBar.Button</item>
+        <item name="buttonBarNeutralButtonStyle">@style/Widget.Jyutdict.ButtonBar.Button</item>
     </style>
 
     <style name="DarkSettingsTheme" parent="Theme.MaterialComponents.NoActionBar.Bridge">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
-        <item name="colorSecondary">@color/colorSecondary</item>
+        <item name="colorSecondary">@color/colorPrimary</item>
+        <item name="colorSecondaryVariant">@color/colorSecondaryVariant</item>
         <item name="colorSurface">@color/colorBackgroundDark</item>
         <item name="colorOnSurface">@color/colorHover</item>
         <item name="android:windowBackground">@color/colorBackgroundDark</item>
@@ -62,10 +71,15 @@
         <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Jyutdict.Straight</item>
         <item name="alertDialogTheme">@style/Theme.Jyutdict.Dark.Dialog.Alert</item>
         <item name="materialAlertDialogTheme">@style/Theme.Jyutdict.Dark.Dialog.Alert</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.Jyutdict.ButtonBar.Button</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.Jyutdict.ButtonBar.Button</item>
+        <item name="buttonBarNeutralButtonStyle">@style/Widget.Jyutdict.ButtonBar.Button</item>
     </style>
 
     <style name="Theme.Jyutdict.Light.Dialog.Alert" parent="Theme.MaterialComponents.Light.Dialog.Alert.Bridge">
         <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorSecondary">@color/colorPrimary</item>
+        <item name="colorAccent">@color/colorPrimary</item>
         <item name="colorSurface">@color/colorBackground</item>
         <item name="colorOnSurface">@color/colorBlack</item>
         <item name="android:background">@color/colorBackground</item>
@@ -73,14 +87,19 @@
         <item name="clockBackground">@color/colorBackground</item>
         <item name="clockHover">@color/colorHover</item>
         <item name="clockTextColor">@color/colorBlack</item>
-        <item name="clockTextColorDim">@color/colorGrayDark</item>
+        <item name="clockTextColorDim">@color/colorGray</item>
         <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.Jyutdict.Straight</item>
         <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Jyutdict.Straight</item>
         <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Jyutdict.Straight</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.Jyutdict.ButtonBar.Button</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.Jyutdict.ButtonBar.Button</item>
+        <item name="buttonBarNeutralButtonStyle">@style/Widget.Jyutdict.ButtonBar.Button</item>
     </style>
 
     <style name="Theme.Jyutdict.Dark.Dialog.Alert" parent="Theme.MaterialComponents.Dialog.Alert">
         <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorSecondary">@color/colorPrimary</item>
+        <item name="colorAccent">@color/colorPrimary</item>
         <item name="colorSurface">@color/colorBackgroundDark</item>
         <item name="colorOnSurface">@color/colorHover</item>
         <item name="android:background">@color/colorBackgroundDark</item>
@@ -94,6 +113,14 @@
         <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.Jyutdict.Straight</item>
         <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Jyutdict.Straight</item>
         <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Jyutdict.Straight</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.Jyutdict.ButtonBar.Button</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.Jyutdict.ButtonBar.Button</item>
+        <item name="buttonBarNeutralButtonStyle">@style/Widget.Jyutdict.ButtonBar.Button</item>
+    </style>
+
+    <style name="Widget.Jyutdict.ButtonBar.Button" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">@color/colorPrimary</item>
+        <item name="android:textStyle">bold</item>
     </style>
 
     <style name="ShapeAppearance.Jyutdict.Straight" parent="ShapeAppearance.MaterialComponents">

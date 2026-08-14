@@ -45,14 +45,7 @@ public class InfoActivity extends AppCompatActivity {
 
         ArticlePagerAdapter pagerAdapter = new ArticlePagerAdapter(this, articleList);
         binding.viewPager.setAdapter(pagerAdapter);
-        binding.viewPager.setUserInputEnabled(false);
-        binding.viewPager.setPageTransformer((page, position) -> {
-            float distance = Math.min(1f, Math.abs(position));
-            page.setAlpha(1f - 0.18f * distance);
-            page.setScaleX(1f - 0.015f * distance);
-            page.setScaleY(1f - 0.015f * distance);
-            page.setTranslationX(-position * page.getWidth() * 0.06f);
-        });
+        binding.viewPager.setUserInputEnabled(true);
         binding.progressBar.setVisibility(View.GONE);
         binding.errorText.setVisibility(View.GONE);
         binding.viewPager.setVisibility(View.VISIBLE);

@@ -57,8 +57,8 @@
 
             <Button
                 android:id="@+id/btn_query"
-                android:layout_width="56dp"
-                android:layout_height="38dp"
+                android:layout_width="72dp"
+                android:layout_height="32dp"
                 android:layout_marginStart="6dp"
                 android:background="@drawable/bg_solid_accent_button"
                 android:foreground="?selectableItemBackground"
@@ -73,7 +73,7 @@
             android:id="@+id/input_switch"
             android:layout_width="match_parent"
             android:layout_height="34dp"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="@dimen/space_xs"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
@@ -81,6 +81,7 @@
                 android:id="@+id/sheet_mode_group"
                 android:layout_width="168dp"
                 android:layout_height="match_parent"
+                android:background="@drawable/bg_segmented_container"
                 app:checkedButton="@id/btn_common_sheet"
                 app:cornerRadius="0dp"
                 app:selectionRequired="true"
@@ -97,9 +98,10 @@
                     android:paddingHorizontal="4dp"
                     android:text="@string/search_common_sheet"
                     android:textAllCaps="false"
-                    android:textColor="@color/btn_toggle_text"
+                    android:textColor="@color/btn_segmented_text"
                     android:textSize="13sp"
-                    app:backgroundTint="@color/btn_toggle_background"
+                    android:textStyle="bold"
+                    app:backgroundTint="@color/btn_segmented_bg"
                     app:cornerRadius="0dp"
                     app:elevation="0dp"
                     app:strokeWidth="0dp" />
@@ -115,9 +117,10 @@
                     android:paddingHorizontal="4dp"
                     android:text="@string/search_jyut_sheet"
                     android:textAllCaps="false"
-                    android:textColor="@color/btn_toggle_text"
+                    android:textColor="@color/btn_segmented_text"
                     android:textSize="13sp"
-                    app:backgroundTint="@color/btn_toggle_background"
+                    android:textStyle="bold"
+                    app:backgroundTint="@color/btn_segmented_bg"
                     app:cornerRadius="0dp"
                     app:elevation="0dp"
                     app:strokeWidth="0dp" />
@@ -128,21 +131,22 @@
                 android:id="@+id/switch_reverse_search"
                 style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
                 android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:layout_marginStart="6dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="8dp"
                 android:checkable="true"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
-                android:paddingHorizontal="8dp"
+                android:paddingHorizontal="10dp"
                 android:text="@string/search_reversal"
                 android:textAllCaps="false"
-                android:textColor="@color/btn_toggle_text"
+                android:textColor="@color/btn_toggle_chip_text"
                 android:textSize="12sp"
                 android:visibility="gone"
-                app:backgroundTint="@color/btn_toggle_background"
+                app:backgroundTint="@color/btn_toggle_chip_bg"
                 app:cornerRadius="0dp"
                 app:elevation="0dp"
-                app:strokeWidth="0dp" />
+                app:strokeColor="@color/btn_toggle_chip_stroke"
+                app:strokeWidth="1dp" />
 
         </LinearLayout>
 
@@ -150,7 +154,8 @@
             android:id="@+id/sheet_query_options"
             android:layout_width="match_parent"
             android:layout_height="36dp"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="6dp"
+            android:baselineAligned="false"
             android:gravity="end|center_vertical"
             android:orientation="horizontal">
 
@@ -159,18 +164,19 @@
                 android:layout_width="0dp"
                 android:layout_height="36dp"
                 android:layout_weight="1"
-                android:background="?attr/selectableItemBackground"
+                android:background="@drawable/bg_locate_picker_field"
                 android:clickable="true"
                 android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingStart="4dp"
+                android:paddingStart="8dp"
                 android:paddingEnd="6dp">
 
                 <View
                     android:id="@+id/locate_picker_swatch"
                     android:layout_width="4dp"
-                    android:layout_height="20dp"
+                    android:layout_height="18dp"
                     android:layout_marginEnd="8dp" />
 
                 <TextView
@@ -197,7 +203,7 @@
                 android:id="@+id/input_advanced_switch"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
-                android:layout_marginStart="6dp"
+                android:layout_marginStart="8dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -205,19 +211,20 @@
                     android:id="@+id/switch_use_regex"
                     style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="32dp"
+                    android:layout_height="match_parent"
                     android:checkable="true"
                     android:insetTop="0dp"
                     android:insetBottom="0dp"
-                    android:paddingHorizontal="8dp"
+                    android:paddingHorizontal="10dp"
                     android:text="@string/search_enable_regex"
                     android:textAllCaps="false"
-                    android:textColor="@color/btn_toggle_text"
+                    android:textColor="@color/btn_toggle_chip_text"
                     android:textSize="12sp"
-                    app:backgroundTint="@color/btn_toggle_background"
+                    app:backgroundTint="@color/btn_toggle_chip_bg"
                     app:cornerRadius="0dp"
                     app:elevation="0dp"
-                    app:strokeWidth="0dp" />
+                    app:strokeColor="@color/btn_toggle_chip_stroke"
+                    app:strokeWidth="1dp" />
 
             </LinearLayout>
 
@@ -226,7 +233,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
+            android:layout_marginTop="6dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
