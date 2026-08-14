@@ -28,6 +28,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
@@ -100,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
             "location_selection_recent_v2";
     private static final String LAST_LOCATION_COLUMN_KEY =
             "last_location_column_v2";
+    private static final String EXTRA_THEME_TRANSITION = "theme_transition";
 
     AppCompatEditText inputEditText;
     Button btnQueryConfirm, btnFilterArea, btnFilterAreaPron, btnColoringJppPartial;
@@ -213,6 +215,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         sp = getSharedPreferences("settings", MODE_PRIVATE);
         setContentView(R.layout.activity_main);
+        if (savedInstanceState != null
+                && getIntent().getBooleanExtra(EXTRA_THEME_TRANSITION, false)) {
+            View content = findViewById(android.R.id.content);
+            content.setAlpha(0f);
+            content.post(() -> MotionUtil.fadeIn(content));
+            getIntent().removeExtra(EXTRA_THEME_TRANSITION);
+        }
         boolean lightSystemBars = !ThemeUtil.isNightMode(this);
         ImmersiveBarUtil.setImmersiveBar(this, lightSystemBars, lightSystemBars);
         getView();
@@ -866,7 +875,7 @@ public class MainActivity extends AppCompatActivity {
         selectedLocationPosition = Math.max(0, Math.min(
                 selectedLocationPosition, locationOptions.size() - 1));
         LocationSpinnerAdapter.Option option = locationOptions.get(selectedLocationPosition);
-        locationPickerText.setText(option.label);
+        MotionUtil.setText(locationPickerText, option.label);
         locationPickerSwatch.setBackground(ColorUtil.locationColorDrawable(option.colors));
         locationPicker.setContentDescription(
                 getString(R.string.search_choose_location) + "：" + option.label);
@@ -976,9 +985,9 @@ public class MainActivity extends AppCompatActivity {
         mainHandler.removeCallbacks(hideHeaderReadyStatus);
         if (!sheetHeaderNeedsRefresh && !locationHeaderNeedsRefresh) {
             headerLoadingSpinner.setVisibility(View.GONE);
-            headerLoadingText.setText(usingFreshCache
+            MotionUtil.setText(headerLoadingText, getString(usingFreshCache
                     ? R.string.header_sync_cached
-                    : R.string.header_sync_ready);
+                    : R.string.header_sync_ready));
             headerLoadingText.setAlpha(usingFreshCache ? 0.52f : 1f);
             headerLoadingStatus.setVisibility(announceReady ? View.VISIBLE : View.GONE);
             if (announceReady) {
@@ -994,11 +1003,11 @@ public class MainActivity extends AppCompatActivity {
         headerLoadingSpinner.setVisibility(loading || !waitingToRetry
                 ? View.VISIBLE : View.INVISIBLE);
         if (loading || !waitingToRetry) {
-            headerLoadingText.setText(readyCount == 2
+            MotionUtil.setText(headerLoadingText, readyCount == 2
                     ? getString(R.string.header_sync_updating)
                     : getString(R.string.header_sync_preparing, readyCount));
         } else {
-            headerLoadingText.setText(readyCount == 2
+            MotionUtil.setText(headerLoadingText, readyCount == 2
                     ? getString(R.string.header_sync_stale)
                     : getString(R.string.header_sync_retrying));
         }
@@ -1385,7 +1394,15 @@ public class MainActivity extends AppCompatActivity {
                 boolean isToggleNightMode = (resultCode&0b10) != 0;
                 if (isToggleNightMode) {
                     applyLightDarkTheme();
-                    recreate();
+                    getIntent().putExtra(EXTRA_THEME_TRANSITION, true);
+                    int surface = ContextCompat.getColor(this,
+                            ThemeUtil.isNightMode(this)
+                                    ? R.color.md_theme_dark_surface
+                                    : R.color.md_theme_light_surface);
+                    MotionUtil.fadeThroughColor(
+                            (ViewGroup) findViewById(android.R.id.content),
+                            surface,
+                            this::recreate);
                 } else {
                     resultFragment.refreshResult();
                 }

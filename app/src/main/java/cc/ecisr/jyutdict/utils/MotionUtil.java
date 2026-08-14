@@ -120,6 +120,41 @@ public final class MotionUtil {
                 .start();
     }
 
+    public static void fadeThroughColor(ViewGroup root, @ColorInt int color, Runnable action) {
+        if (!root.isLaidOut()) {
+            action.run();
+            return;
+        }
+        View scrim = new View(root.getContext());
+        scrim.setBackgroundColor(color);
+        scrim.setAlpha(0f);
+        root.addView(scrim, new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+        scrim.animate()
+                .alpha(1f)
+                .setDuration(DURATION_MEDIUM)
+                .setInterpolator(AnimationUtils.loadInterpolator(
+                        root.getContext(), android.R.interpolator.fast_out_slow_in))
+                .withEndAction(action)
+                .start();
+    }
+
+    public static void fadeIn(View view) {
+        if (!view.isLaidOut()) {
+            view.post(() -> fadeIn(view));
+            return;
+        }
+        view.animate().cancel();
+        view.setAlpha(0f);
+        view.animate()
+                .alpha(1f)
+                .setDuration(DURATION_MEDIUM)
+                .setInterpolator(AnimationUtils.loadInterpolator(
+                        view.getContext(), android.R.interpolator.linear_out_slow_in))
+                .start();
+    }
+
     /** Keeps RecyclerView changes noticeable without the stock 250 ms change pause. */
     public static void configureItemAnimator(RecyclerView recyclerView) {
         DefaultItemAnimator animator = new DefaultItemAnimator();

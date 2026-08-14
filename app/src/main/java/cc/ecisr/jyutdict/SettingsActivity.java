@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.text.InputType;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -20,6 +21,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.preference.EditTextPreference;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
@@ -48,6 +50,7 @@ import cc.ecisr.jyutdict.utils.ToastUtil;
 
 public class SettingsActivity extends AppCompatActivity {
     private static final String EXTRA_THEME_CHANGED = "theme_changed";
+    private static final String EXTRA_THEME_TRANSITION = "theme_transition";
     private static final Pattern SEMANTIC_VERSION_PATTERN = Pattern.compile(
             "^(\\d+)\\.(\\d+)\\.(\\d+)(?:[-+].*)?$");
 
@@ -75,6 +78,13 @@ public class SettingsActivity extends AppCompatActivity {
         sp = getSharedPreferences("settings", Context.MODE_PRIVATE);
         editor = sp.edit();
         setContentView(R.layout.activity_settings);
+        if (savedInstanceState != null
+                && getIntent().getBooleanExtra(EXTRA_THEME_TRANSITION, false)) {
+            android.view.View content = findViewById(android.R.id.content);
+            content.setAlpha(0f);
+            content.post(() -> MotionUtil.fadeIn(content));
+            getIntent().removeExtra(EXTRA_THEME_TRANSITION);
+        }
         boolean lightSystemBars = !ThemeUtil.isNightMode(this);
         ImmersiveBarUtil.setImmersiveBar(this, lightSystemBars, lightSystemBars);
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -293,7 +303,15 @@ public class SettingsActivity extends AppCompatActivity {
                 listThemeMode.setOnPreferenceChangeListener((preference, newValue) -> {
                     sp.edit().putString("theme_mode", String.valueOf(newValue)).apply();
                     requireActivity().getIntent().putExtra(EXTRA_THEME_CHANGED, true);
-                    requireActivity().getWindow().getDecorView().post(requireActivity()::recreate);
+                    requireActivity().getIntent().putExtra(EXTRA_THEME_TRANSITION, true);
+                    ViewGroup content = requireActivity()
+                            .findViewById(android.R.id.content);
+                    int surface = ContextCompat.getColor(requireContext(),
+                            ThemeUtil.isNightMode(requireContext())
+                                    ? R.color.md_theme_dark_surface
+                                    : R.color.md_theme_light_surface);
+                    MotionUtil.fadeThroughColor(
+                            content, surface, requireActivity()::recreate);
                     return true;
                 });
             }

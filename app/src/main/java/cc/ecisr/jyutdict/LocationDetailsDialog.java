@@ -84,7 +84,7 @@ public final class LocationDetailsDialog {
                         phonology
                 );
                 if (result.redirected()) {
-                    redirect.setText(context.getString(
+                    MotionUtil.setText(redirect, context.getString(
                             R.string.location_article_redirected,
                             result.resolvedName
                     ));
@@ -93,9 +93,10 @@ public final class LocationDetailsDialog {
                     redirect.setVisibility(View.INVISIBLE);
                 }
                 article.setEnabled(result.articleAvailable);
-                article.setText(result.articleAvailable
-                        ? R.string.location_article
-                        : R.string.location_article_unavailable_button);
+                MotionUtil.setText((TextView) article, context.getString(
+                        result.articleAvailable
+                                ? R.string.location_article
+                                : R.string.location_article_unavailable_button));
                 article.setOnClickListener(v -> {
                     if (!result.articleAvailable) return;
                     context.startActivity(LocationReaderActivity.articleIntent(
@@ -131,29 +132,30 @@ public final class LocationDetailsDialog {
                                        View metadataAccent,
                                        Button phonology) {
         if (location == null) {
-            title.setText(fallbackName);
-            metadata.setText(R.string.location_no_metadata);
+            MotionUtil.setText(title, fallbackName);
+            MotionUtil.setText(metadata, context.getString(R.string.location_no_metadata));
             metadataAccent.setBackground(ColorUtil.locationColorDrawable(
                     null,
                     GradientDrawable.Orientation.TOP_BOTTOM
             ));
             phonology.setEnabled(false);
-            phonology.setText(R.string.location_phonology_unavailable);
+            MotionUtil.setText((TextView) phonology,
+                    context.getString(R.string.location_phonology_unavailable));
             phonology.setTag(null);
             return;
         }
-        title.setText(location.displayTitle());
+        MotionUtil.setText(title, location.displayTitle());
         metadataAccent.setBackground(ColorUtil.locationColorDrawable(
                 location.colors,
                 GradientDrawable.Orientation.TOP_BOTTOM
         ));
-        metadata.setText(location.sheetInfo.isEmpty()
+        MotionUtil.setText(metadata, location.sheetInfo.isEmpty()
                 ? context.getString(R.string.location_no_metadata)
                 : location.sheetInfo);
         phonology.setEnabled(location.hasPhonology);
-        phonology.setText(location.hasPhonology
+        MotionUtil.setText((TextView) phonology, context.getString(location.hasPhonology
                 ? R.string.location_phonology
-                : R.string.location_phonology_unavailable);
+                : R.string.location_phonology_unavailable));
         phonology.setTag(location);
     }
 
