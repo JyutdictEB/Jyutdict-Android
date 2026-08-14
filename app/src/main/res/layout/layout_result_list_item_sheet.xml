@@ -33,7 +33,7 @@
 
             <LinearLayout
                 android:id="@+id/item_chara"
-                android:layout_width="76dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_character_block"
                 android:gravity="center"
@@ -69,6 +69,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
+                    android:maxWidth="70dp"
                     android:gravity="center"
                     android:text="@string/result_list_extra"
                     android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
