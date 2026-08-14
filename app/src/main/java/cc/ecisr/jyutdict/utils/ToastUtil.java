@@ -38,7 +38,7 @@ public class ToastUtil {
         snackButtonView.setTextSize(14);
         snackButtonView.setTextColor(MaterialColors.getColor(
                 snackButtonView,
-                com.google.android.material.R.attr.colorPrimary
+                androidx.appcompat.R.attr.colorPrimary
         ));
 
 

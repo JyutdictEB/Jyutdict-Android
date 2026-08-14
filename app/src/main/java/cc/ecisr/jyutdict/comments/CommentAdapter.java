@@ -1,12 +1,12 @@
 package cc.ecisr.jyutdict.comments;
 
-import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.text.HtmlCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
@@ -63,8 +63,9 @@ final class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.ViewHolde
         holder.author.setText(comment.displayName());
         holder.meta.setText(holder.itemView.getContext().getString(
                 R.string.comment_meta, comment.role, comment.createdAt));
-        holder.content.setText(Html.fromHtml(
-                comment.content.replace("\n", "<br>"), Html.FROM_HTML_MODE_LEGACY));
+        holder.content.setText(HtmlCompat.fromHtml(
+                comment.content.replace("\n", "<br>"),
+                HtmlCompat.FROM_HTML_MODE_LEGACY));
         holder.content.setVisibility(View.VISIBLE);
         boolean ownComment = currentUser != null && comment.userId == currentUser.id;
         holder.delete.setVisibility(ownComment || isAdmin ? View.VISIBLE : View.GONE);

@@ -19,7 +19,6 @@ import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.Collections;
 
-import cc.ecisr.jyutdict.MainActivity;
 import cc.ecisr.jyutdict.R;
 import cc.ecisr.jyutdict.auth.AuthRepository;
 import cc.ecisr.jyutdict.utils.ToastUtil;
@@ -43,7 +42,6 @@ public final class CommentDialogFragment extends DialogFragment {
     private TextView empty;
     private TextInputEditText input;
     private MaterialButton submit;
-    private MaterialButton signIn;
     private String type;
     private String target;
 
@@ -76,19 +74,10 @@ public final class CommentDialogFragment extends DialogFragment {
         empty = view.findViewById(R.id.comment_empty);
         input = view.findViewById(R.id.comment_input);
         submit = view.findViewById(R.id.comment_submit);
-        signIn = view.findViewById(R.id.comment_sign_in);
 
         list.setLayoutManager(new LinearLayoutManager(requireContext()));
         list.setAdapter(adapter);
         submit.setOnClickListener(ignored -> submitComment());
-        signIn.setOnClickListener(ignored -> {
-            if (getActivity() instanceof MainActivity) {
-                ((MainActivity) getActivity()).startGoogleSignIn(() -> {
-                    updateAuthControls();
-                    loadComments();
-                });
-            }
-        });
         updateAuthControls();
         loadComments();
 
@@ -103,7 +92,6 @@ public final class CommentDialogFragment extends DialogFragment {
         boolean loggedIn = authRepository.isLoggedIn();
         input.setVisibility(loggedIn ? View.VISIBLE : View.GONE);
         submit.setVisibility(loggedIn ? View.VISIBLE : View.GONE);
-        signIn.setVisibility(loggedIn ? View.GONE : View.VISIBLE);
     }
 
     private void loadComments() {

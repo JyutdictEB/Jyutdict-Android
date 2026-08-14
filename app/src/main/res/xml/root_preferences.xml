@@ -1,6 +1,19 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <PreferenceCategory
+        android:layout="@layout/preference_category_compact"
+        app:title="@string/auth_account">
+
+        <Preference
+            android:layout="@layout/preference_compact"
+            app:iconSpaceReserved="false"
+            app:key="account"
+            app:summary="@string/auth_account_summary"
+            app:title="@string/auth_sign_in" />
+
+    </PreferenceCategory>
+
 <!--    <PreferenceCategory app:title="@string/messages_header">-->
 
 <!--        <EditTextPreference-->

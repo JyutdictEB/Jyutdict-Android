@@ -11,15 +11,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.credentials.ClearCredentialStateRequest;
-import androidx.credentials.Credential;
-import androidx.credentials.CredentialManager;
-import androidx.credentials.CredentialManagerCallback;
-import androidx.credentials.CustomCredential;
-import androidx.credentials.GetCredentialRequest;
-import androidx.credentials.GetCredentialResponse;
-import androidx.credentials.exceptions.ClearCredentialException;
-import androidx.credentials.exceptions.GetCredentialException;
 
 import android.Manifest;
 import android.animation.ArgbEvaluator;
@@ -29,7 +20,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.os.CancellationSignal;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -56,8 +46,6 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.radiobutton.MaterialRadioButton;
-import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption;
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -124,8 +112,6 @@ public class MainActivity extends AppCompatActivity {
     Toolbar toolbar;
     LinearLayout lyMain, lyAdvancedSearch;
     AuthRepository authRepository;
-    CredentialManager credentialManager;
-    boolean signInInProgress = false;
 
     // 在輸入框輸入的字符串，在按下查詢按鈕時更新
     String inputString;
@@ -229,8 +215,7 @@ public class MainActivity extends AppCompatActivity {
         ImmersiveBarUtil.setImmersiveBar(this, lightSystemBars, lightSystemBars);
         getView();
         authRepository = AuthRepository.getInstance(this);
-        credentialManager = CredentialManager.create(this);
-        authRepository.initialize((success, errorMessage) -> invalidateOptionsMenu());
+        authRepository.initialize((success, errorMessage) -> {});
         if (savedInstanceState == null) {
             resultFragment = new ResultFragment();
             getSupportFragmentManager().beginTransaction().add(R.id.result_fragment, resultFragment).commit();
@@ -305,7 +290,7 @@ public class MainActivity extends AppCompatActivity {
                         MaterialColors.getColor(btnQueryConfirm,
                                 com.google.android.material.R.attr.colorTertiary) :
                         MaterialColors.getColor(btnQueryConfirm,
-                                com.google.android.material.R.attr.colorPrimary);
+                                androidx.appcompat.R.attr.colorPrimary);
                 if (previousColor == presentColor) return;
                 ObjectAnimator objectAnimator;
                 objectAnimator = ObjectAnimator.ofInt(btnQueryConfirm,"textColor", previousColor, presentColor);
@@ -320,7 +305,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         previousColor = MaterialColors.getColor(btnQueryConfirm,
-                com.google.android.material.R.attr.colorPrimary);
+                androidx.appcompat.R.attr.colorPrimary);
 
         // 讀取幾個開關之前的狀態
         setSheetMode(sp.getBoolean("switch_1_is_checked", false));
@@ -1174,16 +1159,6 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        MenuItem account = menu.findItem(R.id.menu_account);
-        if (account != null) {
-            AuthRepository.User user = authRepository == null ? null : authRepository.getCurrentUser();
-            account.setTitle(user == null ? R.string.auth_sign_in : R.string.auth_account);
-        }
-        return super.onPrepareOptionsMenu(menu);
-    }
-
     /**
      * 響應標題欄右側按鈕的按下事件
      * REQUESTING_SETTING 表示打開設置界面的 request code
@@ -1199,130 +1174,8 @@ public class MainActivity extends AppCompatActivity {
         } else if (itemId == R.id.menu_info) {
             intent = new Intent(MainActivity.this, InfoActivity.class);
             startActivity(intent);
-        } else if (itemId == R.id.menu_account) {
-            showAccountDialog();
-            return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    private void showAccountDialog() {
-        AuthRepository.User user = authRepository.getCurrentUser();
-        if (user == null) {
-            startGoogleSignIn(null);
-            return;
-        }
-
-        String message = user.email + "\n" + getString(R.string.auth_role, user.role);
-        new MaterialAlertDialogBuilder(this)
-                .setTitle(user.displayName())
-                .setMessage(message)
-                .setPositiveButton(R.string.button_confirm, null)
-                .setNegativeButton(R.string.auth_sign_out, (dialog, which) -> signOut())
-                .show();
-    }
-
-    public void startGoogleSignIn(@Nullable Runnable afterSignIn) {
-        if (signInInProgress) return;
-        if (BuildConfig.GOOGLE_WEB_CLIENT_ID.isEmpty()) {
-            ToastUtil.msg(this, getString(R.string.auth_not_configured));
-            return;
-        }
-
-        signInInProgress = true;
-        authRepository.requestLoginNonce((nonce, errorMessage) -> {
-            if (nonce == null) {
-                finishSignInFailure(errorMessage);
-                return;
-            }
-
-            GetSignInWithGoogleOption googleOption;
-            try {
-                googleOption = new GetSignInWithGoogleOption.Builder(
-                        BuildConfig.GOOGLE_WEB_CLIENT_ID)
-                        .setNonce(nonce)
-                        .build();
-            } catch (IllegalArgumentException exception) {
-                finishSignInFailure(exception.getMessage());
-                return;
-            }
-            GetCredentialRequest request = new GetCredentialRequest.Builder()
-                    .addCredentialOption(googleOption)
-                    .build();
-            credentialManager.getCredentialAsync(
-                    this,
-                    request,
-                    new CancellationSignal(),
-                    ContextCompat.getMainExecutor(this),
-                    new CredentialManagerCallback<GetCredentialResponse, GetCredentialException>() {
-                        @Override
-                        public void onResult(@NonNull GetCredentialResponse result) {
-                            handleGoogleCredential(result.getCredential(), afterSignIn);
-                        }
-
-                        @Override
-                        public void onError(@NonNull GetCredentialException exception) {
-                            finishSignInFailure(exception.getMessage());
-                        }
-                    }
-            );
-        });
-    }
-
-    private void handleGoogleCredential(Credential credential, @Nullable Runnable afterSignIn) {
-        if (!(credential instanceof CustomCredential)
-                || !GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL.equals(
-                credential.getType())) {
-            finishSignInFailure(getString(R.string.auth_invalid_credential));
-            return;
-        }
-
-        try {
-            GoogleIdTokenCredential googleCredential = GoogleIdTokenCredential.createFrom(
-                    credential.getData());
-            authRepository.completeGoogleLogin(googleCredential.getIdToken(), (success, errorMessage) -> {
-                signInInProgress = false;
-                invalidateOptionsMenu();
-                if (!success) {
-                    ToastUtil.msg(this, getString(R.string.auth_sign_in_failed,
-                            errorMessage == null ? "" : errorMessage));
-                    return;
-                }
-                ToastUtil.msg(this, getString(R.string.auth_signed_in_as,
-                        authRepository.getCurrentUser().displayName()));
-                if (afterSignIn != null) afterSignIn.run();
-            });
-        } catch (RuntimeException exception) {
-            finishSignInFailure(exception.getMessage());
-        }
-    }
-
-    private void finishSignInFailure(String errorMessage) {
-        signInInProgress = false;
-        String detail = errorMessage == null ? "" : errorMessage;
-        ToastUtil.msg(this, getString(R.string.auth_sign_in_failed, detail));
-    }
-
-    private void signOut() {
-        authRepository.logout((success, errorMessage) -> {
-            invalidateOptionsMenu();
-            credentialManager.clearCredentialStateAsync(
-                    new ClearCredentialStateRequest(
-                            ClearCredentialStateRequest.TYPE_CLEAR_CREDENTIAL_STATE),
-                    null,
-                    ContextCompat.getMainExecutor(this),
-                    new CredentialManagerCallback<Void, ClearCredentialException>() {
-                        @Override
-                        public void onResult(Void result) {}
-
-                        @Override
-                        public void onError(@NonNull ClearCredentialException exception) {
-                            Log.w(TAG, "Unable to clear credential provider state", exception);
-                        }
-                    }
-            );
-            ToastUtil.msg(this, getString(R.string.auth_signed_out));
-        });
     }
 
 

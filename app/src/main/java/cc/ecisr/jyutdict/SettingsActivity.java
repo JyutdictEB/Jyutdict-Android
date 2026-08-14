@@ -35,6 +35,8 @@ import org.json.JSONObject;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import cc.ecisr.jyutdict.auth.AuthRepository;
+import cc.ecisr.jyutdict.auth.GoogleSignInCoordinator;
 import cc.ecisr.jyutdict.utils.DiskTextCache;
 import cc.ecisr.jyutdict.utils.EnumConst;
 import cc.ecisr.jyutdict.utils.HttpUtil;
@@ -54,6 +56,8 @@ public class SettingsActivity extends AppCompatActivity {
     AlertDialog versionDialog;
     SettingHandler mHandler;
     final HttpUtil versionQuery = new HttpUtil(HttpUtil.GET);
+    AuthRepository authRepository;
+    GoogleSignInCoordinator googleSignIn;
 
     static SharedPreferences sp;
     static SharedPreferences.Editor editor;
@@ -74,10 +78,15 @@ public class SettingsActivity extends AppCompatActivity {
         ImmersiveBarUtil.setImmersiveBar(this, lightSystemBars, lightSystemBars);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        authRepository = AuthRepository.getInstance(this);
+        googleSignIn = new GoogleSignInCoordinator(this);
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.settings, settingsFragment)
                 .commit();
+        authRepository.initialize((success, errorMessage) -> {
+            if (settingsFragment.isAdded()) settingsFragment.refreshAccountPreference();
+        });
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -162,6 +171,23 @@ public class SettingsActivity extends AppCompatActivity {
         versionDialog.show();
     }
 
+    private void showAccountDialog() {
+        AuthRepository.User user = authRepository.getCurrentUser();
+        if (user == null) {
+            googleSignIn.signIn(settingsFragment::refreshAccountPreference);
+            return;
+        }
+
+        String message = user.email + "\n" + getString(R.string.auth_role, user.role);
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(user.displayName())
+                .setMessage(message)
+                .setPositiveButton(R.string.button_confirm, null)
+                .setNegativeButton(R.string.auth_sign_out, (dialog, which) ->
+                        googleSignIn.signOut(settingsFragment::refreshAccountPreference))
+                .show();
+    }
+
     private void checkVersion() {
         setVersionStatus(getString(R.string.version_status_checking));
         setVersionCheckEnabled(false);
@@ -235,6 +261,7 @@ public class SettingsActivity extends AppCompatActivity {
         ListPreference listThemeMode;
         SwitchPreferenceCompat switchIpaPresent;
         Preference clearCache;
+        Preference account;
 
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
@@ -246,6 +273,15 @@ public class SettingsActivity extends AppCompatActivity {
             listThemeMode = findPreference("theme_mode");
             switchIpaPresent = findPreference("ipa_presence");
             clearCache = findPreference("clear_cache");
+            account = findPreference("account");
+
+            if (account != null) {
+                account.setOnPreferenceClickListener(preference -> {
+                    ((SettingsActivity) requireActivity()).showAccountDialog();
+                    return true;
+                });
+                refreshAccountPreference();
+            }
 
             if (editAreaColoringDarkenRatio != null) {
                 editAreaColoringDarkenRatio.setOnBindEditTextListener(editText ->
@@ -270,6 +306,19 @@ public class SettingsActivity extends AppCompatActivity {
                     );
                     return true;
                 });
+            }
+        }
+
+        void refreshAccountPreference() {
+            if (account == null || !isAdded()) return;
+            AuthRepository.User user = AuthRepository.getInstance(requireContext())
+                    .getCurrentUser();
+            if (user == null) {
+                account.setTitle(R.string.auth_sign_in);
+                account.setSummary(R.string.auth_account_summary);
+            } else {
+                account.setTitle(getString(R.string.auth_signed_in_as, user.displayName()));
+                account.setSummary(R.string.auth_account_summary);
             }
         }
 

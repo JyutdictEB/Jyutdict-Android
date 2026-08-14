@@ -8,8 +8,6 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.google.android.material.button.MaterialButton;
-
 import cc.ecisr.jyutdict.widget.SelectableTextView;
 
 import androidx.annotation.NonNull;
@@ -69,18 +67,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         holder.tvRightBottom.setVisibility(tvContentLocationVisibility);
         holder.contentDivider.setVisibility(dividerVisibility);
 
-        ResultInfo.CommentTarget commentTarget = ResultInfo.commentTargets.get(position);
-        boolean hasComments = commentTarget != null && !commentTarget.target.isEmpty();
-        holder.commentButton.setVisibility(hasComments ? View.VISIBLE : View.GONE);
-        if (hasComments) {
-            holder.commentButton.setText(commentTarget.count > 0
-                    ? mContext.getString(R.string.comment_button_count, commentTarget.count)
-                    : mContext.getString(R.string.comment_button));
-            holder.commentButton.setOnClickListener(view ->
-                    mListener.onComments(holder, commentTarget.type, commentTarget.target));
-        } else {
-            holder.commentButton.setOnClickListener(null);
-        }
+        holder.commentTarget = ResultInfo.commentTargets.get(position);
 
         // 短按彈出操作菜單
         holder.itemView.setOnClickListener(v -> mListener.onClick(holder));
@@ -109,7 +96,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         View annotationContainer;
         TextView tvCharaHeader, tvCharaInfo, tvCharaExtra;
         SelectableTextView tvRightTop, tvRightBottom, tvAnnotation;
-        MaterialButton commentButton;
+        ResultInfo.CommentTarget commentTarget;
         String expandedAnnotation;
 
         LinearViewHolder(@NonNull View itemView) {
@@ -124,13 +111,16 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
             contentDivider = itemView.findViewById(R.id.content_divider);
             annotationContainer = itemView.findViewById(R.id.sheet_annotation_container);
             tvAnnotation = itemView.findViewById(R.id.sheet_annotation_text);
-            commentButton = itemView.findViewById(R.id.comment_button);
             if (annotationContainer != null) {
                 annotationContainer.setOnClickListener(view -> collapseAnnotation());
             }
             if (tvAnnotation != null) {
                 tvAnnotation.setOnClickListener(view -> collapseAnnotation());
             }
+        }
+
+        ResultInfo.CommentTarget getCommentTarget() {
+            return commentTarget;
         }
 
         void toggleAnnotation(String annotation) {

@@ -15,7 +15,8 @@
     <!-- MainActivity -->
     <string name="menu_options">選項</string>
     <string name="menu_info">關於</string>
-    <string name="auth_account">帳戶</string>
+    <string name="auth_account">賬戶</string>
+    <string name="auth_account_summary">以允許發表評論</string>
     <string name="auth_sign_in">使用 Google 登入</string>
     <string name="auth_sign_out">登出</string>
     <string name="auth_role">身份：%1$s</string>
@@ -32,7 +33,6 @@
     <string name="comment_meta">%1$s · %2$s</string>
     <string name="comment_input_hint">發表評論……</string>
     <string name="comment_submit">發表</string>
-    <string name="comment_sign_in">登入後發表評論</string>
     <string name="comment_delete">刪除</string>
     <string name="comment_delete_confirm">確定刪除此評論？</string>
     <string name="comment_load_failed">載入評論失敗：%1$s</string>

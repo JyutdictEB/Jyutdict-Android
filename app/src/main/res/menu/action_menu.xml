@@ -9,12 +9,6 @@
 <!--    </item>-->
 
     <item
-        android:id="@+id/menu_account"
-        android:title="@string/auth_sign_in"
-        android:icon="@drawable/ic_account_24"
-        app:iconTint="?attr/colorOnSurfaceVariant"
-        app:showAsAction="always" />
-    <item
         android:id="@+id/menu_info"
         android:title="@string/menu_info"
         android:icon="@drawable/ic_about"

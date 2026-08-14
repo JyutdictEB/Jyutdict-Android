@@ -85,6 +85,18 @@ public class ResultFragment extends Fragment {
                     selectionList.add(getString(R.string.entry_menu_search_special, mt.group(0)));
                 }
 
+                ResultItemAdapter.ResultInfo.CommentTarget commentTarget =
+                        holder.getCommentTarget();
+                final int commentOptionIndex;
+                if (commentTarget != null && !commentTarget.target.isEmpty()) {
+                    commentOptionIndex = selectionList.size();
+                    selectionList.add(commentTarget.count > 0
+                            ? getString(R.string.comment_button_count, commentTarget.count)
+                            : getString(R.string.comment_button));
+                } else {
+                    commentOptionIndex = -1;
+                }
+
                 if (!selectionList.isEmpty() && null != getActivity()) {
                     final String[] selections = selectionList.toArray(new String[0]);
                     new MaterialAlertDialogBuilder(getContext())
@@ -95,6 +107,8 @@ public class ResultFragment extends Fragment {
                                     tv.setText(holder.printContent());
                                     new MaterialAlertDialogBuilder(getContext())
                                             .setView(view).setPositiveButton(R.string.button_confirm, null).show();
+                                } else if (i == commentOptionIndex) {
+                                    onComments(holder, commentTarget.type, commentTarget.target);
                                 } else {
                                     int elseItemAddedCount = 1;
                                     int mode = (i % 2 == 1) ?
