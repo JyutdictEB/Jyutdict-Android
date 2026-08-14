@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="40dp"
-    android:background="?attr/colorSurfaceContainerHigh"
+    android:layout_height="36dp"
+    android:background="?attr/clockBackground"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingStart="@dimen/space_md"
-    android:paddingEnd="@dimen/space_md">
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp">
 
     <View
         android:id="@+id/location_color_swatch"
         android:layout_width="4dp"
-        android:layout_height="24dp"
-        android:layout_marginEnd="@dimen/space_sm" />
+        android:layout_height="20dp"
+        android:layout_marginEnd="8dp" />
 
     <TextView
         android:id="@android:id/text1"
@@ -22,7 +22,7 @@
         android:ellipsize="end"
         android:gravity="center_vertical"
         android:singleLine="true"
-        android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
-        android:textColor="?attr/colorOnSurface" />
+        android:textColor="?attr/clockTextColor"
+        android:textSize="14sp" />
 
 </LinearLayout>

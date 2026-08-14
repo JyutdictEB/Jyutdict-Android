@@ -2,10 +2,11 @@
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@android:id/title"
     android:layout_width="match_parent"
-    android:layout_height="36dp"
+    android:layout_height="32dp"
     android:layout_marginTop="4dp"
     android:gravity="start|center_vertical"
     android:paddingStart="16dp"
     android:paddingEnd="16dp"
-    android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
-    android:textColor="?attr/colorPrimary" />
+    android:textColor="@color/colorPrimary"
+    android:textSize="13sp"
+    android:textStyle="bold" />

@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="?attr/clockBackground">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/result_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="?attr/colorSurface"
+        android:background="?attr/clockBackground"
         android:clipToPadding="false"
         android:paddingTop="2dp"
-        android:paddingBottom="@dimen/space_sm"
-        android:scrollbarSize="2dp"
-        android:scrollbarThumbVertical="?attr/colorOutline"
+        android:paddingBottom="8dp"
         android:scrollbars="vertical" />
 
 </FrameLayout>

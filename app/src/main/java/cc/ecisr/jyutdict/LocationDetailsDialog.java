@@ -13,8 +13,6 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-
 import cc.ecisr.jyutdict.databinding.DialogLocationInfoBinding;
 import cc.ecisr.jyutdict.struct.LocationInfo;
 import cc.ecisr.jyutdict.utils.ColorUtil;
@@ -45,7 +43,7 @@ public final class LocationDetailsDialog {
         binding.locationArticle.setEnabled(false);
         binding.locationArticle.setText(R.string.location_article_checking);
 
-        AlertDialog dialog = new MaterialAlertDialogBuilder(context)
+        AlertDialog dialog = new AlertDialog.Builder(context)
                 .setView(binding.getRoot())
                 .create();
         binding.locationClose.setOnClickListener(v -> dialog.dismiss());

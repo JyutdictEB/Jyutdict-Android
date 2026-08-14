@@ -3,14 +3,13 @@ package cc.ecisr.jyutdict.comments;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.core.text.HtmlCompat;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -132,7 +131,7 @@ final class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.ViewHolde
         final TextView author;
         final TextView meta;
         final TextView content;
-        final MaterialButton delete;
+        final Button delete;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);

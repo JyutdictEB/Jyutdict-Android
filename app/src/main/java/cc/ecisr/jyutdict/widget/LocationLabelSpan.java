@@ -84,12 +84,7 @@ public final class LocationLabelSpan extends ReplacementSpan {
             paint.setShader(null);
             paint.setStyle(Paint.Style.FILL);
             paint.setColor(badgeColor);
-            canvas.drawRoundRect(
-                    badge,
-                    originalTextSize * 0.18f,
-                    originalTextSize * 0.18f,
-                    paint
-            );
+            canvas.drawRect(badge, paint);
 
             paint.setTextSize(originalTextSize * BADGE_TEXT_SCALE);
             paint.setTextScaleX(1f);

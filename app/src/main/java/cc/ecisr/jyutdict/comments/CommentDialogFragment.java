@@ -9,7 +9,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import androidx.appcompat.app.AlertDialog;
 
 import java.util.Collections;
 
@@ -67,7 +67,7 @@ public final class CommentDialogFragment extends DialogFragment {
         updateAuthControls();
         loadComments();
 
-        return new MaterialAlertDialogBuilder(requireContext())
+        return new AlertDialog.Builder(requireContext())
                 .setTitle(getString(R.string.comment_dialog_title, label))
                 .setView(binding.getRoot())
                 .setPositiveButton(R.string.button_confirm, null)
@@ -131,7 +131,7 @@ public final class CommentDialogFragment extends DialogFragment {
     }
 
     private void confirmDelete(Comment comment) {
-        new MaterialAlertDialogBuilder(requireContext())
+        new AlertDialog.Builder(requireContext())
                 .setMessage(R.string.comment_delete_confirm)
                 .setNegativeButton(R.string.button_cancel, null)
                 .setPositiveButton(R.string.comment_delete, (dialog, which) ->

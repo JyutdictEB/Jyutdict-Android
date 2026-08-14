@@ -6,13 +6,14 @@
     android:fitsSystemWindows="true"
     android:orientation="vertical">
 
-    <com.google.android.material.appbar.MaterialToolbar
+    <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
-        style="@style/Widget.Jyutdict.Toolbar"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/top_app_bar_height"
-        app:subtitle="@string/settings_supporting_text"
-        app:title="@string/title_activity_settings" />
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/colorPrimary"
+        android:elevation="4dp"
+        app:title="@string/title_activity_settings"
+        app:titleTextColor="@color/colorWhite" />
 
     <FrameLayout
         android:id="@+id/settings"
@@ -20,64 +21,46 @@
         android:layout_height="0dp"
         android:layout_weight="1" />
 
-    <com.google.android.material.card.MaterialCardView
-        style="@style/Widget.Material3.CardView.Filled"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/space_md"
-        android:layout_marginEnd="@dimen/space_md"
-        android:layout_marginBottom="@dimen/space_md"
-        app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
-        app:cardCornerRadius="@dimen/card_corner_radius"
-        app:cardElevation="0dp">
+        android:background="?attr/clockBackground"
+        android:elevation="2dp"
+        android:orientation="vertical">
 
-        <LinearLayout
+        <Button
+            android:id="@+id/btn_check_version"
+            style="@style/ButtonTextColor"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingVertical="2dp">
+            android:layout_height="52dp"
+            android:background="#00000000"
+            android:foreground="?selectableItemBackground"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="24dp"
+            android:text="@string/app_version"
+            android:textColor="?attr/clockTextColor"
+            android:textSize="14sp" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_check_version"
-                style="@style/Widget.Jyutdict.TextButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal|center_vertical"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:minHeight="48dp"
-                android:paddingHorizontal="@dimen/space_md"
-                android:paddingVertical="4dp"
-                android:singleLine="true"
-                android:text="@string/app_version"
-                android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                android:textColor="?attr/colorOnSurface" />
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginHorizontal="16dp"
+            android:background="@color/colorHover" />
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginStart="@dimen/space_md"
-                android:layout_marginEnd="@dimen/space_md"
-                android:background="?attr/colorOutlineVariant" />
+        <Button
+            android:id="@+id/btn_about"
+            style="@style/ButtonTextColor"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="#00000000"
+            android:foreground="?selectableItemBackground"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="24dp"
+            android:text="@string/app_about"
+            android:textAllCaps="false"
+            android:textColor="?attr/clockTextColorDim"
+            android:textSize="12sp" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_about"
-                style="@style/Widget.Jyutdict.TextButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="end|center_vertical"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:minHeight="56dp"
-                android:paddingHorizontal="@dimen/space_md"
-                android:paddingVertical="6dp"
-                android:singleLine="false"
-                android:text="@string/app_about"
-                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-                android:textColor="?attr/colorOnSurfaceVariant" />
-
-        </LinearLayout>
-
-    </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
 
 </LinearLayout>

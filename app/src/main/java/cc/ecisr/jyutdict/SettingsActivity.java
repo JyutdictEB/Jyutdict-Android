@@ -25,8 +25,6 @@ import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SwitchPreferenceCompat;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -166,7 +164,7 @@ public class SettingsActivity extends AppCompatActivity {
         versionDialogBinding.versionDownloadGithub.setOnClickListener(view ->
                 openUrl("https://github.com/EcRal5t/Jyutdict-Android/releases"));
 
-        versionDialog = new MaterialAlertDialogBuilder(this)
+        versionDialog = new AlertDialog.Builder(this)
                 .setTitle(R.string.version_dialog_title)
                 .setView(versionDialogBinding.getRoot())
                 .setNegativeButton(R.string.location_close, null)
@@ -186,7 +184,7 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         String message = user.email + "\n" + getString(R.string.auth_role, user.role);
-        new MaterialAlertDialogBuilder(this)
+        new AlertDialog.Builder(this)
                 .setTitle(user.displayName())
                 .setMessage(message)
                 .setPositiveButton(R.string.button_confirm, null)
@@ -310,8 +308,8 @@ public class SettingsActivity extends AppCompatActivity {
                             .findViewById(android.R.id.content);
                     int surface = ContextCompat.getColor(requireContext(),
                             ThemeUtil.isNightMode(requireContext())
-                                    ? R.color.md_theme_dark_surface
-                                    : R.color.md_theme_light_surface);
+                                    ? R.color.colorBackgroundDark
+                                    : R.color.colorBackground);
                     MotionUtil.fadeThroughColor(
                             content, surface, requireActivity()::recreate);
                     return true;

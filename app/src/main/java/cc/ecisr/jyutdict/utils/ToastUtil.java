@@ -5,8 +5,11 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.content.ContextCompat;
+
 import com.google.android.material.snackbar.Snackbar;
-import com.google.android.material.color.MaterialColors;
+
+import cc.ecisr.jyutdict.R;
 
 public class ToastUtil {
     private static Toast mToast;
@@ -29,20 +32,17 @@ public class ToastUtil {
                     //
                 });
 
-        // TextView snackTextView = mSnackbar.getView().findViewById(R.id.snackbar_text);
-        // snackTextView.setMaxLines(5);
-        // snackTextView.setPadding(50,50,50,50);
         TextView snackButtonView = mSnackbar.getView().findViewById(
                 com.google.android.material.R.id.snackbar_action
         );
-        snackButtonView.setTextSize(14);
-        snackButtonView.setTextColor(MaterialColors.getColor(
-                snackButtonView,
-                androidx.appcompat.R.attr.colorPrimary
-        ));
-
+        if (snackButtonView != null) {
+            snackButtonView.setTextSize(14);
+            snackButtonView.setTextColor(ContextCompat.getColor(
+                    snackButtonView.getContext(),
+                    R.color.colorPrimary
+            ));
+        }
 
         mSnackbar.show();
     }
-
 }

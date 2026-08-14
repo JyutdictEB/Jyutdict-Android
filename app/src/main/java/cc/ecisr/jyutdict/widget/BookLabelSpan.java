@@ -52,7 +52,7 @@ public final class BookLabelSpan extends ReplacementSpan {
 
         paint.setStyle(Paint.Style.FILL);
         paint.setColor((originalColor & 0x00FFFFFF) | 0x26000000);
-        canvas.drawRoundRect(badge, originalSize * 0.24f, originalSize * 0.24f, paint);
+        canvas.drawRect(badge, paint);
 
         paint.setColor(originalColor);
         canvas.drawText(label, x + horizontalPadding,

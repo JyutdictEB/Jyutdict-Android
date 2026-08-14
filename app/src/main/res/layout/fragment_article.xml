@@ -2,28 +2,33 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/article_state_container"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="?attr/clockBackground">
 
-    <com.google.android.material.progressindicator.CircularProgressIndicator
+    <ProgressBar
         android:id="@+id/progress_bar"
+        style="?android:attr/progressBarStyle"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_gravity="center"
-        android:indeterminate="true" />
+        android:indeterminate="true"
+        android:indeterminateTint="@color/colorPrimary" />
 
     <WebView
         android:id="@+id/web_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="?attr/colorSurface"
+        android:background="?attr/clockBackground"
         android:visibility="gone" />
 
-    <com.google.android.material.button.MaterialButton
+    <TextView
         android:id="@+id/error_text"
-        style="@style/Widget.Jyutdict.ActionButton"
         android:layout_width="wrap_content"
-        android:layout_height="@dimen/touch_target"
+        android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:gravity="center"
+        android:padding="16dp"
+        android:textColor="?attr/clockTextColorDim"
         android:visibility="gone" />
 
 </FrameLayout>

@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingVertical="10dp">
+    android:paddingVertical="8dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -16,18 +16,22 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
-            android:textColor="?attr/colorOnSurface" />
+            android:textColor="?attr/clockTextColor"
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/comment_delete"
-            style="@style/Widget.Material3.Button.TextButton"
+            style="@style/ButtonTextColor"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="32dp"
+            android:background="#00000000"
+            android:foreground="?selectableItemBackground"
             android:minWidth="0dp"
-            android:paddingHorizontal="8dp"
+            android:paddingHorizontal="6dp"
             android:text="@string/comment_delete"
-            android:textColor="?attr/colorError" />
+            android:textColor="@color/colorAccent"
+            android:textSize="12sp" />
 
     </LinearLayout>
 
@@ -35,16 +39,16 @@
         android:id="@+id/comment_meta"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
-        android:textColor="?attr/colorOnSurfaceVariant" />
+        android:textColor="?attr/clockTextColorDim"
+        android:textSize="11sp" />
 
     <TextView
         android:id="@+id/comment_content"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-        android:textColor="?attr/colorOnSurface"
-        android:textIsSelectable="true" />
+        android:layout_marginTop="4dp"
+        android:textColor="?attr/clockTextColor"
+        android:textIsSelectable="true"
+        android:textSize="13sp" />
 
 </LinearLayout>

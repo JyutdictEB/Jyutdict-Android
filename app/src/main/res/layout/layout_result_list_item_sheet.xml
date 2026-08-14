@@ -1,170 +1,140 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/list_item"
-    style="@style/Widget.Material3.CardView.Outlined"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginStart="@dimen/space_sm"
-    android:layout_marginTop="2dp"
-    android:layout_marginEnd="@dimen/space_sm"
+    android:layout_marginHorizontal="8dp"
+    android:layout_marginTop="4dp"
     android:layout_marginBottom="2dp"
-    android:clickable="true"
-    android:focusable="true"
-    android:foreground="?attr/selectableItemBackground"
-    app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
-    app:cardCornerRadius="@dimen/card_corner_radius"
-    app:cardElevation="0dp"
-    app:strokeColor="?attr/colorOutlineVariant"
-    app:strokeWidth="1dp">
+    android:background="?attr/clockBackground"
+    android:elevation="2dp"
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:baselineAligned="false"
+        android:orientation="horizontal"
+        android:padding="8dp">
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@+id/item_chara"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:baselineAligned="false"
-            android:orientation="horizontal"
-            android:padding="10dp">
+            android:gravity="center"
+            android:minHeight="72dp"
+            android:orientation="vertical"
+            android:paddingHorizontal="4dp"
+            android:paddingVertical="4dp">
 
-            <LinearLayout
-                android:id="@+id/item_chara"
-                android:layout_width="wrap_content"
+            <TextView
+                android:id="@+id/chara_header"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_character_block"
                 android:gravity="center"
-                android:minHeight="88dp"
-                android:orientation="vertical"
-                android:paddingHorizontal="@dimen/space_xs"
-                android:paddingVertical="@dimen/space_xs">
+                android:includeFontPadding="false"
+                android:text="@string/result_list_chara"
+                android:textColor="?attr/clockTextColor"
+                android:textSize="34sp" />
 
-                <TextView
-                    android:id="@+id/chara_header"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:includeFontPadding="false"
-                    android:text="@string/result_list_chara"
-                    android:textAppearance="@style/TextAppearance.Material3.DisplaySmall"
-                    android:textColor="?attr/colorOnPrimaryContainer"
-                    android:textSize="34sp" />
-
-                <TextView
-                    android:id="@+id/chara_info"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:gravity="center"
-                    android:text="@string/result_list_info"
-                    android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
-                    android:textColor="?attr/colorOnPrimaryContainer"
-                    android:visibility="gone" />
-
-                <TextView
-                    android:id="@+id/chara_extra"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:maxWidth="70dp"
-                    android:gravity="center"
-                    android:text="@string/result_list_extra"
-                    android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
-                    android:textColor="?attr/colorOnPrimaryContainer"
-                    tools:text="mat6/mut6\n(勿 沒)" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="0dp"
+            <TextView
+                android:id="@+id/chara_info"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:text="@string/result_list_info"
+                android:textColor="?attr/clockTextColorDim"
+                android:textSize="11sp"
+                android:visibility="gone" />
 
-                <cc.ecisr.jyutdict.widget.SelectableTextView
-                    android:id="@+id/content_wanshyu"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:includeFontPadding="false"
-                    android:lineSpacingExtra="1dp"
-                    android:text="@string/result_list_upper"
-                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="13sp" />
-
-                <View
-                    android:id="@+id/content_divider"
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginVertical="6dp"
-                    android:background="?attr/colorOutlineVariant" />
-
-                <cc.ecisr.jyutdict.widget.SelectableTextView
-                    android:id="@+id/content_location"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:includeFontPadding="false"
-                    android:lineSpacingExtra="1dp"
-                    android:text="@string/result_list_bottom"
-                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="13sp" />
-
-            </LinearLayout>
+            <TextView
+                android:id="@+id/chara_extra"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:maxWidth="70dp"
+                android:gravity="center"
+                android:text="@string/result_list_extra"
+                android:textColor="?attr/clockTextColorDim"
+                android:textSize="11sp" />
 
         </LinearLayout>
 
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/sheet_annotation_container"
-            style="@style/Widget.Material3.CardView.Filled"
-            android:layout_width="match_parent"
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
-            android:layout_marginBottom="10dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground"
-            android:visibility="gone"
-            app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="0dp"
-            tools:visibility="visible">
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-            <LinearLayout
+            <cc.ecisr.jyutdict.widget.SelectableTextView
+                android:id="@+id/content_wanshyu"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingHorizontal="8dp"
-                android:paddingVertical="6dp">
+                android:includeFontPadding="false"
+                android:lineSpacingExtra="1dp"
+                android:text="@string/result_list_upper"
+                android:textColor="?attr/clockTextColor"
+                android:textSize="13sp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:includeFontPadding="false"
-                    android:text="@string/result_sheet_annotation_title"
-                    android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
-                    android:textColor="?attr/colorPrimary" />
+            <View
+                android:id="@+id/content_divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginVertical="4dp"
+                android:background="@color/colorHover" />
 
-                <cc.ecisr.jyutdict.widget.SelectableTextView
-                    android:id="@+id/sheet_annotation_text"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:includeFontPadding="false"
-                    android:lineSpacingExtra="1dp"
-                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-                    android:textColor="?attr/colorOnSurface"
-                    tools:text="「沕」(mat6) [廣州] mat6\n本條讀音的來源與補充説明" />
+            <cc.ecisr.jyutdict.widget.SelectableTextView
+                android:id="@+id/content_location"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:lineSpacingExtra="1dp"
+                android:text="@string/result_list_bottom"
+                android:textColor="?attr/clockTextColor"
+                android:textSize="13sp" />
 
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
 
     </LinearLayout>
 
-</com.google.android.material.card.MaterialCardView>
+    <LinearLayout
+        android:id="@+id/sheet_annotation_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="@color/colorHover"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:orientation="vertical"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="6dp"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:text="@string/result_sheet_annotation_title"
+            android:textColor="@color/colorPrimary"
+            android:textSize="11sp" />
+
+        <cc.ecisr.jyutdict.widget.SelectableTextView
+            android:id="@+id/sheet_annotation_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:includeFontPadding="false"
+            android:lineSpacingExtra="1dp"
+            android:textColor="?attr/clockTextColor"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+
+</LinearLayout>

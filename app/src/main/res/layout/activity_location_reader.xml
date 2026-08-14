@@ -1,46 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/reader_state_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     android:orientation="vertical">
 
-    <com.google.android.material.appbar.MaterialToolbar
+    <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
-        style="@style/Widget.Jyutdict.Toolbar"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/top_app_bar_height" />
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/colorPrimary"
+        android:elevation="4dp"
+        app:titleTextColor="@color/colorWhite" />
 
-    <com.google.android.material.progressindicator.LinearProgressIndicator
+    <ProgressBar
         android:id="@+id/reader_progress"
+        style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
         android:layout_height="4dp"
         android:indeterminate="true"
-        app:indicatorColor="?attr/colorPrimary"
-        app:trackColor="?attr/colorSurfaceContainerHighest"
-        app:trackThickness="4dp" />
+        android:indeterminateTint="@color/colorPrimary" />
 
     <FrameLayout
+        android:id="@+id/reader_state_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="?attr/colorSurface">
+        android:background="?attr/clockBackground">
 
         <WebView
             android:id="@+id/reader_web_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="?attr/colorSurface"
+            android:background="?attr/clockBackground"
             android:visibility="gone" />
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/reader_error"
-            style="@style/Widget.Jyutdict.ActionButton"
+            style="@style/ButtonTextColor"
             android:layout_width="wrap_content"
-            android:layout_height="@dimen/touch_target"
+            android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:background="#00000000"
+            android:foreground="?selectableItemBackground"
+            android:padding="16dp"
             android:visibility="gone" />
 
     </FrameLayout>

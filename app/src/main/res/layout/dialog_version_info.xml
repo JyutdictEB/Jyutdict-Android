@@ -9,82 +9,93 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingHorizontal="16dp"
-        android:paddingTop="4dp"
-        android:paddingBottom="4dp">
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
 
         <TextView
             android:id="@+id/version_current"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-            android:textColor="?attr/colorOnSurface" />
+            android:textColor="?attr/clockTextColor"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/version_check_status"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="10dp"
             android:text="@string/version_status_not_checked"
-            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-            android:textColor="?attr/colorOnSurface" />
+            android:textColor="?attr/clockTextColor"
+            android:textSize="13sp" />
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/version_check_action"
-            style="@style/Widget.Material3.Button.TonalButton"
+            style="@style/ButtonTextColor"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="36dp"
             android:layout_marginTop="6dp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:minHeight="40dp"
-            android:text="@string/version_check_action" />
+            android:background="@drawable/btn_query_style"
+            android:foreground="?selectableItemBackground"
+            android:minHeight="0dp"
+            android:minWidth="0dp"
+            android:paddingHorizontal="12dp"
+            android:text="@string/version_check_action"
+            android:textColor="@color/colorPrimary"
+            android:textSize="13sp" />
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginTop="14dp"
-            android:layout_marginBottom="10dp"
-            android:background="?attr/colorOutlineVariant" />
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp"
+            android:background="@color/colorHover" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/version_download_title"
-            android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            android:textColor="?attr/clockTextColorDim"
+            android:textSize="12sp" />
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/version_download_baidu"
-            style="@style/Widget.Jyutdict.TextButton"
+            style="@style/ButtonTextColor"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="40dp"
+            android:background="#00000000"
+            android:foreground="?selectableItemBackground"
             android:gravity="start|center_vertical"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:minHeight="42dp"
-            android:text="@string/version_download_baidu" />
+            android:paddingHorizontal="4dp"
+            android:text="@string/version_download_baidu"
+            android:textColor="?attr/clockTextColor"
+            android:textSize="13sp" />
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/version_download_tianyi"
-            style="@style/Widget.Jyutdict.TextButton"
+            style="@style/ButtonTextColor"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="40dp"
+            android:background="#00000000"
+            android:foreground="?selectableItemBackground"
             android:gravity="start|center_vertical"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:minHeight="42dp"
-            android:text="@string/version_download_tianyi" />
+            android:paddingHorizontal="4dp"
+            android:text="@string/version_download_tianyi"
+            android:textColor="?attr/clockTextColor"
+            android:textSize="13sp" />
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/version_download_github"
-            style="@style/Widget.Jyutdict.TextButton"
+            style="@style/ButtonTextColor"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="40dp"
+            android:background="#00000000"
+            android:foreground="?selectableItemBackground"
             android:gravity="start|center_vertical"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:minHeight="42dp"
-            android:text="@string/version_download_github" />
+            android:paddingHorizontal="4dp"
+            android:text="@string/version_download_github"
+            android:textColor="?attr/clockTextColor"
+            android:textSize="13sp" />
 
     </LinearLayout>
 

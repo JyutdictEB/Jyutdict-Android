@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="34dp"
+    android:layout_height="32dp"
     android:background="?attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true"
@@ -13,10 +13,10 @@
     <View
         android:id="@+id/location_picker_item_swatch"
         android:layout_width="4dp"
-        android:layout_height="26dp"
+        android:layout_height="24dp"
         android:layout_marginEnd="8dp" />
 
-    <com.google.android.material.radiobutton.MaterialRadioButton
+    <androidx.appcompat.widget.AppCompatRadioButton
         android:id="@+id/location_picker_item_radio"
         android:layout_width="0dp"
         android:layout_height="match_parent"
@@ -28,7 +28,7 @@
         android:minWidth="0dp"
         android:paddingTop="0dp"
         android:paddingBottom="0dp"
-        android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-        android:textColor="?attr/colorOnSurface" />
+        android:textColor="?attr/clockTextColor"
+        android:textSize="13sp" />
 
 </LinearLayout>

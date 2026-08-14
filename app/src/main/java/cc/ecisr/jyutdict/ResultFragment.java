@@ -18,8 +18,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import androidx.appcompat.app.AlertDialog;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -103,13 +102,13 @@ public class ResultFragment extends Fragment {
 
                 if (!selectionList.isEmpty() && null != getActivity()) {
                     final String[] selections = selectionList.toArray(new String[0]);
-                    new MaterialAlertDialogBuilder(getContext())
+                    new AlertDialog.Builder(getContext())
                             .setItems(selections, (dialogInterface, i) -> {
                                 if (i == 0) {
                                     LayoutCopyAlertdialogBinding dialogBinding =
                                             LayoutCopyAlertdialogBinding.inflate(inflater);
                                     dialogBinding.dialogBoxTv.setText(holder.printContent());
-                                    new MaterialAlertDialogBuilder(getContext())
+                                    new AlertDialog.Builder(getContext())
                                             .setView(dialogBinding.getRoot())
                                             .setPositiveButton(R.string.button_confirm, null)
                                             .show();
@@ -127,7 +126,6 @@ public class ResultFragment extends Fragment {
                             }).create().show();
                 }
             }
-
             @Override
             public void onLongClick(@NonNull ResultItemAdapter.LinearViewHolder holder) {
                 if (!holder.getChara().isEmpty() && getActivity()!=null) {
