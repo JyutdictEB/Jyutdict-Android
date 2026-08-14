@@ -55,6 +55,7 @@ public class ResultFragment extends Fragment {
     private static final String TAG = "`ResultFragment";
 
     private RecyclerView mRvMain;
+    private ResultItemAdapter resultAdapter;
     private boolean resultRevealRunning;
     private CommentRepository commentRepository;
 
@@ -71,7 +72,7 @@ public class ResultFragment extends Fragment {
         View selfView = inflater.inflate(R.layout.fragment_result, container, false);
         mRvMain = selfView.findViewById(R.id.result_list);
         commentRepository = new CommentRepository(requireContext());
-        ResultItemAdapter marketItemAdapter = new ResultItemAdapter(getActivity(), new ResultItemAdapter.iOnItemClickListener() {
+        resultAdapter = new ResultItemAdapter(getActivity(), new ResultItemAdapter.iOnItemClickListener() {
             @Override
             public void onClick(@NonNull ResultItemAdapter.LinearViewHolder holder) {
                 ArrayList<String> selectionList = new ArrayList<>();
@@ -139,12 +140,12 @@ public class ResultFragment extends Fragment {
         });
         mRvMain.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
         MotionUtil.configureItemAnimator(mRvMain);
-        mRvMain.setAdapter(marketItemAdapter);
+        mRvMain.setAdapter(resultAdapter);
         if (savedInstanceState!= null) {
             rawReceivedData = savedInstanceState.getString("received_data");
             receivedMode = savedInstanceState.getInt("received_mode");
-            if (!"".equals(rawReceivedData)) { refreshResult(); }
         }
+        if (rawReceivedData != null && !rawReceivedData.isEmpty()) refreshResult();
         return selfView;
     }
 
@@ -198,6 +199,17 @@ public class ResultFragment extends Fragment {
         MotionUtil.fadeTo(mRvMain, 1f);
     }
 
+    @Override
+    public void onDestroyView() {
+        if (mRvMain != null) {
+            mRvMain.animate().cancel();
+            mRvMain.setAdapter(null);
+        }
+        resultAdapter = null;
+        mRvMain = null;
+        super.onDestroyView();
+    }
+
     private void copy(String chara) {
         if (getActivity() == null) return;
         ClipboardManager cm = (ClipboardManager) getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
@@ -221,7 +233,7 @@ public class ResultFragment extends Fragment {
      */
     void parseJson(String jsonString, int queryObjectWhat) throws JSONException {
         if (getActivity()==null) return;
-        if (mRvMain.getAdapter() == null) return;
+        if (resultAdapter == null) return;
 
         int mode = queryObjectWhat & QUERYING_MODE_MASK;
         if (mode == QUERYING_PRON) {
@@ -230,33 +242,20 @@ public class ResultFragment extends Fragment {
             new JSONArray(jsonString);
         }
 
-        ArrayList<ArrayList<Spanned>> previousItems =
-                new ArrayList<>(ResultItemAdapter.ResultInfo.list);
-        ArrayList<Integer> previousTypes =
-                new ArrayList<>(ResultItemAdapter.ResultInfo.types);
-        ArrayList<ResultItemAdapter.ResultInfo.CommentTarget> previousCommentTargets =
-                new ArrayList<>(ResultItemAdapter.ResultInfo.commentTargets);
-        ResultItemAdapter.ResultInfo.clearItem();
-
-        try {
-            parseJsonValidated(jsonString, queryObjectWhat);
-            rawReceivedData = jsonString;
-            receivedMode = queryObjectWhat;
-        } catch (JSONException | RuntimeException e) {
-            ResultItemAdapter.ResultInfo.list.clear();
-            ResultItemAdapter.ResultInfo.list.addAll(previousItems);
-            ResultItemAdapter.ResultInfo.types.clear();
-            ResultItemAdapter.ResultInfo.types.addAll(previousTypes);
-            ResultItemAdapter.ResultInfo.commentTargets.clear();
-            ResultItemAdapter.ResultInfo.commentTargets.addAll(previousCommentTargets);
-            publishResultViews();
-            throw e;
-        }
+        ArrayList<ResultItemAdapter.ResultInfo> parsedItems =
+                parseJsonValidated(jsonString, queryObjectWhat);
+        resultAdapter.replaceItems(parsedItems);
+        rawReceivedData = jsonString;
+        receivedMode = queryObjectWhat;
+        publishResultViews();
+        loadCommentCounts();
     }
 
-    private void parseJsonValidated(String jsonString, int queryObjectWhat) throws JSONException {
+    private ArrayList<ResultItemAdapter.ResultInfo> parseJsonValidated(
+            String jsonString, int queryObjectWhat) throws JSONException {
 
         SharedPreferences sp = getActivity().getSharedPreferences("settings", Context.MODE_PRIVATE);
+        ArrayList<ResultItemAdapter.ResultInfo> parsedItems = new ArrayList<>();
         EntrySetting entrySettings = new EntrySetting(QUERYING_SHEET)
                 .setAreaColoringInfo(
                         sp.getBoolean("area_coloring", true),
@@ -273,13 +272,14 @@ public class ResultFragment extends Fragment {
                 gcm.coloring(queryObjectWhat & DISPLAY_CHECKING_MASK);
                 for (int i = 0; i<gcm.length(); i++) {
                     Spanned[] spanneds = gcm.printChara(i);
-                    addItem(spanneds[0], spanneds[1], spanneds[2], spanneds[3], spanneds[4],
+                    addItem(parsedItems, spanneds[0], spanneds[1], spanneds[2],
+                            spanneds[3], spanneds[4],
                             ResultItemAdapter.ResultInfo.TYPE_GENERAL,
                             CommentRepository.TYPE_CHAR, spanneds[0].toString());
                 }
                 break;
             case QUERYING_PRON:
-                parseJsonPron(jsonString, entrySettings);
+                parseJsonPron(jsonString, entrySettings, parsedItems);
                 break;
             case QUERYING_SHEET:
                 FjbCharacter character; // TODO: Use ManagerClass like QUERYING_CHARA.
@@ -299,7 +299,7 @@ public class ResultFragment extends Fragment {
                 for (JSONObject entry : sortedEntries) {
                     character = new FjbCharacter(entry, entrySettings);
 
-                    addItem(character.printCharacter(),
+                    addItem(parsedItems, character.printCharacter(),
                             character.printUnicode(),
                             character.printPronunciation(),
                             character.printMeanings(),
@@ -313,8 +313,7 @@ public class ResultFragment extends Fragment {
             default:
                 break;
         }
-        publishResultViews();
-        loadCommentCounts();
+        return parsedItems;
     }
 
     /**
@@ -352,16 +351,19 @@ public class ResultFragment extends Fragment {
      * @param rightBottom layout 中的右下部分
      *                    顯示地方音
      */
-    private void addItem(Spanned chara, Spanned leftMiddle, Spanned leftBottom,
+    private void addItem(ArrayList<ResultItemAdapter.ResultInfo> items,
+                         Spanned chara, Spanned leftMiddle, Spanned leftBottom,
                          Spanned rightTop, Spanned rightBottom, int type) {
-        addItem(chara, leftMiddle, leftBottom, rightTop, rightBottom, type, null, null);
+        addItem(items, chara, leftMiddle, leftBottom, rightTop, rightBottom,
+                type, null, null);
     }
 
-    private void addItem(Spanned chara, Spanned leftMiddle, Spanned leftBottom,
+    private void addItem(ArrayList<ResultItemAdapter.ResultInfo> items,
+                         Spanned chara, Spanned leftMiddle, Spanned leftBottom,
                          Spanned rightTop, Spanned rightBottom, int type,
                          String commentType, String commentTarget) {
         if (rightTop.length()!=0 || rightBottom.length()!=0) {
-            ResultItemAdapter.ResultInfo.addItem(
+            items.add(new ResultItemAdapter.ResultInfo(
                     chara,
                     leftMiddle,
                     leftBottom,
@@ -370,15 +372,17 @@ public class ResultFragment extends Fragment {
                     type,
                     commentType,
                     commentTarget
-            );
+            ));
         }
     }
 
     private void loadCommentCounts() {
         LinkedHashSet<String> charTargets = new LinkedHashSet<>();
         LinkedHashSet<String> sheetTargets = new LinkedHashSet<>();
-        for (ResultItemAdapter.ResultInfo.CommentTarget metadata
-                : ResultItemAdapter.ResultInfo.commentTargets) {
+        if (resultAdapter == null) return;
+        for (int index = 0; index < resultAdapter.getItemCount(); index++) {
+            ResultItemAdapter.ResultInfo.CommentTarget metadata =
+                    resultAdapter.getItem(index).commentTarget;
             if (metadata == null || metadata.target.isEmpty()) continue;
             if (CommentRepository.TYPE_CHAR.equals(metadata.type)) {
                 charTargets.add(metadata.target);
@@ -394,29 +398,29 @@ public class ResultFragment extends Fragment {
         if (targets.isEmpty()) return;
         commentRepository.getCounts(type, targets, (counts, errorMessage) -> {
             if (!isAdded() || counts == null || mRvMain == null
-                    || mRvMain.getAdapter() == null) return;
-            for (int index = 0; index < ResultItemAdapter.ResultInfo.commentTargets.size(); index++) {
+                    || resultAdapter == null) return;
+            for (int index = 0; index < resultAdapter.getItemCount(); index++) {
                 ResultItemAdapter.ResultInfo.CommentTarget metadata =
-                        ResultItemAdapter.ResultInfo.commentTargets.get(index);
+                        resultAdapter.getItem(index).commentTarget;
                 if (metadata == null || !type.equals(metadata.type)) continue;
                 Integer count = counts.get(metadata.target);
                 if (count == null) continue;
                 metadata.count = count;
-                mRvMain.getAdapter().notifyItemChanged(index);
+                resultAdapter.notifyItemChanged(index);
             }
         });
     }
 
     private void updateCommentCount(String type, String target, int count) {
-        if (mRvMain == null || mRvMain.getAdapter() == null) return;
-        for (int index = 0; index < ResultItemAdapter.ResultInfo.commentTargets.size(); index++) {
+        if (resultAdapter == null) return;
+        for (int index = 0; index < resultAdapter.getItemCount(); index++) {
             ResultItemAdapter.ResultInfo.CommentTarget metadata =
-                    ResultItemAdapter.ResultInfo.commentTargets.get(index);
+                    resultAdapter.getItem(index).commentTarget;
             if (metadata == null || !type.equals(metadata.type) || !target.equals(metadata.target)) {
                 continue;
             }
             metadata.count = count;
-            mRvMain.getAdapter().notifyItemChanged(index);
+            resultAdapter.notifyItemChanged(index);
         }
     }
 
@@ -425,7 +429,9 @@ public class ResultFragment extends Fragment {
      *
      * @param jsonString 服務器返回的 JSON 字符串
      */
-    private void parseJsonPron(String jsonString, EntrySetting entrySettings) throws JSONException {
+    private void parseJsonPron(String jsonString, EntrySetting entrySettings,
+                               ArrayList<ResultItemAdapter.ResultInfo> parsedItems)
+            throws JSONException {
         JSONObject root = new JSONObject(jsonString);
         JSONArray wanshyuArray = root.optJSONArray("韻書");
         JSONArray areasArray = root.optJSONArray("各地");
@@ -458,7 +464,7 @@ public class ResultFragment extends Fragment {
                     }
                 }
                 if (pronListSsb.length() > 0) {
-                    addItem(new SpannableStringBuilder(), new SpannableStringBuilder(),
+                    addItem(parsedItems, new SpannableStringBuilder(), new SpannableStringBuilder(),
                             new SpannableStringBuilder(), bookNameSsb, pronListSsb,
                             ResultItemAdapter.ResultInfo.TYPE_GENERAL);
                 }
@@ -534,7 +540,7 @@ public class ResultFragment extends Fragment {
                 }
                 
                 if (hasData) {
-                    addItem(new SpannableStringBuilder(), new SpannableStringBuilder(),
+                    addItem(parsedItems, new SpannableStringBuilder(), new SpannableStringBuilder(),
                             new SpannableStringBuilder(), cityNameSsb, pronListSsb,
                             ResultItemAdapter.ResultInfo.TYPE_GENERAL);
                 }

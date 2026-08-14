@@ -15,10 +15,12 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.LinearViewHolder> {
     private final Context mContext;
     private final iOnItemClickListener mListener;
+    private final ArrayList<ResultInfo> items = new ArrayList<>();
 
     ResultItemAdapter(Context context, iOnItemClickListener listener) {
         this.mContext = context; // 主activity
@@ -37,12 +39,12 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 
     @Override
     public void onBindViewHolder(@NonNull ResultItemAdapter.LinearViewHolder holder, final int position) {
-        ArrayList<Spanned> item = ResultInfo.list.get(position);
-        Spanned header = item.get(ResultInfo.CHARA);
-        Spanned info = item.get(ResultInfo.LEFT_MIDDLE);
-        Spanned extra = item.get(ResultInfo.LEFT_BOTTOM);
-        Spanned wanshyu = item.get(ResultInfo.RIGHT_TOP);
-        Spanned location = item.get(ResultInfo.RIGHT_BOTTOM);
+        ResultInfo item = items.get(position);
+        Spanned header = item.chara;
+        Spanned info = item.leftMiddle;
+        Spanned extra = item.leftBottom;
+        Spanned wanshyu = item.rightTop;
+        Spanned location = item.rightBottom;
 
         holder.tvCharaHeader.setText(header);
         holder.tvCharaInfo.setText(info);
@@ -68,7 +70,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         holder.tvRightBottom.setVisibility(tvContentLocationVisibility);
         holder.contentDivider.setVisibility(dividerVisibility);
 
-        holder.commentTarget = ResultInfo.commentTargets.get(position);
+        holder.commentTarget = item.commentTarget;
 
         // 短按彈出操作菜單
         holder.itemView.setOnClickListener(v -> mListener.onClick(holder));
@@ -83,12 +85,21 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 
     @Override
     public int getItemViewType(int position) {
-        return ResultInfo.types.get(position);
+        return items.get(position).type;
     }
 
     @Override
     public int getItemCount() {
-        return ResultInfo.list.size();
+        return items.size();
+    }
+
+    void replaceItems(List<ResultInfo> newItems) {
+        items.clear();
+        items.addAll(newItems);
+    }
+
+    ResultInfo getItem(int position) {
+        return items.get(position);
     }
 
     public static class LinearViewHolder extends RecyclerView.ViewHolder {
@@ -174,43 +185,26 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
     static class ResultInfo {
         static final int TYPE_GENERAL = 0;
         static final int TYPE_SHEET = 1;
-        private static final int CHARA = 0, LEFT_MIDDLE = 1, LEFT_BOTTOM = 2, RIGHT_TOP = 3, RIGHT_BOTTOM = 4;
+        final Spanned chara;
+        final Spanned leftMiddle;
+        final Spanned leftBottom;
+        final Spanned rightTop;
+        final Spanned rightBottom;
+        final int type;
+        final CommentTarget commentTarget;
 
-        static ArrayList<ArrayList<Spanned>> list = new ArrayList<>(0);
-        static ArrayList<Integer> types = new ArrayList<>(0);
-        static ArrayList<CommentTarget> commentTargets = new ArrayList<>(0);
-
-        ResultInfo() {
-        }
-
-        /**
-         * 向本類維護的字項列表中添加一項
-         */
-        static void addItem(Spanned chara, Spanned leftMiddle, Spanned leftBottom,
-                            Spanned rightTop, Spanned rightBottom, int type) {
-            addItem(chara, leftMiddle, leftBottom, rightTop, rightBottom, type, null, null);
-        }
-
-        static void addItem(Spanned chara, Spanned leftMiddle, Spanned leftBottom,
-                            Spanned rightTop, Spanned rightBottom, int type,
-                            String commentType, String commentTarget) {
-            ArrayList<Spanned> item = new ArrayList<>(5);
-            item.add(chara);
-            item.add(leftMiddle);
-            item.add(leftBottom);
-            item.add(rightTop);
-            item.add(rightBottom);
-            list.add(item);
-            types.add(type);
-            commentTargets.add(commentType == null || commentTarget == null
+        ResultInfo(Spanned chara, Spanned leftMiddle, Spanned leftBottom,
+                   Spanned rightTop, Spanned rightBottom, int type,
+                   String commentType, String commentTarget) {
+            this.chara = chara;
+            this.leftMiddle = leftMiddle;
+            this.leftBottom = leftBottom;
+            this.rightTop = rightTop;
+            this.rightBottom = rightBottom;
+            this.type = type;
+            this.commentTarget = commentType == null || commentTarget == null
                     ? null
-                    : new CommentTarget(commentType, commentTarget));
-        }
-
-        static void clearItem() {
-            list.clear();
-            types.clear();
-            commentTargets.clear();
+                    : new CommentTarget(commentType, commentTarget);
         }
 
         static final class CommentTarget {
