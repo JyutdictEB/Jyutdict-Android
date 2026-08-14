@@ -37,7 +37,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.google.android.material.checkbox.MaterialCheckBox;
@@ -45,8 +44,6 @@ import com.google.android.material.color.MaterialColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
-import com.google.android.material.card.MaterialCardView;
-import com.google.android.material.radiobutton.MaterialRadioButton;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -59,6 +56,9 @@ import java.util.Set;
 
 import cc.ecisr.jyutdict.auth.AuthRepository;
 import cc.ecisr.jyutdict.databinding.ActivityMainBinding;
+import cc.ecisr.jyutdict.databinding.DialogFilterPronBinding;
+import cc.ecisr.jyutdict.databinding.DialogLocationPickerBinding;
+import cc.ecisr.jyutdict.databinding.LocationPickerItemBinding;
 import cc.ecisr.jyutdict.search.SearchRequest;
 import cc.ecisr.jyutdict.search.SearchUiState;
 import cc.ecisr.jyutdict.search.SearchViewModel;
@@ -467,10 +467,11 @@ public class MainActivity extends AppCompatActivity {
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(MainActivity.this);
         builder.setTitle(titleRes);
 
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_filter_pron, null);
-        LinearLayout container = dialogView.findViewById(R.id.checkbox_container);
-        AppCompatEditText filterSearch = dialogView.findViewById(R.id.filter_search);
-        TextView selectionSummary = dialogView.findViewById(R.id.filter_selection_summary);
+        DialogFilterPronBinding dialogBinding =
+                DialogFilterPronBinding.inflate(getLayoutInflater());
+        LinearLayout container = dialogBinding.checkboxContainer;
+        AppCompatEditText filterSearch = dialogBinding.filterSearch;
+        TextView selectionSummary = dialogBinding.filterSelectionSummary;
 
         // 臨時 filter，在確定前不直接修改原始 filter
         HashSet<String> tempFilter = new HashSet<>(filter);
@@ -523,7 +524,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // 全選按鈕
-        dialogView.findViewById(R.id.btn_dialog_select_all).setOnClickListener(btn -> {
+        dialogBinding.btnDialogSelectAll.setOnClickListener(btn -> {
             tempFilter.clear();
             for (MaterialCheckBox cb : checkBoxes) {
                 cb.setChecked(true);
@@ -532,14 +533,14 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // 清除選取
-        dialogView.findViewById(R.id.btn_dialog_invert).setOnClickListener(btn -> {
+        dialogBinding.btnDialogInvert.setOnClickListener(btn -> {
             for (MaterialCheckBox cb : checkBoxes) {
                 cb.setChecked(false);
             }
             updateSelectionSummary.run();
         });
 
-        builder.setView(dialogView);
+        builder.setView(dialogBinding.getRoot());
         builder.setNegativeButton(R.string.button_cancel, null);
         builder.setPositiveButton(R.string.button_confirm, (dialog, which) -> {
             onConfirm.onConfirm(tempFilter);
@@ -554,14 +555,11 @@ public class MainActivity extends AppCompatActivity {
     private void showLocationPickerDialog() {
         if (locationOptions.isEmpty()) return;
 
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_location_picker, null);
-        LinearLayout container = dialogView.findViewById(R.id.location_picker_container);
-        AppCompatEditText search = dialogView.findViewById(R.id.location_picker_search);
-        TextView summary = dialogView.findViewById(R.id.location_picker_summary);
-        ScrollView scroll = dialogView.findViewById(R.id.location_picker_scroll);
-        MaterialCardView recentCard = dialogView.findViewById(R.id.location_picker_recent);
-        View recentSwatch = dialogView.findViewById(R.id.location_picker_recent_swatch);
-        TextView recentText = dialogView.findViewById(R.id.location_picker_recent_text);
+        DialogLocationPickerBinding dialogBinding =
+                DialogLocationPickerBinding.inflate(getLayoutInflater());
+        LinearLayout container = dialogBinding.locationPickerContainer;
+        AppCompatEditText search = dialogBinding.locationPickerSearch;
+        TextView summary = dialogBinding.locationPickerSummary;
         ArrayList<View> rows = new ArrayList<>();
         ArrayList<LocationSpinnerAdapter.Option> listedOptions = new ArrayList<>();
         LocationSpinnerAdapter.Option recentOption = buildRecentLocationOption();
@@ -569,7 +567,7 @@ public class MainActivity extends AppCompatActivity {
 
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.search_choose_location)
-                .setView(dialogView)
+                .setView(dialogBinding.getRoot())
                 .setNegativeButton(R.string.button_cancel, null);
         AlertDialog dialog = builder.create();
 
@@ -579,13 +577,13 @@ public class MainActivity extends AppCompatActivity {
                 selectedListedPosition = listedOptions.size();
             }
             listedOptions.add(option);
-            View row = getLayoutInflater().inflate(
-                    R.layout.location_picker_item, container, false);
-            View swatch = row.findViewById(R.id.location_picker_item_swatch);
-            MaterialRadioButton radio = row.findViewById(R.id.location_picker_item_radio);
-            swatch.setBackground(ColorUtil.locationColorDrawable(option.colors));
-            radio.setText(option.label);
-            radio.setChecked(index == selectedLocationPosition);
+            LocationPickerItemBinding rowBinding = LocationPickerItemBinding.inflate(
+                    getLayoutInflater(), container, false);
+            View row = rowBinding.getRoot();
+            rowBinding.locationPickerItemSwatch.setBackground(
+                    ColorUtil.locationColorDrawable(option.colors));
+            rowBinding.locationPickerItemRadio.setText(option.label);
+            rowBinding.locationPickerItemRadio.setChecked(index == selectedLocationPosition);
             row.setOnClickListener(view -> selectLocationOption(option, dialog));
             container.addView(row);
             rows.add(row);
@@ -593,18 +591,18 @@ public class MainActivity extends AppCompatActivity {
 
         if (recentOption != null) {
             LocationSpinnerAdapter.Option standaloneRecent = recentOption;
-            recentText.setText(standaloneRecent.label);
-            recentSwatch.setBackground(
+            dialogBinding.locationPickerRecentText.setText(standaloneRecent.label);
+            dialogBinding.locationPickerRecentSwatch.setBackground(
                     ColorUtil.locationColorDrawable(standaloneRecent.colors));
             int recentBackground = MaterialColors.getColor(
-                    recentCard,
+                    dialogBinding.locationPickerRecent,
                     com.google.android.material.R.attr.colorSurfaceContainerHigh
             );
-            recentCard.setCardBackgroundColor(recentBackground);
-            recentCard.setOnClickListener(view ->
+            dialogBinding.locationPickerRecent.setCardBackgroundColor(recentBackground);
+            dialogBinding.locationPickerRecent.setOnClickListener(view ->
                     selectLocationOption(standaloneRecent, dialog));
         } else {
-            recentCard.setVisibility(View.GONE);
+            dialogBinding.locationPickerRecent.setVisibility(View.GONE);
         }
 
         search.addTextChangedListener(new TextWatcher() {
@@ -638,7 +636,8 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
         constrainDialogWidth(dialog, 340);
         int initialScrollPosition = selectedListedPosition;
-        scroll.post(() -> scroll.scrollTo(0,
+        dialogBinding.locationPickerScroll.post(() ->
+                dialogBinding.locationPickerScroll.scrollTo(0,
                 initialScrollPosition * Math.round(
                         34 * getResources().getDisplayMetrics().density)));
     }

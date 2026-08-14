@@ -12,15 +12,12 @@ import android.os.Looper;
 import android.os.Message;
 import android.text.InputType;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.preference.EditTextPreference;
 import androidx.preference.ListPreference;
@@ -28,7 +25,6 @@ import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SwitchPreferenceCompat;
 
-import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import org.json.JSONArray;
@@ -39,6 +35,8 @@ import java.util.regex.Pattern;
 
 import cc.ecisr.jyutdict.auth.AuthRepository;
 import cc.ecisr.jyutdict.auth.GoogleSignInCoordinator;
+import cc.ecisr.jyutdict.databinding.ActivitySettingsBinding;
+import cc.ecisr.jyutdict.databinding.DialogVersionInfoBinding;
 import cc.ecisr.jyutdict.utils.DiskTextCache;
 import cc.ecisr.jyutdict.utils.EnumConst;
 import cc.ecisr.jyutdict.utils.HttpUtil;
@@ -51,33 +49,29 @@ import cc.ecisr.jyutdict.utils.ToastUtil;
 public class SettingsActivity extends AppCompatActivity {
     private static final String EXTRA_THEME_CHANGED = "theme_changed";
     private static final String EXTRA_THEME_TRANSITION = "theme_transition";
+    private static final String SETTINGS_FRAGMENT_TAG = "settings_fragment";
     private static final Pattern SEMANTIC_VERSION_PATTERN = Pattern.compile(
             "^(\\d+)\\.(\\d+)\\.(\\d+)(?:[-+].*)?$");
 
-    Button btnCheckVersion;
-    MaterialButton dialogCheckVersion;
-    TextView dialogVersionStatus;
+    DialogVersionInfoBinding versionDialogBinding;
     AlertDialog versionDialog;
     SettingHandler mHandler;
     final HttpUtil versionQuery = new HttpUtil(HttpUtil.GET);
     AuthRepository authRepository;
     GoogleSignInCoordinator googleSignIn;
 
-    static SharedPreferences sp;
-    static SharedPreferences.Editor editor;
     String versionNameThis;
     int v0This, v1This, v2This; // 版本号
 
-    SettingsFragment settingsFragment = new SettingsFragment();
+    SettingsFragment settingsFragment;
 
     @SuppressLint("HandlerLeak")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(ThemeUtil.isNightMode(this) ? R.style.DarkSettingsTheme : R.style.AppTheme);
         super.onCreate(savedInstanceState);
-        sp = getSharedPreferences("settings", Context.MODE_PRIVATE);
-        editor = sp.edit();
-        setContentView(R.layout.activity_settings);
+        ActivitySettingsBinding binding = ActivitySettingsBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
         if (savedInstanceState != null
                 && getIntent().getBooleanExtra(EXTRA_THEME_TRANSITION, false)) {
             android.view.View content = findViewById(android.R.id.content);
@@ -87,14 +81,20 @@ public class SettingsActivity extends AppCompatActivity {
         }
         boolean lightSystemBars = !ThemeUtil.isNightMode(this);
         ImmersiveBarUtil.setImmersiveBar(this, lightSystemBars, lightSystemBars);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        setSupportActionBar(binding.toolbar);
         authRepository = AuthRepository.getInstance(this);
         googleSignIn = new GoogleSignInCoordinator(this);
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.settings, settingsFragment)
-                .commit();
+        androidx.fragment.app.Fragment restoredFragment = getSupportFragmentManager()
+                .findFragmentByTag(SETTINGS_FRAGMENT_TAG);
+        if (restoredFragment instanceof SettingsFragment) {
+            settingsFragment = (SettingsFragment) restoredFragment;
+        } else {
+            settingsFragment = new SettingsFragment();
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.settings, settingsFragment, SETTINGS_FRAGMENT_TAG)
+                    .commitNow();
+        }
         authRepository.initialize((success, errorMessage) -> {
             if (settingsFragment.isAdded()) settingsFragment.refreshAccountPreference();
         });
@@ -147,37 +147,33 @@ public class SettingsActivity extends AppCompatActivity {
         });
 
 
-        btnCheckVersion = findViewById(R.id.btn_check_version);
-        btnCheckVersion.setText(getString(R.string.app_version, versionNameThis));
-        btnCheckVersion.setOnClickListener(v -> showVersionDialog());
+        binding.btnCheckVersion.setText(getString(R.string.app_version, versionNameThis));
+        binding.btnCheckVersion.setOnClickListener(v -> showVersionDialog());
+        binding.btnAbout.setOnClickListener(v ->
+                startActivity(new Intent(this, InfoActivity.class)));
     }
 
     private void showVersionDialog() {
         if (versionDialog != null && versionDialog.isShowing()) return;
-        android.view.View content = getLayoutInflater().inflate(
-                R.layout.dialog_version_info, null);
-        TextView currentVersion = content.findViewById(R.id.version_current);
-        currentVersion.setText(getString(
+        versionDialogBinding = DialogVersionInfoBinding.inflate(getLayoutInflater());
+        versionDialogBinding.versionCurrent.setText(getString(
                 R.string.version_current_value, versionNameThis));
-        dialogVersionStatus = content.findViewById(R.id.version_check_status);
-        dialogCheckVersion = content.findViewById(R.id.version_check_action);
-        dialogCheckVersion.setOnClickListener(view -> checkVersion());
-        content.findViewById(R.id.version_download_baidu).setOnClickListener(view ->
+        versionDialogBinding.versionCheckAction.setOnClickListener(view -> checkVersion());
+        versionDialogBinding.versionDownloadBaidu.setOnClickListener(view ->
                 openUrl("https://pan.baidu.com/s/1r7mo35tEwZ0zAjQHIacf8w"));
-        content.findViewById(R.id.version_download_tianyi).setOnClickListener(view ->
+        versionDialogBinding.versionDownloadTianyi.setOnClickListener(view ->
                 openUrl("https://cloud.189.cn/t/yA7FVnUzQZj2"));
-        content.findViewById(R.id.version_download_github).setOnClickListener(view ->
+        versionDialogBinding.versionDownloadGithub.setOnClickListener(view ->
                 openUrl("https://github.com/EcRal5t/Jyutdict-Android/releases"));
 
         versionDialog = new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.version_dialog_title)
-                .setView(content)
+                .setView(versionDialogBinding.getRoot())
                 .setNegativeButton(R.string.location_close, null)
                 .create();
         versionDialog.setOnDismissListener(dialog -> {
             versionDialog = null;
-            dialogVersionStatus = null;
-            dialogCheckVersion = null;
+            versionDialogBinding = null;
         });
         versionDialog.show();
     }
@@ -235,11 +231,15 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void setVersionStatus(String status) {
-        if (dialogVersionStatus != null) MotionUtil.setText(dialogVersionStatus, status);
+        if (versionDialogBinding != null) {
+            MotionUtil.setText(versionDialogBinding.versionCheckStatus, status);
+        }
     }
 
     private void setVersionCheckEnabled(boolean enabled) {
-        if (dialogCheckVersion != null) dialogCheckVersion.setEnabled(enabled);
+        if (versionDialogBinding != null) {
+            versionDialogBinding.versionCheckAction.setEnabled(enabled);
+        }
     }
 
     private void openUrl(String url) {
@@ -301,7 +301,9 @@ public class SettingsActivity extends AppCompatActivity {
             }
             if (listThemeMode != null) {
                 listThemeMode.setOnPreferenceChangeListener((preference, newValue) -> {
-                    sp.edit().putString("theme_mode", String.valueOf(newValue)).apply();
+                    preferences().edit()
+                            .putString("theme_mode", String.valueOf(newValue))
+                            .apply();
                     requireActivity().getIntent().putExtra(EXTRA_THEME_CHANGED, true);
                     requireActivity().getIntent().putExtra(EXTRA_THEME_TRANSITION, true);
                     ViewGroup content = requireActivity()
@@ -342,9 +344,11 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         int saveSettings() {
+            SharedPreferences preferences = preferences();
+            SharedPreferences.Editor editor = preferences.edit();
             int settings = 0;
             String newThemeMode = listThemeMode.getValue();
-            String oldThemeMode = sp.getString("theme_mode", "follow_system");
+            String oldThemeMode = preferences.getString("theme_mode", "follow_system");
             boolean themeChanged = requireActivity().getIntent()
                     .getBooleanExtra(EXTRA_THEME_CHANGED, false);
             settings |= themeChanged || !newThemeMode.equals(oldThemeMode) ? 1 << 1 : 0;
@@ -364,6 +368,10 @@ public class SettingsActivity extends AppCompatActivity {
             settings |= switchAdvancedSearch.isChecked() ? 1 : 0;
 
             return settings;
+        }
+
+        private SharedPreferences preferences() {
+            return requireContext().getSharedPreferences("settings", Context.MODE_PRIVATE);
         }
     }
 
