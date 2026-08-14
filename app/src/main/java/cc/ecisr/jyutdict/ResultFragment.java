@@ -94,7 +94,7 @@ public class ResultFragment extends Fragment {
                 final int commentOptionIndex;
                 if (commentTarget != null && !commentTarget.target.isEmpty()) {
                     commentOptionIndex = selectionList.size();
-                    selectionList.add(commentTarget.count > 0
+                    selectionList.add(commentTarget.countLoaded
                             ? getString(R.string.comment_button_count, commentTarget.count)
                             : getString(R.string.comment_button));
                 } else {
@@ -411,6 +411,7 @@ public class ResultFragment extends Fragment {
                 Integer count = counts.get(metadata.target);
                 if (count == null) continue;
                 metadata.count = count;
+                metadata.countLoaded = true;
                 resultAdapter.notifyItemChanged(index);
             }
         });
@@ -425,6 +426,7 @@ public class ResultFragment extends Fragment {
                 continue;
             }
             metadata.count = count;
+            metadata.countLoaded = true;
             resultAdapter.notifyItemChanged(index);
         }
     }

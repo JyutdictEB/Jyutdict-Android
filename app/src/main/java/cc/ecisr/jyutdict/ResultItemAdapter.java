@@ -211,6 +211,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
             final String type;
             final String target;
             int count;
+            boolean countLoaded;
 
             CommentTarget(String type, String target) {
                 this.type = type;

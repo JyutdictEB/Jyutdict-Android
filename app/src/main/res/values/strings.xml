@@ -26,7 +26,7 @@
     <string name="auth_signed_in_as">已登入：%1$s</string>
     <string name="auth_signed_out">已登出</string>
     <string name="comment_button">評論</string>
-    <string name="comment_button_count">評論 · %1$d</string>
+    <string name="comment_button_count">評論 (%1$d)</string>
     <string name="comment_dialog_title">評論 · %1$s</string>
     <string name="comment_empty">暫無評論</string>
     <string name="comment_deleted">該評論已刪除</string>
