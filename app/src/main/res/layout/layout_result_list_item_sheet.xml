@@ -84,7 +84,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginVertical="4dp"
-                android:background="@color/colorHover" />
+                android:background="?attr/clockHover" />
 
             <cc.ecisr.jyutdict.widget.SelectableTextView
                 android:id="@+id/content_location"
@@ -107,7 +107,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
-        android:background="@color/colorHover"
+        android:background="?attr/clockHover"
         android:clickable="true"
         android:focusable="true"
         android:foreground="?attr/selectableItemBackground"

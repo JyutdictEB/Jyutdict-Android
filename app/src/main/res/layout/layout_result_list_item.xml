@@ -88,7 +88,7 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginTop="4dp"
-        android:background="@color/colorHover" />
+        android:background="?attr/clockHover" />
 
     <!-- 下部：各地讀音使用完整卡片寬度 -->
     <cc.ecisr.jyutdict.widget.SelectableTextView

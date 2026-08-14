@@ -77,9 +77,9 @@ public class SettingsActivity extends AppCompatActivity {
             content.post(() -> MotionUtil.fadeIn(content));
             getIntent().removeExtra(EXTRA_THEME_TRANSITION);
         }
-        boolean lightSystemBars = !ThemeUtil.isNightMode(this);
-        ImmersiveBarUtil.setImmersiveBar(this, lightSystemBars, lightSystemBars);
+        ImmersiveBarUtil.setImmersiveBar(this, false, !ThemeUtil.isNightMode(this));
         setSupportActionBar(binding.toolbar);
+        ImmersiveBarUtil.applyToolbarInsets(binding.toolbar);
         authRepository = AuthRepository.getInstance(this);
         googleSignIn = new GoogleSignInCoordinator(this);
         androidx.fragment.app.Fragment restoredFragment = getSupportFragmentManager()

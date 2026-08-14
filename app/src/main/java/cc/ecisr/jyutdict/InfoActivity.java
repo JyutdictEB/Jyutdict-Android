@@ -27,8 +27,8 @@ public class InfoActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         ActivityInfoBinding binding = ActivityInfoBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        boolean lightSystemBars = !ThemeUtil.isNightMode(this);
-        ImmersiveBarUtil.setImmersiveBar(this, lightSystemBars, lightSystemBars);
+        ImmersiveBarUtil.setImmersiveBar(this, false, !ThemeUtil.isNightMode(this));
+        ImmersiveBarUtil.applyToolbarInsets(binding.toolbar);
 
         setSupportActionBar(binding.toolbar);
         if (getSupportActionBar() != null) {

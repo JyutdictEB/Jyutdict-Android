@@ -93,7 +93,7 @@
             android:layout_width="0dp"
             android:layout_height="44dp"
             android:layout_weight="1"
-            android:background="@drawable/bg_location_action_outline"
+            android:background="@drawable/bg_solid_accent_button"
             android:enabled="false"
             android:gravity="center"
             android:minHeight="0dp"
@@ -101,7 +101,7 @@
             android:paddingHorizontal="8dp"
             android:text="@string/location_article_checking"
             android:textAllCaps="false"
-            android:textColor="@color/location_action_outline_text"
+            android:textColor="@color/btn_solid_accent_text"
             android:textSize="13sp"
             android:textStyle="bold" />
 
@@ -111,14 +111,14 @@
             android:layout_height="44dp"
             android:layout_marginStart="8dp"
             android:layout_weight="1"
-            android:background="@drawable/bg_location_action_filled"
+            android:background="@drawable/bg_solid_accent_button"
             android:gravity="center"
             android:minHeight="0dp"
             android:minWidth="0dp"
             android:paddingHorizontal="8dp"
             android:text="@string/location_phonology"
             android:textAllCaps="false"
-            android:textColor="@color/location_action_filled_text"
+            android:textColor="@color/btn_solid_accent_text"
             android:textSize="13sp"
             android:textStyle="bold" />
 

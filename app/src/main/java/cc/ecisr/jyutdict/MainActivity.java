@@ -224,9 +224,9 @@ public class MainActivity extends AppCompatActivity {
             content.post(() -> MotionUtil.fadeIn(content));
             getIntent().removeExtra(EXTRA_THEME_TRANSITION);
         }
-        boolean lightSystemBars = !ThemeUtil.isNightMode(this);
-        ImmersiveBarUtil.setImmersiveBar(this, lightSystemBars, lightSystemBars);
+        ImmersiveBarUtil.setImmersiveBar(this, false, !ThemeUtil.isNightMode(this));
         getView();
+        ImmersiveBarUtil.applyToolbarInsets(toolbar);
         authRepository = AuthRepository.getInstance(this);
         authRepository.initialize((success, errorMessage) -> {});
         if (savedInstanceState == null) {
@@ -590,8 +590,9 @@ public class MainActivity extends AppCompatActivity {
             dialogBinding.locationPickerRecentText.setText(standaloneRecent.label);
             dialogBinding.locationPickerRecentSwatch.setBackground(
                     ColorUtil.locationColorDrawable(standaloneRecent.colors));
-            int recentBackground = ContextCompat.getColor(this, R.color.colorHover);
-            dialogBinding.locationPickerRecent.setCardBackgroundColor(recentBackground);
+            int recentBackground = ContextCompat.getColor(this,
+                    ThemeUtil.isNightMode(this) ? R.color.colorHoverDark : R.color.colorHover);
+            dialogBinding.locationPickerRecent.setBackgroundColor(recentBackground);
             dialogBinding.locationPickerRecent.setOnClickListener(view ->
                     selectLocationOption(standaloneRecent, dialog));
         } else {

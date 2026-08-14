@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="?attr/clockBackground"
     android:orientation="vertical"
     android:paddingHorizontal="16dp"
     android:paddingTop="8dp">
@@ -30,44 +31,36 @@
         android:textColor="?attr/clockTextColorDim"
         android:textSize="12sp" />
 
-    <com.google.android.material.card.MaterialCardView
+    <LinearLayout
         android:id="@+id/location_picker_recent"
         android:layout_width="match_parent"
         android:layout_height="36dp"
         android:layout_marginBottom="6dp"
+        android:background="?attr/clockHover"
         android:clickable="true"
         android:focusable="true"
         android:foreground="?attr/selectableItemBackground"
-        app:cardBackgroundColor="@color/colorHover"
-        app:cardCornerRadius="0dp"
-        app:cardElevation="0dp">
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp">
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <View
+            android:id="@+id/location_picker_recent_swatch"
+            android:layout_width="4dp"
+            android:layout_height="18dp"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/location_picker_recent_text"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
+            android:layout_weight="1"
             android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="8dp">
+            android:maxLines="1"
+            android:textColor="?attr/clockTextColor"
+            android:textSize="13sp" />
 
-            <View
-                android:id="@+id/location_picker_recent_swatch"
-                android:layout_width="4dp"
-                android:layout_height="18dp"
-                android:layout_marginEnd="8dp" />
-
-            <TextView
-                android:id="@+id/location_picker_recent_text"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:gravity="center_vertical"
-                android:maxLines="1"
-                android:textColor="?attr/clockTextColor"
-                android:textSize="13sp" />
-
-        </LinearLayout>
-
-    </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
 
     <ScrollView
         android:id="@+id/location_picker_scroll"

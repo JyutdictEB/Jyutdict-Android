@@ -2,6 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="?attr/clockBackground"
     android:fillViewport="true">
 
     <LinearLayout
@@ -31,25 +32,25 @@
 
         <Button
             android:id="@+id/version_check_action"
-            style="@style/ButtonTextColor"
             android:layout_width="wrap_content"
             android:layout_height="36dp"
             android:layout_marginTop="6dp"
-            android:background="@drawable/btn_query_style"
+            android:background="@drawable/bg_solid_accent_button"
             android:foreground="?selectableItemBackground"
             android:minHeight="0dp"
             android:minWidth="0dp"
-            android:paddingHorizontal="12dp"
+            android:paddingHorizontal="14dp"
             android:text="@string/version_check_action"
-            android:textColor="@color/colorPrimary"
-            android:textSize="13sp" />
+            android:textColor="@color/btn_solid_accent_text"
+            android:textSize="13sp"
+            android:textStyle="bold" />
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginTop="12dp"
             android:layout_marginBottom="8dp"
-            android:background="@color/colorHover" />
+            android:background="?attr/clockHover" />
 
         <TextView
             android:layout_width="match_parent"

@@ -5,14 +5,14 @@
     android:id="@+id/whole_main_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
     android:orientation="vertical"
     tools:context=".MainActivity">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/tool_bar"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
+        android:layout_height="wrap_content"
+        android:minHeight="?attr/actionBarSize"
         android:background="@color/colorPrimary"
         android:elevation="4dp"
         app:title="@string/app_name"
@@ -72,15 +72,15 @@
 
                     <Button
                         android:id="@+id/btn_query"
-                        style="@style/ButtonTextColor"
                         android:layout_width="56dp"
-                        android:layout_height="36dp"
+                        android:layout_height="38dp"
                         android:layout_marginStart="6dp"
-                        android:background="@drawable/btn_query_style"
+                        android:background="@drawable/bg_solid_accent_button"
                         android:foreground="?selectableItemBackground"
                         android:text="@string/search_button"
-                        android:textColor="@color/colorPrimary"
-                        android:textSize="16sp" />
+                        android:textColor="@color/btn_solid_accent_text"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
 
                 </LinearLayout>
 
@@ -103,7 +103,7 @@
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_common_sheet"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_weight="1"
@@ -112,15 +112,16 @@
                             android:paddingHorizontal="4dp"
                             android:text="@string/search_common_sheet"
                             android:textAllCaps="false"
-                            android:textColor="?attr/clockTextColor"
-                            android:textSize="12sp"
+                            android:textColor="@color/btn_toggle_text"
+                            android:textSize="13sp"
+                            app:backgroundTint="@color/btn_toggle_background"
                             app:cornerRadius="0dp"
-                            app:strokeColor="@color/colorHover"
-                            app:strokeWidth="1dp" />
+                            app:elevation="0dp"
+                            app:strokeWidth="0dp" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_jyut_sheet"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_weight="1"
@@ -129,17 +130,18 @@
                             android:paddingHorizontal="4dp"
                             android:text="@string/search_jyut_sheet"
                             android:textAllCaps="false"
-                            android:textColor="?attr/clockTextColor"
-                            android:textSize="12sp"
+                            android:textColor="@color/btn_toggle_text"
+                            android:textSize="13sp"
+                            app:backgroundTint="@color/btn_toggle_background"
                             app:cornerRadius="0dp"
-                            app:strokeColor="@color/colorHover"
-                            app:strokeWidth="1dp" />
+                            app:elevation="0dp"
+                            app:strokeWidth="0dp" />
 
                     </com.google.android.material.button.MaterialButtonToggleGroup>
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/switch_reverse_search"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
                         android:layout_width="wrap_content"
                         android:layout_height="32dp"
                         android:layout_marginStart="6dp"
@@ -149,12 +151,13 @@
                         android:paddingHorizontal="8dp"
                         android:text="@string/search_reversal"
                         android:textAllCaps="false"
-                        android:textColor="?attr/clockTextColor"
+                        android:textColor="@color/btn_toggle_text"
                         android:textSize="12sp"
                         android:visibility="gone"
+                        app:backgroundTint="@color/btn_toggle_background"
                         app:cornerRadius="0dp"
-                        app:strokeColor="@color/colorHover"
-                        app:strokeWidth="1dp" />
+                        app:elevation="0dp"
+                        app:strokeWidth="0dp" />
 
                 </LinearLayout>
 
@@ -166,55 +169,44 @@
                     android:gravity="end|center_vertical"
                     android:orientation="horizontal">
 
-                    <com.google.android.material.card.MaterialCardView
+                    <LinearLayout
                         android:id="@+id/locate_picker"
                         android:layout_width="0dp"
                         android:layout_height="36dp"
                         android:layout_weight="1"
+                        android:background="?attr/selectableItemBackground"
                         android:clickable="true"
                         android:focusable="true"
-                        android:foreground="?attr/selectableItemBackground"
-                        app:cardBackgroundColor="?attr/clockBackground"
-                        app:cardCornerRadius="0dp"
-                        app:cardElevation="0dp"
-                        app:strokeColor="@color/colorHover"
-                        app:strokeWidth="1dp">
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingStart="4dp"
+                        android:paddingEnd="6dp">
 
-                        <LinearLayout
-                            android:layout_width="match_parent"
+                        <View
+                            android:id="@+id/locate_picker_swatch"
+                            android:layout_width="4dp"
+                            android:layout_height="20dp"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:id="@+id/locate_picker_text"
+                            android:layout_width="0dp"
                             android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:ellipsize="end"
                             android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="6dp">
+                            android:maxLines="1"
+                            android:textColor="?attr/clockTextColor"
+                            android:textSize="13sp" />
 
-                            <View
-                                android:id="@+id/locate_picker_swatch"
-                                android:layout_width="4dp"
-                                android:layout_height="20dp"
-                                android:layout_marginEnd="8dp" />
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="@string/search_choose_location"
+                            android:src="@drawable/ic_arrow_drop_down_24"
+                            app:tint="?attr/clockTextColorDim" />
 
-                            <TextView
-                                android:id="@+id/locate_picker_text"
-                                android:layout_width="0dp"
-                                android:layout_height="match_parent"
-                                android:layout_weight="1"
-                                android:ellipsize="end"
-                                android:gravity="center_vertical"
-                                android:maxLines="1"
-                                android:textColor="?attr/clockTextColor"
-                                android:textSize="13sp" />
-
-                            <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
-                                android:contentDescription="@string/search_choose_location"
-                                android:src="@drawable/ic_arrow_drop_down_24"
-                                app:tint="?attr/clockTextColorDim" />
-
-                        </LinearLayout>
-
-                    </com.google.android.material.card.MaterialCardView>
+                    </LinearLayout>
 
                     <LinearLayout
                         android:id="@+id/input_advanced_switch"
@@ -226,7 +218,7 @@
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/switch_use_regex"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
                             android:layout_width="wrap_content"
                             android:layout_height="32dp"
                             android:checkable="true"
@@ -235,11 +227,12 @@
                             android:paddingHorizontal="8dp"
                             android:text="@string/search_enable_regex"
                             android:textAllCaps="false"
-                            android:textColor="?attr/clockTextColor"
+                            android:textColor="@color/btn_toggle_text"
                             android:textSize="12sp"
+                            app:backgroundTint="@color/btn_toggle_background"
                             app:cornerRadius="0dp"
-                            app:strokeColor="@color/colorHover"
-                            app:strokeWidth="1dp" />
+                            app:elevation="0dp"
+                            app:strokeWidth="0dp" />
 
                     </LinearLayout>
 
