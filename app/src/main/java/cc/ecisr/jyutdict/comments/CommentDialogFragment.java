@@ -80,6 +80,7 @@ public final class CommentDialogFragment extends DialogFragment {
         submit = view.findViewById(R.id.comment_submit);
 
         list.setLayoutManager(new LinearLayoutManager(requireContext()));
+        MotionUtil.configureItemAnimator(list);
         list.setAdapter(adapter);
         submit.setOnClickListener(ignored -> submitComment());
         updateAuthControls();

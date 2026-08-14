@@ -7,6 +7,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.core.text.HtmlCompat;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
@@ -25,14 +26,59 @@ final class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.ViewHolde
 
     CommentAdapter(DeleteListener deleteListener) {
         this.deleteListener = deleteListener;
+        setHasStableIds(true);
     }
 
     void submit(List<Comment> values, AuthRepository.User user, boolean admin) {
+        ArrayList<Comment> previous = new ArrayList<>(comments);
+        AuthRepository.User previousUser = currentUser;
+        boolean previousAdmin = isAdmin;
+        ArrayList<Comment> updated = new ArrayList<>(values);
+        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new DiffUtil.Callback() {
+            @Override
+            public int getOldListSize() {
+                return previous.size();
+            }
+
+            @Override
+            public int getNewListSize() {
+                return updated.size();
+            }
+
+            @Override
+            public boolean areItemsTheSame(int oldPosition, int newPosition) {
+                return previous.get(oldPosition).id == updated.get(newPosition).id;
+            }
+
+            @Override
+            public boolean areContentsTheSame(int oldPosition, int newPosition) {
+                Comment oldComment = previous.get(oldPosition);
+                Comment newComment = updated.get(newPosition);
+                return sameContent(oldComment, newComment)
+                        && canDelete(oldComment, previousUser, previousAdmin)
+                        == canDelete(newComment, user, admin);
+            }
+        });
         comments.clear();
-        comments.addAll(values);
+        comments.addAll(updated);
         currentUser = user;
         isAdmin = admin;
-        notifyDataSetChanged();
+        diff.dispatchUpdatesTo(this);
+    }
+
+    private static boolean sameContent(Comment left, Comment right) {
+        return left.userId == right.userId
+                && left.deleted == right.deleted
+                && left.content.equals(right.content)
+                && left.createdAt.equals(right.createdAt)
+                && left.updatedAt.equals(right.updatedAt)
+                && left.nickname.equals(right.nickname)
+                && left.email.equals(right.email)
+                && left.role.equals(right.role);
+    }
+
+    private static boolean canDelete(Comment comment, AuthRepository.User user, boolean admin) {
+        return !comment.deleted && (admin || user != null && comment.userId == user.id);
     }
 
     int activeCount() {
@@ -75,6 +121,11 @@ final class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.ViewHolde
     @Override
     public int getItemCount() {
         return comments.size();
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return comments.get(position).id;
     }
 
     static final class ViewHolder extends RecyclerView.ViewHolder {

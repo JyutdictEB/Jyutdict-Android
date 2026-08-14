@@ -55,6 +55,13 @@ public class InfoActivity extends AppCompatActivity {
         ArticlePagerAdapter pagerAdapter = new ArticlePagerAdapter(this, articleList);
         viewPager.setAdapter(pagerAdapter);
         viewPager.setUserInputEnabled(false);
+        viewPager.setPageTransformer((page, position) -> {
+            float distance = Math.min(1f, Math.abs(position));
+            page.setAlpha(1f - 0.18f * distance);
+            page.setScaleX(1f - 0.015f * distance);
+            page.setScaleY(1f - 0.015f * distance);
+            page.setTranslationX(-position * page.getWidth() * 0.06f);
+        });
         progressBar.setVisibility(View.GONE);
         errorText.setVisibility(View.GONE);
         viewPager.setVisibility(View.VISIBLE);

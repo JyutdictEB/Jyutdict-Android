@@ -9,6 +9,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import cc.ecisr.jyutdict.widget.SelectableTextView;
+import cc.ecisr.jyutdict.utils.MotionUtil;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -48,7 +49,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         holder.tvCharaExtra.setText(extra);
         holder.tvRightTop.setSelectableText(wanshyu);
         holder.tvRightBottom.setSelectableText(location);
-        holder.collapseAnnotation();
+        holder.collapseAnnotation(false);
         holder.tvRightBottom.setOnAnnotationClickListener(annotation ->
                 holder.toggleAnnotation(annotation));
         int lyCharaVisibility = (header.length()!=0 || info.length()!=0) ? View.VISIBLE : View.GONE;
@@ -112,10 +113,10 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
             annotationContainer = itemView.findViewById(R.id.sheet_annotation_container);
             tvAnnotation = itemView.findViewById(R.id.sheet_annotation_text);
             if (annotationContainer != null) {
-                annotationContainer.setOnClickListener(view -> collapseAnnotation());
+                annotationContainer.setOnClickListener(view -> collapseAnnotation(true));
             }
             if (tvAnnotation != null) {
-                tvAnnotation.setOnClickListener(view -> collapseAnnotation());
+                tvAnnotation.setOnClickListener(view -> collapseAnnotation(true));
             }
         }
 
@@ -127,18 +128,28 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
             if (annotationContainer == null || tvAnnotation == null) return;
             if (annotationContainer.getVisibility() == View.VISIBLE
                     && annotation.equals(expandedAnnotation)) {
-                collapseAnnotation();
+                collapseAnnotation(true);
                 return;
             }
             expandedAnnotation = annotation;
             tvAnnotation.setSelectableText(annotation);
+            beginAnnotationTransition();
             annotationContainer.setVisibility(View.VISIBLE);
         }
 
-        void collapseAnnotation() {
+        void collapseAnnotation(boolean animate) {
             expandedAnnotation = null;
+            if (animate) beginAnnotationTransition();
             if (annotationContainer != null) annotationContainer.setVisibility(View.GONE);
             if (tvAnnotation != null) tvAnnotation.setSelectableText("");
+        }
+
+        private void beginAnnotationTransition() {
+            if (itemView.getParent() instanceof ViewGroup) {
+                MotionUtil.beginLayoutTransition((ViewGroup) itemView.getParent());
+            } else if (itemView instanceof ViewGroup) {
+                MotionUtil.beginLayoutTransition((ViewGroup) itemView);
+            }
         }
 
         String getChara() {

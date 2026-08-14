@@ -12,6 +12,8 @@ import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 
 import androidx.annotation.ColorInt;
+import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.RecyclerView;
 
 /** Shared, deliberately brisk motion used by the View-based UI. */
 public final class MotionUtil {
@@ -116,5 +118,15 @@ public final class MotionUtil {
                 .setInterpolator(AnimationUtils.loadInterpolator(
                         view.getContext(), android.R.interpolator.fast_out_slow_in))
                 .start();
+    }
+
+    /** Keeps RecyclerView changes noticeable without the stock 250 ms change pause. */
+    public static void configureItemAnimator(RecyclerView recyclerView) {
+        DefaultItemAnimator animator = new DefaultItemAnimator();
+        animator.setAddDuration(DURATION_MEDIUM);
+        animator.setRemoveDuration(DURATION_SHORT);
+        animator.setMoveDuration(DURATION_MEDIUM);
+        animator.setChangeDuration(DURATION_SHORT);
+        recyclerView.setItemAnimator(animator);
     }
 }

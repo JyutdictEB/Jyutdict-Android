@@ -17,7 +17,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -139,7 +138,7 @@ public class ResultFragment extends Fragment {
             }
         });
         mRvMain.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
-        mRvMain.setItemAnimator(new DefaultItemAnimator());
+        MotionUtil.configureItemAnimator(mRvMain);
         mRvMain.setAdapter(marketItemAdapter);
         if (savedInstanceState!= null) {
             rawReceivedData = savedInstanceState.getString("received_data");
