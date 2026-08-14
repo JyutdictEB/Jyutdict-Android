@@ -26,6 +26,7 @@ import android.os.Message;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -96,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
             "location_selection_explicit_v1";
     private static final String LOCATION_SELECTION_COLUMN_KEY =
             "location_selection_column_v2";
-    private static final String LOCATION_SELECTION_RECENT_KEY =
+    private static final String LEGACY_LOCATION_SELECTION_RECENT_KEY =
             "location_selection_recent_v2";
     private static final String LAST_LOCATION_COLUMN_KEY =
             "last_location_column_v2";
@@ -167,6 +168,7 @@ public class MainActivity extends AppCompatActivity {
     // 並根據這個狀態來解析JSON
     int queryingMode = QUERYING_CHARA;
     int queryingModeConfig = 0;
+    private boolean inputEnterKeyDown = false;
 
     // 夜间模式
     //private static boolean isNightMode = false;
@@ -265,11 +267,12 @@ public class MainActivity extends AppCompatActivity {
         // 監聽焦點在輸入框內的軟鍵盤的確認按鈕
         inputEditText.setOnEditorActionListener((v, actionId, event) -> {
             Log.i(TAG, "onEditorAction: " + actionId);
-            if(actionId==EditorInfo.IME_ACTION_SEARCH && MainActivity.this.getCurrentFocus()!=null){
-                search();
-                ((InputMethodManager) MainActivity.this.getSystemService(Context.INPUT_METHOD_SERVICE))
-                        .hideSoftInputFromWindow(MainActivity.this.getCurrentFocus().getWindowToken(),
-                                InputMethodManager.HIDE_NOT_ALWAYS);
+            boolean isSearchAction = actionId == EditorInfo.IME_ACTION_SEARCH
+                    || actionId == EditorInfo.IME_ACTION_GO
+                    || actionId == EditorInfo.IME_ACTION_DONE
+                    || actionId == EditorInfo.IME_ACTION_SEND;
+            if (isSearchAction) {
+                submitSearchFromInput(v);
                 return true;
             }
             return false;
@@ -426,6 +429,35 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if (event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
+            if (event.getAction() == KeyEvent.ACTION_DOWN
+                    && inputEditText != null
+                    && inputEditText.hasFocus()) {
+                if (event.getRepeatCount() == 0) {
+                    inputEnterKeyDown = true;
+                    submitSearchFromInput(inputEditText);
+                }
+                return true;
+            }
+            if (event.getAction() == KeyEvent.ACTION_UP && inputEnterKeyDown) {
+                inputEnterKeyDown = false;
+                inputEditText.requestFocus();
+                return true;
+            }
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    private void submitSearchFromInput(View input) {
+        search();
+        ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
+                .hideSoftInputFromWindow(input.getWindowToken(),
+                        InputMethodManager.HIDE_NOT_ALWAYS);
+        input.requestFocus();
+    }
+
     /**
      * 通用的篩選對話框：自定義佈局，全選/反選按鈕在對話框內部，不會關閉對話框
      *
@@ -535,7 +567,7 @@ public class MainActivity extends AppCompatActivity {
         TextView recentText = dialogView.findViewById(R.id.location_picker_recent_text);
         ArrayList<View> rows = new ArrayList<>();
         ArrayList<LocationSpinnerAdapter.Option> listedOptions = new ArrayList<>();
-        LocationSpinnerAdapter.Option recentOption = null;
+        LocationSpinnerAdapter.Option recentOption = buildRecentLocationOption();
         int selectedListedPosition = 0;
 
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
@@ -546,10 +578,6 @@ public class MainActivity extends AppCompatActivity {
 
         for (int index = 0; index < locationOptions.size(); index++) {
             LocationSpinnerAdapter.Option option = locationOptions.get(index);
-            if (option.recent) {
-                recentOption = option;
-                continue;
-            }
             if (index == selectedLocationPosition) {
                 selectedListedPosition = listedOptions.size();
             }
@@ -571,12 +599,9 @@ public class MainActivity extends AppCompatActivity {
             recentText.setText(standaloneRecent.label);
             recentSwatch.setBackground(
                     ColorUtil.locationColorDrawable(standaloneRecent.colors));
-            LocationSpinnerAdapter.Option current = getSelectedLocationOption();
             int recentBackground = MaterialColors.getColor(
                     recentCard,
-                    current != null && current.recent
-                            ? com.google.android.material.R.attr.colorSecondaryContainer
-                            : com.google.android.material.R.attr.colorSurfaceContainerHigh
+                    com.google.android.material.R.attr.colorSurfaceContainerHigh
             );
             recentCard.setCardBackgroundColor(recentBackground);
             recentCard.setOnClickListener(view ->
@@ -623,15 +648,14 @@ public class MainActivity extends AppCompatActivity {
     private void selectLocationOption(LocationSpinnerAdapter.Option selected,
                                       AlertDialog dialog) {
         LocationSpinnerAdapter.Option previous = getSelectedLocationOption();
-        if (!selected.recent && previous != null
-                && !previous.queryColumn.equals(selected.queryColumn)) {
+        if (previous != null && !previous.queryColumn.equals(selected.queryColumn)) {
             sp.edit().putString(
                     LAST_LOCATION_COLUMN_KEY, previous.queryColumn).apply();
         }
 
         locationOptions = buildLocationOptions(FjbHeaderInfo.isLoaded);
         selectedLocationPosition = findLocationOption(
-                selected.queryColumn, selected.recent, locationOptions);
+                selected.queryColumn, locationOptions);
         sp.edit().putBoolean(LOCATION_SELECTION_EXPLICIT_KEY, true).apply();
         updateLocationPickerPresentation();
         saveLayoutStatus();
@@ -787,11 +811,10 @@ public class MainActivity extends AppCompatActivity {
         boolean hasSemanticSelection = sp.contains(LOCATION_SELECTION_COLUMN_KEY);
         String selectedColumn = sp.getString(
                 LOCATION_SELECTION_COLUMN_KEY, FjbHeaderInfo.COLUMN_NAME_RETRIEVAL);
-        boolean selectedRecent = sp.getBoolean(LOCATION_SELECTION_RECENT_KEY, false);
         locationOptions = buildLocationOptions(true);
         if (hasSemanticSelection) {
             selectedLocationPosition = findLocationOption(
-                    selectedColumn, selectedRecent, locationOptions);
+                    selectedColumn, locationOptions);
         } else {
             selectedLocationPosition = getInitialLocationPosition();
         }
@@ -803,13 +826,12 @@ public class MainActivity extends AppCompatActivity {
             return findLocationOption(
                     sp.getString(LOCATION_SELECTION_COLUMN_KEY,
                             FjbHeaderInfo.COLUMN_NAME_RETRIEVAL),
-                    sp.getBoolean(LOCATION_SELECTION_RECENT_KEY, false),
                     locationOptions);
         }
         int savedPosition = sp.getInt(
                 "spinner_selected_position", DEFAULT_LOCATION_POSITION);
-        if (savedPosition >= 2 && locationOptions.size() > 3) {
-            return Math.min(savedPosition + 1, locationOptions.size() - 1);
+        if (savedPosition >= 1) {
+            return Math.min(savedPosition, locationOptions.size() - 1);
         }
         if (savedPosition == 0
                 && sp.getBoolean(LOCATION_SELECTION_EXPLICIT_KEY, false)) {
@@ -825,11 +847,11 @@ public class MainActivity extends AppCompatActivity {
         return locationOptions.get(position);
     }
 
-    private int findLocationOption(String queryColumn, boolean recent,
+    private int findLocationOption(String queryColumn,
                                    ArrayList<LocationSpinnerAdapter.Option> options) {
         for (int index = 0; index < options.size(); index++) {
             LocationSpinnerAdapter.Option option = options.get(index);
-            if (option.recent == recent && option.queryColumn.equals(queryColumn)) {
+            if (option.queryColumn.equals(queryColumn)) {
                 return index;
             }
         }
@@ -1053,9 +1075,6 @@ public class MainActivity extends AppCompatActivity {
                 FjbHeaderInfo.getColumnColors(FjbHeaderInfo.COLUMN_NAME_RETRIEVAL),
                 FjbHeaderInfo.COLUMN_NAME_RETRIEVAL
         ));
-        String recentColumn = sp.getString(
-                LAST_LOCATION_COLUMN_KEY, FjbHeaderInfo.COLUMN_NAME_RETRIEVAL);
-        LocationSpinnerAdapter.Option recentSource = null;
         if (includeCities) {
             String[] cityNames = FjbHeaderInfo.getCityList();
             for (int i = 0; i < cityNames.length; i++) {
@@ -1066,25 +1085,31 @@ public class MainActivity extends AppCompatActivity {
                         column
                 );
                 options.add(cityOption);
-                if (column.equals(recentColumn)) recentSource = cityOption;
+            }
+        }
+        return options;
+    }
+
+    private LocationSpinnerAdapter.Option buildRecentLocationOption() {
+        if (locationOptions.isEmpty()) return null;
+        String recentColumn = sp.getString(
+                LAST_LOCATION_COLUMN_KEY, FjbHeaderInfo.COLUMN_NAME_RETRIEVAL);
+        LocationSpinnerAdapter.Option recentSource = null;
+        for (LocationSpinnerAdapter.Option option : locationOptions) {
+            if (option.queryColumn.equals(recentColumn)) {
+                recentSource = option;
+                break;
             }
         }
         if (recentSource == null) {
-            for (LocationSpinnerAdapter.Option option : options) {
-                if (option.queryColumn.equals(recentColumn)) {
-                    recentSource = option;
-                    break;
-                }
-            }
+            recentSource = locationOptions.get(Math.min(
+                    DEFAULT_LOCATION_POSITION, locationOptions.size() - 1));
         }
-        if (recentSource == null) recentSource = options.get(DEFAULT_LOCATION_POSITION);
-        options.add(2, new LocationSpinnerAdapter.Option(
+        return new LocationSpinnerAdapter.Option(
                 getString(R.string.select_drop_down_recent, recentSource.label),
                 recentSource.colors,
-                recentSource.queryColumn,
-                true
-        ));
-        return options;
+                recentSource.queryColumn
+        );
     }
 
     private void updateFilterButtonLabels() {
@@ -1192,8 +1217,8 @@ public class MainActivity extends AppCompatActivity {
         LocationSpinnerAdapter.Option selectedLocation = getSelectedLocationOption();
         if (selectedLocation != null) {
             editor.putString(LOCATION_SELECTION_COLUMN_KEY, selectedLocation.queryColumn);
-            editor.putBoolean(LOCATION_SELECTION_RECENT_KEY, selectedLocation.recent);
         }
+        editor.remove(LEGACY_LOCATION_SELECTION_RECENT_KEY);
         editor.putInt("querying_mode_config", queryingModeConfig);
         editor.putStringSet("querying_filter_city", GeneralCharacterManager.cityFilter);
         editor.putStringSet("querying_filter_city_pron", ResultFragment.pronCityFilter);

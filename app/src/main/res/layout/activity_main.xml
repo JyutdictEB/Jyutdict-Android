@@ -62,6 +62,7 @@
                         android:inputType="text"
                         android:gravity="center_vertical"
                         android:maxLines="1"
+                        android:singleLine="true"
                         android:paddingTop="0dp"
                         android:paddingBottom="0dp"
                         android:paddingStart="16dp"

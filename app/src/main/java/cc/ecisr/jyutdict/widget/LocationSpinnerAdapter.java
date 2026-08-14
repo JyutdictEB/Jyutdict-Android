@@ -21,19 +21,13 @@ public final class LocationSpinnerAdapter extends BaseAdapter implements Spinner
         public final String label;
         public final List<String> colors;
         public final String queryColumn;
-        public final boolean recent;
 
         public Option(String label, List<String> colors, String queryColumn) {
-            this(label, colors, queryColumn, false);
-        }
-
-        public Option(String label, List<String> colors, String queryColumn, boolean recent) {
             this.label = label;
             this.colors = colors == null
                     ? Collections.emptyList()
                     : new ArrayList<>(colors);
             this.queryColumn = queryColumn == null ? "" : queryColumn;
-            this.recent = recent;
         }
     }
 
