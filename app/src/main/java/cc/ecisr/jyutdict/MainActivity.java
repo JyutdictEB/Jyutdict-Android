@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.Manifest;
 import android.content.Context;
@@ -58,6 +59,9 @@ import java.util.Set;
 
 import cc.ecisr.jyutdict.auth.AuthRepository;
 import cc.ecisr.jyutdict.databinding.ActivityMainBinding;
+import cc.ecisr.jyutdict.search.SearchRequest;
+import cc.ecisr.jyutdict.search.SearchUiState;
+import cc.ecisr.jyutdict.search.SearchViewModel;
 import cc.ecisr.jyutdict.struct.FjbHeaderInfo;
 import cc.ecisr.jyutdict.struct.GeneralCharacterManager;
 import cc.ecisr.jyutdict.struct.LocationInfo;
@@ -82,10 +86,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String URL_API_ROOT = "https://jyutdict.org/api/v1.0/";
     private static final int INITIALIZE_LOCATIONS_FAIL = 3288;
     private static final int INITIALIZE_DETAIL_LOCATIONS_FAIL = 3289;
-    private static final int SEARCH_SUCCESS_BASE = 0x5000;
-    private static final int SEARCH_SUCCESS_MASK = 0xFF00;
-    private static final int SEARCH_MODE_MASK = 0x00FF;
-    private static final int SEARCH_FAIL = 0x5100;
     private static final String SHEET_HEADER_CACHE_KEY = "main_sheet_header_v1";
     private static final String LOCATION_HEADER_CACHE_KEY = "main_location_header_v1";
     private static final long HEADER_CACHE_MAX_AGE = 24L * 60L * 60L * 1000L;
@@ -116,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
     Toolbar toolbar;
     LinearLayout lyMain, lyAdvancedSearch;
     AuthRepository authRepository;
+    private SearchViewModel searchViewModel;
 
     // 在輸入框輸入的字符串，在按下查詢按鈕時更新
     String inputString;
@@ -153,7 +154,6 @@ public class MainActivity extends AppCompatActivity {
     MainHandler mainHandler;
     // 用於向服務器發送請求，與接收回應
     final HttpUtil headerQuery = new HttpUtil(HttpUtil.GET);
-    final HttpUtil searchQuery = new HttpUtil(HttpUtil.GET);
     final HttpUtil locationQuery = new HttpUtil(HttpUtil.GET);
 
     final Runnable sheetHeaderRetry = () -> {
@@ -236,21 +236,11 @@ public class MainActivity extends AppCompatActivity {
         } else {
             resultFragment = (ResultFragment) getSupportFragmentManager().getFragment(savedInstanceState, "result_fragment");
         }
+        searchViewModel = new ViewModelProvider(this).get(SearchViewModel.class);
+        binding.getRoot().post(this::observeSearchState);
         initPermission();
 
         mainHandler = new MainHandler(Looper.getMainLooper(), msg -> {
-            if ((msg.what & SEARCH_SUCCESS_MASK) == SEARCH_SUCCESS_BASE) {
-                int responseMode = msg.what & SEARCH_MODE_MASK;
-                try {
-                    resultFragment.parseJson(msg.obj.toString(), responseMode);
-                } catch (JSONException | RuntimeException e) {
-                    Log.e(TAG, "Unable to parse search response", e);
-                    ToastUtil.msg(this, getString(R.string.error_tips_data));
-                }
-                finishSearchUi();
-                return;
-            }
-
             switch (msg.what) {
                 case INITIALIZE_LOCATIONS: // 初始化泛粵字表表頭
                     finishHeaderRequest(true, msg.obj == null ? "" : msg.obj.toString());
@@ -263,10 +253,6 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case INITIALIZE_DETAIL_LOCATIONS_FAIL:
                     handleHeaderFailure(false, msg.obj);
-                    break;
-                case SEARCH_FAIL:
-                    showRequestError(msg.obj);
-                    finishSearchUi();
                     break;
                 default:
                     break;
@@ -721,6 +707,45 @@ public class MainActivity extends AppCompatActivity {
         btnColoringJppPartial.setEnabled(true);
         btnQueryConfirm.setEnabled(true);
         if (resultFragment != null) resultFragment.finishLoading();
+    }
+
+    private void beginSearchUi() {
+        MotionUtil.beginLayoutTransition(lyMain);
+        loadingProgressBar.setVisibility(View.VISIBLE);
+        if (resultFragment != null) resultFragment.beginLoading();
+        btnColoringJppPartial.setEnabled(false);
+        btnQueryConfirm.setEnabled(false);
+    }
+
+    private void observeSearchState() {
+        searchViewModel.getUiState().observe(this, state -> {
+            switch (state.status) {
+                case LOADING:
+                    beginSearchUi();
+                    break;
+                case SUCCESS:
+                    if (state.request == null || state.responseBody == null) return;
+                    binding.resultFragment.post(() -> {
+                        try {
+                            resultFragment.parseJson(
+                                    state.responseBody,
+                                    state.request.responseMode);
+                        } catch (JSONException | RuntimeException exception) {
+                            Log.e(TAG, "Unable to parse search response", exception);
+                            ToastUtil.msg(this, getString(R.string.error_tips_data));
+                        }
+                        finishSearchUi();
+                    });
+                    break;
+                case ERROR:
+                    showRequestError(state.error);
+                    finishSearchUi();
+                    break;
+                case IDLE:
+                default:
+                    break;
+            }
+        });
     }
 
     private void showRequestError(Object errorObject) {
@@ -1297,10 +1322,6 @@ public class MainActivity extends AppCompatActivity {
             return;
         } // 搜索欄爲空時不檢索
 
-        MotionUtil.beginLayoutTransition(lyMain);
-        loadingProgressBar.setVisibility(View.VISIBLE);
-        if (resultFragment != null) resultFragment.beginLoading();
-        btnColoringJppPartial.setEnabled(false);
         ApiUrlBuilder url;
         int modeSnapshot;
         if (isSheetMode()) { // 檢索泛粵字表
@@ -1361,14 +1382,7 @@ public class MainActivity extends AppCompatActivity {
         }
         queryingMode = modeSnapshot;
         int responseMode = modeSnapshot | queryingModeConfig;
-        searchQuery.setUrl(url.build())
-                .setHandler(
-                        mainHandler,
-                        SEARCH_SUCCESS_BASE | responseMode,
-                        SEARCH_FAIL
-                )
-                .start();
-        btnQueryConfirm.setEnabled(false);
+        searchViewModel.search(new SearchRequest(url.build(), responseMode));
         saveLayoutStatus();
     }
 
@@ -1521,7 +1535,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         headerQuery.cancel();
         locationQuery.cancel();
-        searchQuery.cancel();
         if (mainHandler != null) {
             mainHandler.removeCallbacksAndMessages(null);
         }

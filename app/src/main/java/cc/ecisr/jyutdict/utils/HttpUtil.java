@@ -1,6 +1,7 @@
 package cc.ecisr.jyutdict.utils;
 
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
@@ -37,12 +38,18 @@ public class HttpUtil {
         HTTP
     }
 
+    public interface Callback {
+        void onSuccess(String body);
+
+        void onFailure(RequestError error);
+    }
+
     public static final class RequestError {
         public final ErrorKind kind;
         public final int statusCode;
         public final String detail;
 
-        RequestError(ErrorKind kind, int statusCode, String detail) {
+        public RequestError(ErrorKind kind, int statusCode, String detail) {
             this.kind = kind;
             this.statusCode = statusCode;
             this.detail = detail == null ? "" : detail;
@@ -134,6 +141,24 @@ public class HttpUtil {
         );
         getThread = thread;
         thread.start();
+    }
+
+    /** Java-friendly callback API for repositories and ViewModels. */
+    public void enqueue(String requestUrl, Callback callback) {
+        Handler callbackHandler = new Handler(Looper.getMainLooper(), message -> {
+            if (message.what == REQUEST_CONTENT_SUCCESSFULLY) {
+                callback.onSuccess(String.valueOf(message.obj));
+            } else {
+                RequestError error = message.obj instanceof RequestError
+                        ? (RequestError) message.obj
+                        : new RequestError(ErrorKind.NETWORK, 0, String.valueOf(message.obj));
+                callback.onFailure(error);
+            }
+            return true;
+        });
+        setUrl(requestUrl)
+                .setHandler(callbackHandler)
+                .start();
     }
 
     public synchronized void cancel() {
