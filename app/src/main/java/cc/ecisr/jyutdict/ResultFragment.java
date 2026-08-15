@@ -51,6 +51,8 @@ import cc.ecisr.jyutdict.widget.LocationLabelSpan;
 
 public class ResultFragment extends Fragment {
     private static final String TAG = "`ResultFragment";
+    private static final Pattern WORD_PATTERN = Pattern.compile(
+            "((?<=〔[～~])[^～~]+?(?=〕))|((?<=〔)[^～~]+?(?=[～~]+?〕))");
 
     private RecyclerView mRvMain;
     private FragmentResultBinding binding;
@@ -71,67 +73,7 @@ public class ResultFragment extends Fragment {
         binding = FragmentResultBinding.inflate(inflater, container, false);
         mRvMain = binding.resultList;
         commentRepository = new CommentRepository(requireContext());
-        resultAdapter = new ResultItemAdapter(getActivity(), new ResultItemAdapter.iOnItemClickListener() {
-            @Override
-            public void onClick(@NonNull ResultItemAdapter.LinearViewHolder holder) {
-                ArrayList<String> selectionList = new ArrayList<>();
-                ArrayList<String> charaInWordsList = new ArrayList<>();
-                selectionList.add(getString(R.string.entry_menu_copy_chara));
-
-                final Pattern pt= Pattern.compile("((?<=〔[～~])[^～~]+?(?=〕))|((?<=〔)[^～~]+?(?=[～~]+?〕))");
-                CharSequence wanshyu = holder.getWanshyuText();
-                Matcher mt = pt.matcher(wanshyu != null ? wanshyu.toString() : "");
-                while (mt.find()){
-                    charaInWordsList.add(mt.group(0));
-                    selectionList.add(getString(R.string.entry_menu_search_common, mt.group(0)));
-                    selectionList.add(getString(R.string.entry_menu_search_special, mt.group(0)));
-                }
-
-                ResultItemAdapter.ResultInfo.CommentTarget commentTarget =
-                        holder.getCommentTarget();
-                final int commentOptionIndex;
-                if (commentTarget != null && !commentTarget.target.isEmpty()) {
-                    commentOptionIndex = selectionList.size();
-                    selectionList.add(commentTarget.countLoaded
-                            ? getString(R.string.comment_button_count, commentTarget.count)
-                            : getString(R.string.comment_button));
-                } else {
-                    commentOptionIndex = -1;
-                }
-
-                if (!selectionList.isEmpty() && null != getActivity()) {
-                    final String[] selections = selectionList.toArray(new String[0]);
-                    new AlertDialog.Builder(getContext())
-                            .setItems(selections, (dialogInterface, i) -> {
-                                if (i == 0) {
-                                    LayoutCopyAlertdialogBinding dialogBinding =
-                                            LayoutCopyAlertdialogBinding.inflate(inflater);
-                                    dialogBinding.dialogBoxTv.setText(holder.printContent());
-                                    new AlertDialog.Builder(getContext())
-                                            .setView(dialogBinding.getRoot())
-                                            .setPositiveButton(R.string.button_confirm, null)
-                                            .show();
-                                } else if (i == commentOptionIndex) {
-                                    onComments(holder, commentTarget.type, commentTarget.target);
-                                } else {
-                                    int elseItemAddedCount = 1;
-                                    int mode = (i % 2 == 1) ?
-                                            QUERYING_CHARA :
-                                            QUERYING_SHEET;
-                                    ((MainActivity) getActivity()).search(
-                                            charaInWordsList.get((i - 1) >> elseItemAddedCount),
-                                            mode);
-                                }
-                            }).create().show();
-                }
-            }
-            @Override
-            public void onComments(@NonNull ResultItemAdapter.LinearViewHolder holder,
-                                   String type, String target) {
-                CommentDialogFragment.newInstance(type, target, holder.getChara())
-                        .show(getParentFragmentManager(), "comments");
-            }
-        });
+        resultAdapter = new ResultItemAdapter(this::showItemMenu);
         mRvMain.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
         mRvMain.setItemAnimator(null);
         mRvMain.setAdapter(resultAdapter);
@@ -141,6 +83,46 @@ public class ResultFragment extends Fragment {
         }
         if (rawReceivedData != null && !rawReceivedData.isEmpty()) refreshResult();
         return binding.getRoot();
+    }
+
+    private void showItemMenu(ResultItemAdapter.LinearViewHolder holder) {
+        ArrayList<String> choices = new ArrayList<>();
+        ArrayList<String> characters = new ArrayList<>();
+        choices.add(getString(R.string.entry_menu_copy_chara));
+        Matcher matcher = WORD_PATTERN.matcher(holder.getWanshyuText());
+        while (matcher.find()) {
+            String character = matcher.group();
+            characters.add(character);
+            choices.add(getString(R.string.entry_menu_search_common, character));
+            choices.add(getString(R.string.entry_menu_search_special, character));
+        }
+
+        ResultItemAdapter.ResultInfo.CommentTarget comment = holder.getCommentTarget();
+        int commentIndex = -1;
+        if (comment != null && !comment.target.isEmpty()) {
+            commentIndex = choices.size();
+            choices.add(comment.countLoaded
+                    ? getString(R.string.comment_button_count, comment.count)
+                    : getString(R.string.comment_button));
+        }
+        MainActivity activity = (MainActivity) getActivity();
+        if (activity == null) return;
+        int finalCommentIndex = commentIndex;
+        new AlertDialog.Builder(activity).setItems(choices.toArray(new String[0]), (dialog, index) -> {
+            if (index == 0) {
+                LayoutCopyAlertdialogBinding copy =
+                        LayoutCopyAlertdialogBinding.inflate(getLayoutInflater());
+                copy.dialogBoxTv.setText(holder.printContent());
+                new AlertDialog.Builder(activity).setView(copy.getRoot())
+                        .setPositiveButton(R.string.button_confirm, null).show();
+            } else if (index == finalCommentIndex) {
+                CommentDialogFragment.newInstance(comment.type, comment.target, holder.getChara())
+                        .show(getParentFragmentManager(), "comments");
+            } else {
+                activity.search(characters.get((index - 1) >> 1),
+                        index % 2 == 1 ? QUERYING_CHARA : QUERYING_SHEET);
+            }
+        }).show();
     }
 
     @Override
@@ -224,13 +206,6 @@ public class ResultFragment extends Fragment {
             throws JSONException {
         if (getActivity()==null) return;
         if (resultAdapter == null) return;
-
-        int mode = queryObjectWhat & QUERYING_MODE_MASK;
-        if (mode == QUERYING_PRON) {
-            new JSONObject(jsonString);
-        } else {
-            new JSONArray(jsonString);
-        }
 
         ArrayList<ResultItemAdapter.ResultInfo> parsedItems =
                 parseJsonValidated(jsonString, queryObjectWhat);
@@ -423,133 +398,83 @@ public class ResultFragment extends Fragment {
         }
     }
 
-    /**
-     * 解析並顯示 v1.0 檢音 API 返回的結果
-     *
-     * @param jsonString 服務器返回的 JSON 字符串
-     */
     private void parseJsonPron(String jsonString, EntrySetting entrySettings,
                                ArrayList<ResultItemAdapter.ResultInfo> parsedItems)
             throws JSONException {
         JSONObject root = new JSONObject(jsonString);
-        JSONArray wanshyuArray = root.optJSONArray("韻書");
-        JSONArray areasArray = root.optJSONArray("各地");
-
-        // 解析韻書
-        if (wanshyuArray != null) {
-            for (int i = 0; i < wanshyuArray.length(); i++) {
-                JSONObject obj = wanshyuArray.optJSONObject(i);
-                if (obj == null) continue;
-                String bookName = obj.optString("__name", "韻書");
-                if (pronBookFilter.contains(bookName)) continue;
-                SpannableStringBuilder bookNameSsb = new SpannableStringBuilder(bookName);
-                SpannableStringBuilder pronListSsb = new SpannableStringBuilder();
-
-                Iterator<String> keys = obj.keys();
-                while (keys.hasNext()) {
-                    String syllable = keys.next();
-                    if ("__name".equals(syllable)) continue;
-                    JSONObject tones = obj.optJSONObject(syllable);
-                    if (tones == null) continue;
-
-                    Iterator<String> toneKeys = tones.keys();
-                    while (toneKeys.hasNext()) {
-                        String tone = toneKeys.next();
-                        String chars = tones.optString(tone, "");
-                        if (!chars.isEmpty()) {
-                            if (pronListSsb.length() > 0) pronListSsb.append("\n");
-                            pronListSsb.append(syllable).append(tone).append(": ").append(chars);
-                        }
-                    }
-                }
-                if (pronListSsb.length() > 0) {
-                    addItem(parsedItems, new SpannableStringBuilder(), new SpannableStringBuilder(),
-                            new SpannableStringBuilder(), bookNameSsb, pronListSsb,
-                            ResultItemAdapter.ResultInfo.TYPE_GENERAL);
+        JSONArray books = root.optJSONArray("韻書"), areas = root.optJSONArray("各地");
+        if (books != null) {
+            for (int index = 0; index < books.length(); index++) {
+                JSONObject book = books.optJSONObject(index);
+                if (book == null) continue;
+                String name = book.optString("__name", "韻書");
+                if (!pronBookFilter.contains(name)) {
+                    addPronunciationItem(parsedItems, new SpannableStringBuilder(name),
+                            formatPronunciations(book, "__name"));
                 }
             }
         }
-
-        // 解析各地
-        if (areasArray != null) {
-            for (int i = 0; i < areasArray.length(); i++) {
-                JSONObject obj = areasArray.optJSONObject(i);
-                if (obj == null) continue;
-
-                int locId = obj.optInt("__id", -1);
-                if (locId != -1 && pronCityFilter.contains(String.valueOf(locId))) {
-                    continue; // 被篩選掉
+        if (areas != null) {
+            for (int index = 0; index < areas.length(); index++) {
+                JSONObject area = areas.optJSONObject(index);
+                if (area == null) continue;
+                int locationId = area.optInt("__id", -1);
+                if (locationId != -1 && pronCityFilter.contains(String.valueOf(locationId))) {
+                    continue;
                 }
-
-                LocationInfo.Location loc = LocationInfo.get(locId);
-                String cityName;
-                if (loc != null) {
-                    cityName = loc.displayName();
-                } else {
-                    cityName = "id=" + locId;
-                }
-
-                SpannableStringBuilder cityNameSsb = new SpannableStringBuilder(cityName);
-                if (loc != null && cityNameSsb.length() > 0) {
-                    int[] locationColors = new int[entrySettings.isAreaColoring()
-                            ? loc.colors.size()
-                            : 0];
-                    double ratio = entrySettings.isUsingNightMode()
-                            ? 2 - entrySettings.getAreaColoringDarkenRatio()
-                            : entrySettings.getAreaColoringDarkenRatio();
-                    for (int colorIndex = 0; colorIndex < locationColors.length; colorIndex++) {
-                        locationColors[colorIndex] = ColorUtil.darken(
-                                loc.colors.get(colorIndex),
-                                ratio
-                        );
-                    }
-                    cityNameSsb.setSpan(
-                            new LocationLabelSpan(cityName, locationColors),
-                            0,
-                            cityNameSsb.length(),
-                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                    );
-                    cityNameSsb.setSpan(
-                            new LocationClickSpan(loc.id),
-                            0,
-                            cityNameSsb.length(),
-                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                    );
-                }
-                SpannableStringBuilder pronListSsb = new SpannableStringBuilder();
-
-                Iterator<String> keys = obj.keys();
-                boolean hasData = false;
-                while (keys.hasNext()) {
-                    String syllable = keys.next();
-                    if ("__id".equals(syllable)) continue;
-                    JSONObject tones = obj.optJSONObject(syllable);
-                    if (tones == null) continue;
-
-                    Iterator<String> toneKeys = tones.keys();
-                    while (toneKeys.hasNext()) {
-                        String tone = toneKeys.next();
-                        String chars = tones.optString(tone, "");
-                        if (!chars.isEmpty()) {
-                            if (pronListSsb.length() > 0) pronListSsb.append("\n");
-                            pronListSsb.append(syllable).append(tone).append(": ").append(chars);
-                            hasData = true;
-                        }
-                    }
-                }
-                
-                if (hasData) {
-                    addItem(parsedItems, new SpannableStringBuilder(), new SpannableStringBuilder(),
-                            new SpannableStringBuilder(), cityNameSsb, pronListSsb,
-                            ResultItemAdapter.ResultInfo.TYPE_GENERAL);
-                }
+                addPronunciationItem(parsedItems,
+                        locationLabel(LocationInfo.get(locationId), locationId, entrySettings),
+                        formatPronunciations(area, "__id"));
             }
         }
-        
-        if (wanshyuArray == null && areasArray == null) {
+        if (books == null && areas == null) {
             ToastUtil.msg(getContext(), getString(R.string.tips_no_result));
         }
     }
 
+    private SpannableStringBuilder formatPronunciations(JSONObject source, String metadataKey) {
+        SpannableStringBuilder result = new SpannableStringBuilder();
+        Iterator<String> syllables = source.keys();
+        while (syllables.hasNext()) {
+            String syllable = syllables.next();
+            if (metadataKey.equals(syllable)) continue;
+            JSONObject tones = source.optJSONObject(syllable);
+            if (tones == null) continue;
+            Iterator<String> toneKeys = tones.keys();
+            while (toneKeys.hasNext()) {
+                String tone = toneKeys.next();
+                String characters = tones.optString(tone, "");
+                if (characters.isEmpty()) continue;
+                if (result.length() > 0) result.append("\n");
+                result.append(syllable).append(tone).append(": ").append(characters);
+            }
+        }
+        return result;
+    }
+
+    private SpannableStringBuilder locationLabel(LocationInfo.Location location, int id,
+                                                  EntrySetting settings) {
+        String name = location == null ? "id=" + id : location.displayName();
+        SpannableStringBuilder result = new SpannableStringBuilder(name);
+        if (location == null || name.isEmpty()) return result;
+        double ratio = settings.isUsingNightMode()
+                ? 2 - settings.getAreaColoringDarkenRatio()
+                : settings.getAreaColoringDarkenRatio();
+        int[] colors = settings.isAreaColoring()
+                ? ColorUtil.locationColorInts(location.colors, ratio) : new int[0];
+        result.setSpan(new LocationLabelSpan(name, colors), 0, result.length(),
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        result.setSpan(new LocationClickSpan(location.id), 0, result.length(),
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return result;
+    }
+
+    private void addPronunciationItem(ArrayList<ResultItemAdapter.ResultInfo> items,
+                                      Spanned label, Spanned pronunciations) {
+        if (pronunciations.isEmpty()) return;
+        addItem(items, new SpannableStringBuilder(), new SpannableStringBuilder(),
+                new SpannableStringBuilder(), label, pronunciations,
+                ResultItemAdapter.ResultInfo.TYPE_GENERAL);
+    }
 
 }

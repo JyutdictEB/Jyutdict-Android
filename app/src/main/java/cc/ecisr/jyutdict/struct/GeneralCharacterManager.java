@@ -43,11 +43,8 @@ public class GeneralCharacterManager {
     EntrySetting settings;
     int colorCount = 0;
 
-    public void parse(String raw, EntrySetting settings) {
-        JSONArray charasJSON;
-        try {
-            charasJSON = new JSONArray(raw);
-        } catch (JSONException e) { return; }
+    public void parse(String raw, EntrySetting settings) throws JSONException {
+        JSONArray charasJSON = new JSONArray(raw);
         for (int i=0; i<charasJSON.length(); i++) {
             JSONObject chara = charasJSON.optJSONObject(i);
             if (charaHead.contains(chara.optString("字"))) { continue; }

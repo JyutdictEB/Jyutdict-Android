@@ -25,10 +25,10 @@ import cc.ecisr.jyutdict.widget.HorizontalDividerSpan;
 import cc.ecisr.jyutdict.widget.SelectableTextView;
 
 public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.LinearViewHolder> {
-    private final iOnItemClickListener listener;
+    private final OnItemClickListener listener;
     private final ArrayList<ResultInfo> items = new ArrayList<>();
 
-    ResultItemAdapter(Context context, iOnItemClickListener listener) {
+    ResultItemAdapter(OnItemClickListener listener) {
         this.listener = listener;
     }
 
@@ -280,9 +280,8 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         }
     }
 
-    public interface iOnItemClickListener {
+    public interface OnItemClickListener {
         void onClick(@NonNull LinearViewHolder holder);
-        void onComments(@NonNull LinearViewHolder holder, String type, String target);
     }
 
     static class ResultInfo {
