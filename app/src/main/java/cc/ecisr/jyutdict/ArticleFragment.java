@@ -3,8 +3,6 @@ package cc.ecisr.jyutdict;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,8 +49,7 @@ public class ArticleFragment extends Fragment {
     private ProgressBar progressBar;
     private TextView errorText;
     private String articleId;
-    private HttpUtil contentRequest;
-    private Handler contentHandler;
+    private final HttpUtil contentRequest = new HttpUtil();
     private int viewGeneration = 0;
 
     // 每个 Fragment 自己的加载状态
@@ -176,41 +173,32 @@ public class ArticleFragment extends Fragment {
         MotionUtil.showOnly(stateContainer, progressBar, progressBar, errorText, webView);
 
         final int requestViewGeneration = viewGeneration;
-        if (contentRequest != null) contentRequest.cancel();
-        if (contentHandler != null) contentHandler.removeCallbacksAndMessages(null);
-        contentRequest = new HttpUtil(HttpUtil.GET);
-        contentHandler = new Handler(Looper.getMainLooper(), msg -> {
-                    isLoading = false;
+        contentRequest.enqueue(ApiUrlBuilder.from(URL_API_BASE, "articles/about")
+                .add("id", articleId).build(), new HttpUtil.Callback() {
+            @Override
+            public void onSuccess(String body) {
+                finishLoad(requestViewGeneration, cacheKey, body);
+            }
 
-                    if (requestViewGeneration != viewGeneration
-                            || !isAdded()
-                            || webView == null
-                            || progressBar == null
-                            || errorText == null) {
-                        return true;
-                    }
+            @Override
+            public void onFailure(HttpUtil.RequestError error) {
+                finishLoad(requestViewGeneration, cacheKey, null);
+            }
+        });
+    }
 
-                    if (msg.what == HttpUtil.REQUEST_CONTENT_SUCCESSFULLY) {
-                        String response = msg.obj.toString();
-                        if (applyResponse(response)) {
-                            if (getContext() != null) {
-                                DiskTextCache.write(getContext(), cacheKey, response);
-                            }
-                            return true;
-                        }
-                    }
-                    String stale = getContext() == null
-                            ? null
-                            : DiskTextCache.readAny(getContext(), cacheKey);
-                    if (stale != null && applyResponse(stale)) return true;
-                    if (!loadBundledArticleFallback(cacheKey)) showError();
-                    return true;
-                });
-        contentRequest.setUrl(ApiUrlBuilder.from(URL_API_BASE, "articles/about")
-                        .add("id", articleId)
-                        .build())
-                .setHandler(contentHandler)
-                .start();
+    private void finishLoad(int requestGeneration, String cacheKey, String response) {
+        isLoading = false;
+        if (requestGeneration != viewGeneration || !isAdded() || webView == null
+                || progressBar == null || errorText == null) return;
+        if (response != null && applyResponse(response)) {
+            if (getContext() != null) DiskTextCache.write(getContext(), cacheKey, response);
+            return;
+        }
+        String stale = getContext() == null
+                ? null : DiskTextCache.readAny(getContext(), cacheKey);
+        if (stale != null && applyResponse(stale)) return;
+        if (!loadBundledArticleFallback(cacheKey)) showError();
     }
 
     private boolean loadBundledArticleFallback(String cacheKey) {
@@ -294,14 +282,7 @@ public class ArticleFragment extends Fragment {
     public void onDestroyView() {
         viewGeneration++;
         isLoading = false;
-        if (contentRequest != null) {
-            contentRequest.cancel();
-            contentRequest = null;
-        }
-        if (contentHandler != null) {
-            contentHandler.removeCallbacksAndMessages(null);
-            contentHandler = null;
-        }
+        contentRequest.cancel();
         if (webView != null) {
             webView.stopLoading();
             webView.setWebViewClient(null);

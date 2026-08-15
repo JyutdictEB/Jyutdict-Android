@@ -854,7 +854,7 @@ public class MainActivity extends AppCompatActivity {
     private final class HeaderLoader {
         final boolean sheet;
         final String url, cacheKey;
-        final HttpUtil request = new HttpUtil(HttpUtil.GET).setTimeouts(8_000, 12_000);
+        final HttpUtil request = new HttpUtil().setTimeouts(8_000, 12_000);
         boolean needsRefresh = true, inFlight, retryScheduled;
         int retryAttempt;
         final Runnable retry = () -> {

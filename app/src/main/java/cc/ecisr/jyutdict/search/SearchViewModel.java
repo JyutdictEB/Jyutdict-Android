@@ -49,7 +49,7 @@ public final class SearchViewModel extends ViewModel {
 
     public SearchViewModel() {
         this(new Client() {
-            private final HttpUtil request = new HttpUtil(HttpUtil.GET);
+            private final HttpUtil request = new HttpUtil();
 
             @Override
             public void search(@NonNull String url, @NonNull HttpUtil.Callback callback) {

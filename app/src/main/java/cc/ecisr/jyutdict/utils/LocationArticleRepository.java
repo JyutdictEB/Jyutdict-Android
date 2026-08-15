@@ -1,8 +1,6 @@
 package cc.ecisr.jyutdict.utils;
 
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,8 +24,6 @@ public final class LocationArticleRepository {
             "https://jyutdict.org/api/v1.0/articles/?list=1&type=location";
     private static final String CACHE_KEY = "location_article_directory_v1";
     private static final long MAX_AGE = 24L * 60L * 60L * 1000L;
-    private static final int SUCCESS = 8611;
-    private static final int FAILURE = 8612;
 
     private static final Object LOCK = new Object();
     private static final Map<String, String> RESOLVED_NAMES = new HashMap<>();
@@ -37,7 +33,6 @@ public final class LocationArticleRepository {
     private static boolean ready;
     private static boolean loading;
     private static HttpUtil request;
-    private static Handler handler;
 
     private LocationArticleRepository() {
     }
@@ -82,42 +77,43 @@ public final class LocationArticleRepository {
             loading = true;
         }
 
-        request = new HttpUtil(HttpUtil.GET);
-        handler = new Handler(Looper.getMainLooper(), message -> {
-            boolean parsed = false;
-            String response = null;
-            if (message.what == SUCCESS) {
-                response = String.valueOf(message.obj);
-                parsed = parseDirectory(response);
+        request = new HttpUtil();
+        request.enqueue(URL, new HttpUtil.Callback() {
+            @Override
+            public void onSuccess(String body) {
+                finishLoad(appContext, body);
             }
-            if (!parsed) {
-                String stale = DiskTextCache.readAny(appContext, CACHE_KEY);
-                if (stale != null) parsed = parseDirectory(stale);
+
+            @Override
+            public void onFailure(HttpUtil.RequestError error) {
+                finishLoad(appContext, null);
             }
-            if (parsed && response != null) {
-                DiskTextCache.write(appContext, CACHE_KEY, response);
-            }
-            ArrayList<Pending> callbacks;
-            synchronized (LOCK) {
-                ready = parsed;
-                loading = false;
-                callbacks = new ArrayList<>(PENDING);
-                PENDING.clear();
-            }
-            for (Pending pending : callbacks) {
-                pending.callback.onResult(resultFor(pending.requestedName));
-            }
-            return true;
         });
-        request.setUrl(URL).setHandler(handler, SUCCESS, FAILURE).start();
+    }
+
+    private static void finishLoad(Context context, String response) {
+        boolean parsed = response != null && parseDirectory(response);
+        if (!parsed) {
+            String stale = DiskTextCache.readAny(context, CACHE_KEY);
+            if (stale != null) parsed = parseDirectory(stale);
+        }
+        if (parsed && response != null) DiskTextCache.write(context, CACHE_KEY, response);
+        ArrayList<Pending> callbacks;
+        synchronized (LOCK) {
+            ready = parsed;
+            loading = false;
+            callbacks = new ArrayList<>(PENDING);
+            PENDING.clear();
+        }
+        for (Pending pending : callbacks) {
+            pending.callback.onResult(resultFor(pending.requestedName));
+        }
     }
 
     public static void clearMemoryCache() {
         synchronized (LOCK) {
             if (request != null) request.cancel();
-            if (handler != null) handler.removeCallbacksAndMessages(null);
             request = null;
-            handler = null;
             ready = false;
             loading = false;
             PENDING.clear();

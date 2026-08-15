@@ -1,21 +1,15 @@
 package cc.ecisr.jyutdict;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.text.InputType;
 import android.view.ViewGroup;
 
 import androidx.activity.OnBackPressedCallback;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -36,7 +30,6 @@ import cc.ecisr.jyutdict.auth.GoogleSignInCoordinator;
 import cc.ecisr.jyutdict.databinding.ActivitySettingsBinding;
 import cc.ecisr.jyutdict.databinding.DialogVersionInfoBinding;
 import cc.ecisr.jyutdict.utils.DiskTextCache;
-import cc.ecisr.jyutdict.utils.EnumConst;
 import cc.ecisr.jyutdict.utils.HttpUtil;
 import cc.ecisr.jyutdict.utils.LocationArticleRepository;
 import cc.ecisr.jyutdict.utils.ImmersiveBarUtil;
@@ -53,17 +46,15 @@ public class SettingsActivity extends AppCompatActivity {
 
     DialogVersionInfoBinding versionDialogBinding;
     AlertDialog versionDialog;
-    SettingHandler mHandler;
-    final HttpUtil versionQuery = new HttpUtil(HttpUtil.GET);
+    final HttpUtil versionQuery = new HttpUtil();
     AuthRepository authRepository;
     GoogleSignInCoordinator googleSignIn;
 
     String versionNameThis;
-    int v0This, v1This, v2This; // 版本号
+    int[] currentVersion;
 
     SettingsFragment settingsFragment;
 
-    @SuppressLint("HandlerLeak")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(ThemeUtil.isNightMode(this) ? R.style.DarkSettingsTheme : R.style.AppTheme);
@@ -109,40 +100,7 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         versionNameThis = getInstalledVersionName();
-        int[] currentVersion = parseSemanticVersion(versionNameThis);
-        v0This = currentVersion[0];
-        v1This = currentVersion[1];
-        v2This = currentVersion[2];
-
-        mHandler = new SettingHandler(getMainLooper(), msg -> {
-            switch (msg.what) {
-                case EnumConst.CHECKING_VERSION:
-                    try {
-                        JSONObject response = new JSONObject(msg.obj.toString());
-                        JSONArray version = response.optJSONArray("app_version");
-                        if (version == null) version = response.getJSONArray("version");
-                        int v0 = version.getInt(0); // 服務器記錄的最新版本號
-                        int v1 = version.getInt(1);
-                        int v2 = version.getInt(2);
-                        if (isNewerVersion(v0, v1, v2)) {
-                            setVersionStatus(getString(
-                                    R.string.version_status_update_available, v0, v1, v2));
-                        } else {
-                            setVersionStatus(getString(R.string.version_status_current));
-                        }
-                    } catch (Exception ignored) {
-                        setVersionStatus(getString(R.string.version_status_invalid));
-                    }
-                    setVersionCheckEnabled(true);
-                    break;
-                case HttpUtil.REQUEST_CONTENT_FAIL:
-                    setVersionStatus(getString(R.string.version_status_failed));
-                    setVersionCheckEnabled(true);
-                    break;
-                default:
-                    break;
-            }
-        });
+        currentVersion = parseSemanticVersion(versionNameThis);
 
 
         binding.btnCheckVersion.setText(getString(R.string.app_version, versionNameThis));
@@ -196,15 +154,39 @@ public class SettingsActivity extends AppCompatActivity {
     private void checkVersion() {
         setVersionStatus(getString(R.string.version_status_checking));
         setVersionCheckEnabled(false);
-        versionQuery.setUrl("https://jyutdict.org/api/")
-                .setHandler(mHandler, EnumConst.CHECKING_VERSION)
-                .start();
+        versionQuery.enqueue("https://jyutdict.org/api/", new HttpUtil.Callback() {
+            @Override
+            public void onSuccess(String body) {
+                applyVersionResponse(body);
+            }
+
+            @Override
+            public void onFailure(HttpUtil.RequestError error) {
+                setVersionStatus(getString(R.string.version_status_failed));
+                setVersionCheckEnabled(true);
+            }
+        });
+    }
+
+    private void applyVersionResponse(String raw) {
+        try {
+            JSONObject response = new JSONObject(raw);
+            JSONArray version = response.optJSONArray("app_version");
+            if (version == null) version = response.getJSONArray("version");
+            int major = version.getInt(0), minor = version.getInt(1), patch = version.getInt(2);
+            setVersionStatus(isNewerVersion(major, minor, patch)
+                    ? getString(R.string.version_status_update_available, major, minor, patch)
+                    : getString(R.string.version_status_current));
+        } catch (Exception ignored) {
+            setVersionStatus(getString(R.string.version_status_invalid));
+        }
+        setVersionCheckEnabled(true);
     }
 
     private boolean isNewerVersion(int major, int minor, int patch) {
-        if (major != v0This) return major > v0This;
-        if (minor != v1This) return minor > v1This;
-        return patch > v2This;
+        if (major != currentVersion[0]) return major > currentVersion[0];
+        if (minor != currentVersion[1]) return minor > currentVersion[1];
+        return patch > currentVersion[2];
     }
 
     private String getInstalledVersionName() {
@@ -257,7 +239,6 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         versionQuery.cancel();
-        if (mHandler != null) mHandler.removeCallbacksAndMessages(null);
         if (versionDialog != null) versionDialog.dismiss();
         super.onDestroy();
     }
@@ -376,21 +357,4 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
-    static class SettingHandler extends Handler{
-        IHandleMessageProcessor iHandleMessageProcessor;
-
-        public SettingHandler(@NonNull Looper looper, IHandleMessageProcessor processor) {
-            super(looper);
-            iHandleMessageProcessor = processor;
-        }
-
-        @Override
-        public void handleMessage(@Nullable Message msg) {
-            iHandleMessageProcessor.handleMessage(msg);
-        }
-
-        public interface IHandleMessageProcessor {
-            void handleMessage(Message msg);
-        }
-    }
 }

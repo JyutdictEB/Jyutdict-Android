@@ -4,8 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -34,15 +32,12 @@ public class LocationReaderActivity extends AppCompatActivity {
     private static final String EXTRA_SHEET_STATISTIC = "sheet_statistic";
     private static final String MODE_ARTICLE = "article";
     private static final String MODE_PHONOLOGY = "phonology";
-    private static final int LOAD_SUCCESS = 7401;
-    private static final int LOAD_FAILURE = 7402;
     private static final long ARTICLE_CACHE_MAX_AGE = 24L * 60L * 60L * 1000L;
     private static final long PHONOLOGY_CACHE_FALLBACK_MAX_AGE =
             7L * 24L * 60L * 60L * 1000L;
 
     private ActivityLocationReaderBinding binding;
-    private final HttpUtil request = new HttpUtil(HttpUtil.GET);
-    private Handler handler;
+    private final HttpUtil request = new HttpUtil();
     private String mode;
     private String locationName;
     private String sheetStatistic;
@@ -91,22 +86,6 @@ public class LocationReaderActivity extends AppCompatActivity {
 
         configureWebView();
         binding.readerError.setOnClickListener(v -> load(true));
-        handler = new Handler(Looper.getMainLooper(), msg -> {
-            if (isFinishing() || isDestroyed()) return true;
-            if (msg.what == LOAD_SUCCESS) {
-                String raw = String.valueOf(msg.obj);
-                DiskTextCache.write(this, cacheKey(), raw);
-                showResponse(raw);
-            } else {
-                String stale = DiskTextCache.readAny(this, cacheKey());
-                if (stale == null) {
-                    showError(R.string.info_load_error_retry);
-                } else {
-                    showResponse(stale);
-                }
-            }
-            return true;
-        });
         load(false);
     }
 
@@ -166,9 +145,22 @@ public class LocationReaderActivity extends AppCompatActivity {
                     .add("location_name", locationName)
                     .add("type", "location");
         }
-        request.setUrl(url.build())
-                .setHandler(handler, LOAD_SUCCESS, LOAD_FAILURE)
-                .start();
+        request.enqueue(url.build(), new HttpUtil.Callback() {
+            @Override
+            public void onSuccess(String body) {
+                if (isFinishing() || isDestroyed()) return;
+                DiskTextCache.write(LocationReaderActivity.this, cacheKey(), body);
+                showResponse(body);
+            }
+
+            @Override
+            public void onFailure(HttpUtil.RequestError error) {
+                if (isFinishing() || isDestroyed()) return;
+                String stale = DiskTextCache.readAny(LocationReaderActivity.this, cacheKey());
+                if (stale == null) showError(R.string.info_load_error_retry);
+                else showResponse(stale);
+            }
+        });
     }
 
     private String cacheKey() {
@@ -224,7 +216,6 @@ public class LocationReaderActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         request.cancel();
-        if (handler != null) handler.removeCallbacksAndMessages(null);
         if (binding != null) {
             binding.readerWebView.stopLoading();
             binding.readerWebView.setWebViewClient(null);
