@@ -66,6 +66,23 @@ public final class MotionUtil {
         animator.start();
     }
 
+    /**
+     * Crisp, flat elastic spring pulse for sharp-corner button state changes.
+     * Scales down slightly and rebounds smoothly without skewing or rotating.
+     */
+    public static void animateFlatButtonPulse(View view) {
+        if (view == null || !view.isLaidOut()) return;
+        view.animate().cancel();
+        view.setScaleX(0.91f);
+        view.setScaleY(0.91f);
+        view.animate()
+                .scaleX(1.0f)
+                .scaleY(1.0f)
+                .setDuration(220L)
+                .setInterpolator(new android.view.animation.OvershootInterpolator(2.0f))
+                .start();
+    }
+
     /** Quickly fades changed text out and back in without retaining stale end actions. */
     public static void setText(TextView view, CharSequence text) {
         CharSequence current = view.getText();

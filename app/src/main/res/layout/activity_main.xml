@@ -79,15 +79,14 @@
 
             <Button
                 android:id="@+id/btn_query"
-                android:layout_width="72dp"
-                android:layout_height="32dp"
+                android:layout_width="wrap_content"
+                android:layout_height="34dp"
                 android:layout_marginStart="6dp"
                 android:background="@drawable/bg_solid_accent_button"
                 android:foreground="?selectableItemBackground"
                 android:text="@string/search_button"
                 android:textColor="@color/btn_solid_accent_text"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textSize="16sp" />
 
         </LinearLayout>
 

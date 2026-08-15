@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="false">
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/colorUnavailable" />
+                </shape>
+            </item>
+            <item
+                android:top="-4dp"
+                android:left="-4dp"
+                android:right="-4dp">
+                <shape android:shape="rectangle">
+                    <stroke android:width="3dp" android:color="@color/colorUnavailableDark" />
+                    <solid android:color="@android:color/transparent" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item android:state_pressed="true">
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/colorSecondaryVariant" />
+                </shape>
+            </item>
+            <item
+                android:top="-4dp"
+                android:left="-4dp"
+                android:right="-4dp">
+                <shape android:shape="rectangle">
+                    <stroke android:width="3dp" android:color="#33070E" />
+                    <solid android:color="@android:color/transparent" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item>
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/colorSecondary" />
+                </shape>
+            </item>
+            <item
+                android:top="-4dp"
+                android:left="-4dp"
+                android:right="-4dp">
+                <shape android:shape="rectangle">
+                    <stroke android:width="3dp" android:color="@color/colorSecondaryVariant" />
+                    <solid android:color="@android:color/transparent" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</selector>

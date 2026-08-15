@@ -13,6 +13,8 @@ import androidx.lifecycle.ViewModelProvider;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.TransitionDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -99,8 +101,9 @@ public class MainActivity extends AppCompatActivity {
     ResultFragment resultFragment;
     private SearchViewModel searchViewModel;
 
-    // 查詢按鈕字體的顏色，僅用於功能測試
-    int previousColor;
+    // 查詢按鈕搜字/搜音雙態背景
+    private TransitionDrawable queryButtonBackground;
+    private boolean isQueryingJyutping = false;
 
     boolean headerLoadingInitialized = false;
     boolean headerRetriesEnabled = false;
@@ -194,6 +197,13 @@ public class MainActivity extends AppCompatActivity {
 
         // 查詢按鈕
         binding.btnQuery.setOnClickListener(v -> search());
+        Drawable charaBg = ContextCompat.getDrawable(this, R.drawable.bg_solid_accent_button);
+        Drawable pronBg = ContextCompat.getDrawable(this, R.drawable.bg_solid_secondary_button);
+        if (charaBg != null && pronBg != null) {
+            queryButtonBackground = new TransitionDrawable(new Drawable[]{charaBg, pronBg});
+            queryButtonBackground.setCrossFadeEnabled(true);
+            binding.btnQuery.setBackground(queryButtonBackground);
+        }
         binding.btnClearInput.setOnClickListener(v -> {
             inputEditText.setText("");
             inputEditText.requestFocus();
@@ -213,33 +223,41 @@ public class MainActivity extends AppCompatActivity {
             return false;
         });
 
-        // 監聽輸入框的輸入 // 僅用於功能測試
-        inputEditText.addTextChangedListener(new TextWatcher() { // 用來根據搜字/搜音變按鈕色
+        // 監聽輸入框的輸入
+        inputEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
             @Override
             public void afterTextChanged(Editable s) {
                 binding.btnClearInput.setVisibility(s.length() == 0 ? View.GONE : View.VISIBLE);
                 boolean isJpp = StringUtil.isJyutpingInput(s.toString());
 
-                int presentColor = isJpp ?
-                        ContextCompat.getColor(MainActivity.this, R.color.colorSecondary) :
-                        ContextCompat.getColor(MainActivity.this, R.color.colorPrimary);
-                if (previousColor == presentColor) return;
-                MotionUtil.animateTextColor(
-                        binding.btnQuery, previousColor, presentColor);
-                previousColor = presentColor;
-                if (!isSheetMode()) {
-                    MotionUtil.beginLayoutTransition(binding.queryLayout);
-                    btnFilterArea.setVisibility(isJpp ? View.GONE : View.VISIBLE);
-                    btnFilterAreaPron.setVisibility(isJpp ? View.VISIBLE : View.GONE);
+                if (isQueryingJyutping != isJpp) {
+                    isQueryingJyutping = isJpp;
+                    if (queryButtonBackground != null) {
+                        if (isJpp) {
+                            queryButtonBackground.startTransition((int) MotionUtil.DURATION_MEDIUM);
+                        } else {
+                            queryButtonBackground.reverseTransition((int) MotionUtil.DURATION_MEDIUM);
+                        }
+                    }
+                    MotionUtil.animateFlatButtonPulse(binding.btnQuery);
+                    if (!isSheetMode()) {
+                        MotionUtil.beginLayoutTransition(binding.queryLayout);
+                        btnFilterArea.setVisibility(isJpp ? View.GONE : View.VISIBLE);
+                        btnFilterAreaPron.setVisibility(isJpp ? View.VISIBLE : View.GONE);
+                    }
                 }
             }
         });
-        previousColor = ContextCompat.getColor(this, R.color.colorPrimary);
+        if (inputEditText.getText() != null && StringUtil.isJyutpingInput(inputEditText.getText().toString())) {
+            isQueryingJyutping = true;
+            if (queryButtonBackground != null) {
+                queryButtonBackground.startTransition(0);
+            }
+        }
         binding.btnClearInput.setVisibility(inputEditText.length() == 0 ? View.GONE : View.VISIBLE);
 
         // 讀取幾個開關之前的狀態
