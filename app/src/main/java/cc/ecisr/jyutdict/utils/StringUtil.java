@@ -1,5 +1,6 @@
 package cc.ecisr.jyutdict.utils;
 
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
@@ -61,7 +62,7 @@ public class StringUtil {
                 }
             }
             if (i!=0) unicodeBytes.append(" ");
-            unicodeBytes.append("U+").append(hexB.toUpperCase());
+            unicodeBytes.append("U+").append(hexB.toUpperCase(Locale.ROOT));
         }
         return unicodeBytes.toString();
     }

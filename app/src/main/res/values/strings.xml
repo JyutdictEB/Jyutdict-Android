@@ -22,6 +22,7 @@
     <string name="auth_role">身份：%1$s</string>
     <string name="auth_not_configured">尚未配置 Google 登入</string>
     <string name="auth_invalid_credential">Google 返回了無法識別的登入憑證</string>
+    <string name="auth_no_credential">未找到可用的 Google 登入憑證</string>
     <string name="auth_sign_in_failed">登入失敗：%1$s</string>
     <string name="auth_signed_in_as">已登入：%1$s</string>
     <string name="auth_signed_out">已登出</string>

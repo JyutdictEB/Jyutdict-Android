@@ -247,6 +247,14 @@ public class SelectableTextView extends AppCompatTextView {
     }
 
     @Override
+    public boolean performClick() {
+        boolean handled = super.performClick();
+        if (mOnNonLinkClickListener == null) return handled;
+        mOnNonLinkClickListener.onClick(this);
+        return true;
+    }
+
+    @Override
     public boolean onTouchEvent(MotionEvent event) {
         int action = event.getAction();
 
@@ -287,10 +295,6 @@ public class SelectableTextView extends AppCompatTextView {
                         super.onTouchEvent(cancelEvent);
                         cancelEvent.recycle();
                         return true;
-                    } else {
-                        if (mOnNonLinkClickListener != null) {
-                            mOnNonLinkClickListener.onClick(this);
-                        }
                     }
                 } else if (clickedSpan != null) {
                     clickedSpan.onClick(this);
@@ -299,10 +303,6 @@ public class SelectableTextView extends AppCompatTextView {
                     super.onTouchEvent(cancelEvent);
                     cancelEvent.recycle();
                     return true;
-                } else {
-                    if (mOnNonLinkClickListener != null) {
-                        mOnNonLinkClickListener.onClick(this);
-                    }
                 }
                 break;
 

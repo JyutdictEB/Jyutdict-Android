@@ -16,6 +16,7 @@ import androidx.credentials.GetCredentialRequest;
 import androidx.credentials.GetCredentialResponse;
 import androidx.credentials.exceptions.ClearCredentialException;
 import androidx.credentials.exceptions.GetCredentialException;
+import androidx.credentials.exceptions.NoCredentialException;
 
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption;
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
@@ -80,6 +81,11 @@ public final class GoogleSignInCoordinator {
 
                         @Override
                         public void onError(@NonNull GetCredentialException exception) {
+                            if (exception instanceof NoCredentialException) {
+                                finishSignInFailure(activity.getString(
+                                        R.string.auth_no_credential));
+                                return;
+                            }
                             finishSignInFailure(exception.getMessage());
                         }
                     }

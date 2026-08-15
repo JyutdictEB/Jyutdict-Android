@@ -1,5 +1,6 @@
 package cc.ecisr.jyutdict.utils;
 
+import java.util.Locale;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -64,7 +65,7 @@ public class JyutpingUtil {
      */
     public static String[] parseJyutpingQuery(String input) {
         if (input == null || input.isEmpty()) return null;
-        input = input.toLowerCase().trim();
+        input = input.toLowerCase(Locale.ROOT).trim();
 
         // 正則定義（與 Vue 前端 PronunciationView.vue 保持一致）
         // 聲母：用 lookahead (?=...) 確保後面是元音/鼻音/空格，但不消費該字符

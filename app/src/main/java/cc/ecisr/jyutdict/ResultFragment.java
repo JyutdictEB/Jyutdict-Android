@@ -2,6 +2,7 @@ package cc.ecisr.jyutdict;
 
 import static cc.ecisr.jyutdict.utils.EnumConst.*;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -286,6 +287,7 @@ public class ResultFragment extends Fragment {
      * 同模式再次查詢若只 notifyDataSetChanged，重綁後的文字可能再也無法長按選取；
      * 發佈一批新結果時丟棄舊 holder，確保每次查詢都使用全新的選取狀態。
      */
+    @SuppressLint("NotifyDataSetChanged")
     private void publishResultViews(boolean revealNewResult) {
         if (mRvMain == null || resultAdapter == null) return;
         mRvMain.stopScroll();
