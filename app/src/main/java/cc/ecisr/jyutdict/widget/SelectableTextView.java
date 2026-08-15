@@ -170,7 +170,10 @@ public class SelectableTextView extends AppCompatTextView {
     }
 
     private static String stripLayoutCharacters(CharSequence text) {
-        return text == null ? "" : text.toString().replace(WORD_JOINER, "");
+        return text == null ? "" : text.toString()
+                .replace(WORD_JOINER, "")
+                .replace("\u200B", "")
+                .replace("\uFEFF", "");
     }
 
     @Override
@@ -194,6 +197,12 @@ public class SelectableTextView extends AppCompatTextView {
     public boolean performLongClick() {
         mHasPerformedLongPress = true;
         return super.performLongClick();
+    }
+
+    @Override
+    public boolean performLongClick(float x, float y) {
+        mHasPerformedLongPress = true;
+        return super.performLongClick(x, y);
     }
 
     @Override

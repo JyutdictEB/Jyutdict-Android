@@ -79,7 +79,8 @@ public class ResultFragment extends Fragment {
                 selectionList.add(getString(R.string.entry_menu_copy_chara));
 
                 final Pattern pt= Pattern.compile("((?<=〔[～~])[^～~]+?(?=〕))|((?<=〔)[^～~]+?(?=[～~]+?〕))");
-                Matcher mt=pt.matcher(holder.tvRightTop.getText().toString());
+                CharSequence wanshyu = holder.getWanshyuText();
+                Matcher mt = pt.matcher(wanshyu != null ? wanshyu.toString() : "");
                 while (mt.find()){
                     charaInWordsList.add(mt.group(0));
                     selectionList.add(getString(R.string.entry_menu_search_common, mt.group(0)));

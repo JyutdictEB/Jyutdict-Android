@@ -208,4 +208,21 @@ public class ColorUtil {
         hsv[2] = 0.8f;
         return Color.HSVToColor(hsv);
     }
+
+    /**
+     * 解析當前主題下的顏色屬性，如 R.attr.clockTextColor、R.attr.clockHover 等
+     */
+    public static int resolveThemeColor(android.content.Context context, int attrResId) {
+        if (context == null) return Color.BLACK;
+        android.util.TypedValue typedValue = new android.util.TypedValue();
+        if (context.getTheme().resolveAttribute(attrResId, typedValue, true)) {
+            if (typedValue.type >= android.util.TypedValue.TYPE_FIRST_COLOR_INT
+                    && typedValue.type <= android.util.TypedValue.TYPE_LAST_COLOR_INT) {
+                return typedValue.data;
+            } else if (typedValue.resourceId != 0) {
+                return androidx.core.content.ContextCompat.getColor(context, typedValue.resourceId);
+            }
+        }
+        return Color.BLACK;
+    }
 }

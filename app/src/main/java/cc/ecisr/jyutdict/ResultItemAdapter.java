@@ -1,15 +1,22 @@
 package cc.ecisr.jyutdict;
 
 import android.content.Context;
+import android.graphics.Paint;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.LeadingMarginSpan;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
-import cc.ecisr.jyutdict.widget.SelectableTextView;
+import cc.ecisr.jyutdict.utils.ColorUtil;
 import cc.ecisr.jyutdict.utils.MotionUtil;
+import cc.ecisr.jyutdict.widget.CharacterHeaderSpan;
+import cc.ecisr.jyutdict.widget.HorizontalDividerSpan;
+import cc.ecisr.jyutdict.widget.SelectableTextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -36,7 +43,6 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         return new LinearViewHolder(LayoutInflater.from(mContext).inflate(layout, parent, false));
     }
 
-
     @Override
     public void onBindViewHolder(@NonNull ResultItemAdapter.LinearViewHolder holder, final int position) {
         ResultInfo item = items.get(position);
@@ -45,46 +51,66 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         Spanned extra = item.leftBottom;
         Spanned wanshyu = item.rightTop;
         Spanned location = item.rightBottom;
-
-        holder.tvCharaHeader.setSelectableText(header);
-        holder.tvCharaInfo.setSelectableText(info);
         boolean isSheetEntry = getItemViewType(position) == ResultInfo.TYPE_SHEET;
-        holder.tvCharaExtra.setSelectableText(extra);
-        holder.tvRightTop.setSelectableText(wanshyu);
-        holder.tvRightBottom.setSelectableText(isSheetEntry
-                ? joinTextSections(wanshyu, location)
-                : location);
-        holder.collapseAnnotation(false);
-        holder.tvRightBottom.setOnAnnotationClickListener(holder::toggleAnnotation);
-        int lyCharaVisibility = (!header.isEmpty() || !info.isEmpty()) ? View.VISIBLE : View.GONE;
-        int tvContentInfoVisibility = (!info.isEmpty()) ? View.VISIBLE : View.GONE;
-        int tvContentExtraVisibility = (!extra.isEmpty()) ? View.VISIBLE : View.GONE;
-        int tvContentWanshyuVisibility = (!wanshyu.isEmpty()) ? View.VISIBLE : View.GONE;
-        int tvContentLocationVisibility = (!location.isEmpty()) ? View.VISIBLE : View.GONE;
-        boolean hasTopContent = !wanshyu.isEmpty()
-                || (getItemViewType(position) == ResultInfo.TYPE_GENERAL && !extra.isEmpty());
-        int dividerVisibility = (hasTopContent && !location.isEmpty())
-                ? View.VISIBLE : View.GONE;
-        holder.lyChara.setVisibility(lyCharaVisibility);
-        holder.tvCharaInfo.setVisibility(tvContentInfoVisibility);
-        holder.tvCharaExtra.setVisibility(tvContentExtraVisibility);
-        holder.tvRightTop.setVisibility(isSheetEntry ? View.GONE : tvContentWanshyuVisibility);
-        holder.tvRightBottom.setVisibility(isSheetEntry
-                ? (wanshyu.isEmpty() && location.isEmpty() ? View.GONE : View.VISIBLE)
-                : tvContentLocationVisibility);
-        holder.contentDivider.setVisibility(isSheetEntry ? View.GONE : dividerVisibility);
-        holder.contentMerged = isSheetEntry;
 
+        holder.currentItem = item;
+        holder.contentMerged = true;
         holder.commentTarget = item.commentTarget;
+        holder.collapseAnnotation(false);
+
+        if (isSheetEntry) {
+            if (holder.tvCharaHeader != null) holder.tvCharaHeader.setSelectableText(header);
+            if (holder.tvCharaInfo != null) holder.tvCharaInfo.setSelectableText(info);
+            if (holder.tvCharaExtra != null) holder.tvCharaExtra.setSelectableText(extra);
+            if (holder.tvRightTop != null) {
+                holder.tvRightTop.setSelectableText(wanshyu);
+                holder.tvRightTop.setVisibility(View.GONE);
+            }
+            if (holder.tvRightBottom != null) {
+                holder.tvRightBottom.setSelectableText(joinTextSections(wanshyu, location));
+                holder.tvRightBottom.setVisibility(
+                        wanshyu.isEmpty() && location.isEmpty() ? View.GONE : View.VISIBLE);
+                holder.tvRightBottom.setOnAnnotationClickListener(holder::toggleAnnotation);
+            }
+            if (holder.lyChara != null) {
+                int lyCharaVisibility = (!header.isEmpty() || !info.isEmpty()) ? View.VISIBLE : View.GONE;
+                holder.lyChara.setVisibility(lyCharaVisibility);
+            }
+            if (holder.tvCharaInfo != null) {
+                holder.tvCharaInfo.setVisibility(!info.isEmpty() ? View.VISIBLE : View.GONE);
+            }
+            if (holder.tvCharaExtra != null) {
+                holder.tvCharaExtra.setVisibility(!extra.isEmpty() ? View.VISIBLE : View.GONE);
+            }
+            if (holder.contentDivider != null) {
+                holder.contentDivider.setVisibility(View.GONE);
+            }
+        } else {
+            if (holder.tvCharaHeader != null) holder.tvCharaHeader.setSelectableText("");
+            if (holder.tvCharaInfo != null) holder.tvCharaInfo.setSelectableText("");
+            if (holder.tvCharaExtra != null) holder.tvCharaExtra.setSelectableText("");
+            if (holder.tvRightTop != null) holder.tvRightTop.setSelectableText("");
+            if (holder.lyChara != null) holder.lyChara.setVisibility(View.GONE);
+            if (holder.contentDivider != null) holder.contentDivider.setVisibility(View.GONE);
+            if (holder.tvRightBottom != null) {
+                holder.tvRightBottom.setSelectableText(
+                        formatGeneralEntry(mContext, header, extra, wanshyu, location));
+                holder.tvRightBottom.setVisibility(
+                        header.isEmpty() && extra.isEmpty() && wanshyu.isEmpty() && location.isEmpty()
+                                ? View.GONE
+                                : View.VISIBLE);
+                holder.tvRightBottom.setOnAnnotationClickListener(holder::toggleAnnotation);
+            }
+        }
 
         // 短按彈出操作菜單
         View.OnClickListener showItemMenu = v -> mListener.onClick(holder);
         holder.itemView.setOnClickListener(showItemMenu);
-        holder.tvCharaHeader.setOnNonLinkClickListener(showItemMenu);
-        holder.tvCharaInfo.setOnNonLinkClickListener(showItemMenu);
-        holder.tvCharaExtra.setOnNonLinkClickListener(showItemMenu);
-        holder.tvRightTop.setOnNonLinkClickListener(showItemMenu);
-        holder.tvRightBottom.setOnNonLinkClickListener(showItemMenu);
+        if (holder.tvCharaHeader != null) holder.tvCharaHeader.setOnNonLinkClickListener(showItemMenu);
+        if (holder.tvCharaInfo != null) holder.tvCharaInfo.setOnNonLinkClickListener(showItemMenu);
+        if (holder.tvCharaExtra != null) holder.tvCharaExtra.setOnNonLinkClickListener(showItemMenu);
+        if (holder.tvRightTop != null) holder.tvRightTop.setOnNonLinkClickListener(showItemMenu);
+        if (holder.tvRightBottom != null) holder.tvRightBottom.setOnNonLinkClickListener(showItemMenu);
 
         ViewGroup.LayoutParams layoutParams = holder.itemView.getLayoutParams();
         layoutParams.height = LinearLayout.LayoutParams.WRAP_CONTENT;
@@ -123,6 +149,119 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         return combined;
     }
 
+    private static Spanned formatGeneralEntry(Context context, Spanned header, Spanned extra,
+                                             Spanned wanshyu, Spanned location) {
+        SpannableStringBuilder builder = new SpannableStringBuilder();
+
+        boolean hasHeader = header != null && !header.isEmpty();
+        boolean hasExtra = extra != null && !extra.isEmpty();
+        boolean hasWanshyu = wanshyu != null && !wanshyu.isEmpty();
+        boolean hasLocation = location != null && !location.isEmpty();
+
+        boolean hasTop = hasHeader || hasExtra || hasWanshyu;
+
+        if (hasHeader) {
+            boolean topIsSingleLine = !hasExtra && !hasWanshyu;
+            CharacterHeaderSpan headerSpan = new CharacterHeaderSpan(context, topIsSingleLine);
+
+            Paint measurePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            measurePaint.setTextSize(TypedValue.applyDimension(
+                    TypedValue.COMPLEX_UNIT_SP, 13, context.getResources().getDisplayMetrics()));
+            int totalHeaderWidth = headerSpan.getTotalWidth(
+                    measurePaint, header.toString(), 0, header.length());
+
+            int headerStart = builder.length();
+            builder.append(header);
+            int headerEnd = builder.length();
+            builder.setSpan(headerSpan, headerStart, headerEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            if (hasExtra) {
+                int extraStart = builder.length();
+                builder.append(extra);
+                int extraEnd = builder.length();
+
+                int primaryColor = androidx.core.content.ContextCompat.getColor(context, R.color.colorPrimary);
+                builder.setSpan(new ForegroundColorSpan(primaryColor), extraStart, extraEnd,
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                builder.setSpan(new LeadingMarginSpan.Standard(0, totalHeaderWidth),
+                        headerStart, extraEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                if (hasWanshyu) {
+                    appendWanshyuParagraphs(builder, wanshyu, headerStart, totalHeaderWidth, false);
+                }
+            } else if (hasWanshyu) {
+                // 沒有廣韻時（如“氈”）：第一段韻書緊接字頭右側排版，後續韻書各段均縮進 totalHeaderWidth
+                appendWanshyuParagraphs(builder, wanshyu, headerStart, totalHeaderWidth, true);
+            }
+        } else if (hasExtra || hasWanshyu) {
+            if (hasExtra) {
+                int extraStart = builder.length();
+                builder.append(extra);
+                int extraEnd = builder.length();
+                int primaryColor = androidx.core.content.ContextCompat.getColor(context, R.color.colorPrimary);
+                builder.setSpan(new ForegroundColorSpan(primaryColor), extraStart, extraEnd,
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
+            if (hasWanshyu) {
+                if (!builder.isEmpty()) builder.append("\n");
+                builder.append(wanshyu);
+            }
+        }
+
+        if (hasTop && hasLocation) {
+            builder.append("\n\u200B\n");
+            int dividerStart = builder.length() - 2;
+            int dividerEnd = builder.length() - 1;
+            builder.setSpan(new HorizontalDividerSpan(context), dividerStart, dividerEnd,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+
+        if (hasLocation) {
+            builder.append(location);
+        }
+
+        return builder;
+    }
+
+    private static void appendWanshyuParagraphs(SpannableStringBuilder builder, Spanned wanshyu,
+                                                int headerStart, int totalHeaderWidth,
+                                                boolean firstFollowsHeader) {
+        int length = wanshyu.length();
+        int cursor = 0;
+        boolean isFirst = true;
+
+        while (cursor < length) {
+            int nextNewline = -1;
+            for (int i = cursor; i < length; i++) {
+                if (wanshyu.charAt(i) == '\n') {
+                    nextNewline = i;
+                    break;
+                }
+            }
+            int end = (nextNewline == -1) ? length : nextNewline;
+            CharSequence paragraph = wanshyu.subSequence(cursor, end);
+
+            if (isFirst && firstFollowsHeader) {
+                int pStart = builder.length();
+                builder.append(paragraph);
+                int pEnd = builder.length();
+                builder.setSpan(new LeadingMarginSpan.Standard(0, totalHeaderWidth),
+                        headerStart, pEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                isFirst = false;
+            } else {
+                builder.append("\n");
+                int pStart = builder.length();
+                builder.append(paragraph);
+                int pEnd = builder.length();
+                builder.setSpan(new LeadingMarginSpan.Standard(totalHeaderWidth, totalHeaderWidth),
+                        pStart, pEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
+
+            cursor = end + 1;
+        }
+    }
+
     public static class LinearViewHolder extends RecyclerView.ViewHolder {
         LinearLayout lyChara;
         View contentDivider;
@@ -130,6 +269,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         SelectableTextView tvCharaHeader, tvCharaInfo, tvCharaExtra,
                 tvRightTop, tvRightBottom, tvAnnotation;
         ResultInfo.CommentTarget commentTarget;
+        ResultInfo currentItem;
         String expandedAnnotation;
         boolean contentMerged;
 
@@ -155,6 +295,13 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 
         ResultInfo.CommentTarget getCommentTarget() {
             return commentTarget;
+        }
+
+        CharSequence getWanshyuText() {
+            if (currentItem != null && currentItem.rightTop != null) {
+                return currentItem.rightTop.toString();
+            }
+            return tvRightTop != null ? tvRightTop.getText() : "";
         }
 
         void toggleAnnotation(String annotation) {
@@ -186,14 +333,21 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         }
 
         String getChara() {
-            return tvCharaHeader.getSelectablePlainText();
+            if (currentItem != null && currentItem.chara != null && !currentItem.chara.isEmpty()) {
+                return currentItem.chara.toString();
+            }
+            return tvCharaHeader != null ? tvCharaHeader.getSelectablePlainText() : "";
         }
+
         String printContent() {
-            return tvCharaHeader.getSelectablePlainText() + "\n" +
-                    tvCharaInfo.getSelectablePlainText() + "\n" +
-                    tvCharaExtra.getSelectablePlainText() + "\n" +
-                    (contentMerged ? "" : tvRightTop.getSelectablePlainText() + "\n") +
-                    tvRightBottom.getSelectablePlainText() + "\n";
+            if (tvRightBottom != null && tvCharaHeader == null) {
+                return tvRightBottom.getSelectablePlainText();
+            }
+            return (tvCharaHeader != null ? tvCharaHeader.getSelectablePlainText() + "\n" : "") +
+                    (tvCharaInfo != null ? tvCharaInfo.getSelectablePlainText() + "\n" : "") +
+                    (tvCharaExtra != null ? tvCharaExtra.getSelectablePlainText() + "\n" : "") +
+                    (contentMerged ? "" : (tvRightTop != null ? tvRightTop.getSelectablePlainText() + "\n" : "")) +
+                    (tvRightBottom != null ? tvRightBottom.getSelectablePlainText() + "\n" : "");
         }
     }
 

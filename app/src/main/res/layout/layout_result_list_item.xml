@@ -12,91 +12,11 @@
     android:orientation="vertical"
     android:padding="8dp">
 
-    <!-- 上部：左側字頭，右側韻書／釋義 -->
-    <LinearLayout
-        android:id="@+id/item_top"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:baselineAligned="false"
-        android:orientation="horizontal">
-
-        <LinearLayout
-            android:id="@+id/item_chara"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <cc.ecisr.jyutdict.widget.SelectableTextView
-                android:id="@+id/chara_header"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:paddingHorizontal="10dp"
-                android:text="@string/result_list_chara"
-                android:textColor="?attr/clockTextColor"
-                android:textSize="34sp" />
-
-            <cc.ecisr.jyutdict.widget.SelectableTextView
-                android:id="@+id/chara_info"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:paddingHorizontal="4dp"
-                android:text="@string/result_list_info"
-                android:textColor="?attr/clockTextColor"
-                android:textSize="12sp"
-                android:visibility="gone" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_weight="1"
-            android:orientation="vertical">
-
-            <cc.ecisr.jyutdict.widget.SelectableTextView
-                android:id="@+id/chara_extra"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:includeFontPadding="false"
-                android:lineSpacingExtra="1dp"
-                android:text="@string/result_list_info"
-                android:textColor="@color/colorPrimary"
-                android:textSize="13sp" />
-
-            <cc.ecisr.jyutdict.widget.SelectableTextView
-                android:id="@+id/content_wanshyu"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:includeFontPadding="false"
-                android:lineSpacingExtra="1dp"
-                android:text="@string/result_list_upper"
-                android:textColor="?attr/clockTextColor"
-                android:textSize="13sp" />
-
-        </LinearLayout>
-
-    </LinearLayout>
-
-    <View
-        android:id="@+id/content_divider"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="4dp"
-        android:background="?attr/clockHover" />
-
-    <!-- 下部：各地讀音使用完整卡片寬度 -->
     <cc.ecisr.jyutdict.widget.SelectableTextView
         android:id="@+id/content_location"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:includeFontPadding="false"
-        android:paddingTop="4dp"
         android:lineSpacingExtra="1dp"
         android:text="@string/result_list_bottom"
         android:textColor="?attr/clockTextColor"
