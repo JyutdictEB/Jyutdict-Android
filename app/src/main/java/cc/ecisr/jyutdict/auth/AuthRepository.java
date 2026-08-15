@@ -7,10 +7,9 @@ import org.json.JSONObject;
 import cc.ecisr.jyutdict.network.ApiClient;
 import cc.ecisr.jyutdict.network.SecureSessionStore;
 
-/** Owns the website-compatible PHP session and the current signed-in user. */
+/** Owns the website-compatible PHP session and current signed-in user. */
 public final class AuthRepository {
     private static volatile AuthRepository instance;
-
     private final ApiClient apiClient;
     private final SecureSessionStore sessionStore;
     private volatile User currentUser;
@@ -38,94 +37,62 @@ public final class AuthRepository {
     }
 
     public boolean isAdmin() {
-        User user = currentUser;
-        return user != null && ("admin".equals(user.role) || "owner".equals(user.role));
+        return currentUser != null
+                && ("admin".equals(currentUser.role) || "owner".equals(currentUser.role));
     }
 
     public void initialize(Completion completion) {
-        apiClient.get("/api/auth/me", new ApiClient.Callback() {
-            @Override
-            public void onSuccess(ApiClient.ApiResponse response) {
-                applyAuthResponse(response.body);
-                completion.onComplete(true, null);
-            }
-
-            @Override
-            public void onFailure(ApiClient.ApiFailure failure) {
-                currentUser = null;
-                completion.onComplete(false, failure.message);
-            }
+        apiClient.get("/api/auth/me", (body, error) -> {
+            if (error == null) applyAuthResponse(body);
+            else currentUser = null;
+            completion.onComplete(error == null, error);
         });
     }
 
     public void requestLoginNonce(ValueCallback<String> callback) {
-        apiClient.get("/api/auth/mobile", new ApiClient.Callback() {
-            @Override
-            public void onSuccess(ApiClient.ApiResponse response) {
-                String nonce = response.body.optString("nonce", "");
-                if (nonce.isEmpty()) callback.onResult(null, "Server returned no login challenge");
-                else callback.onResult(nonce, null);
+        apiClient.get("/api/auth/mobile", (body, error) -> {
+            if (error != null) {
+                callback.onResult(null, error);
+                return;
             }
-
-            @Override
-            public void onFailure(ApiClient.ApiFailure failure) {
-                callback.onResult(null, failure.message);
-            }
+            String nonce = body.optString("nonce", "");
+            callback.onResult(nonce.isEmpty() ? null : nonce,
+                    nonce.isEmpty() ? "Server returned no login challenge" : null);
         });
     }
 
     public void completeGoogleLogin(String idToken, Completion completion) {
-        JSONObject body = new JSONObject();
+        JSONObject request = new JSONObject();
         try {
-            body.put("id_token", idToken);
+            request.put("id_token", idToken);
         } catch (Exception exception) {
             completion.onComplete(false, exception.getMessage());
             return;
         }
-        apiClient.post("/api/auth/mobile", body, false, new ApiClient.Callback() {
-            @Override
-            public void onSuccess(ApiClient.ApiResponse response) {
-                applyAuthResponse(response.body);
-                completion.onComplete(currentUser != null,
-                        currentUser == null ? "Server returned no user" : null);
-            }
-
-            @Override
-            public void onFailure(ApiClient.ApiFailure failure) {
-                completion.onComplete(false, failure.message);
-            }
+        apiClient.post("/api/auth/mobile", request, false, (body, error) -> {
+            if (error == null) applyAuthResponse(body);
+            boolean success = error == null && currentUser != null;
+            completion.onComplete(success,
+                    error != null ? error : success ? null : "Server returned no user");
         });
     }
 
     public void logout(Completion completion) {
-        apiClient.post("/api/auth/logout", new JSONObject(), false, new ApiClient.Callback() {
-            @Override
-            public void onSuccess(ApiClient.ApiResponse response) {
-                clearLocalSession();
-                completion.onComplete(true, null);
-            }
-
-            @Override
-            public void onFailure(ApiClient.ApiFailure failure) {
-                clearLocalSession();
-                completion.onComplete(false, failure.message);
-            }
+        apiClient.post("/api/auth/logout", new JSONObject(), false, (body, error) -> {
+            clearLocalSession();
+            completion.onComplete(error == null, error);
         });
     }
 
     private void applyAuthResponse(JSONObject body) {
-        JSONObject userJson = body.optJSONObject("user");
-        if (userJson == null) {
+        JSONObject json = body.optJSONObject("user");
+        if (json == null) {
             currentUser = null;
             sessionStore.setCsrfToken("");
             return;
         }
-        currentUser = new User(
-                userJson.optInt("id"),
-                userJson.optString("email", ""),
-                userJson.optString("nickname", ""),
-                userJson.optString("role", "user")
-        );
+        currentUser = new User(json.optInt("id"), json.optString("email", ""),
+                json.optString("nickname", ""), json.optString("role", "user"));
         sessionStore.setCsrfToken(body.optString("csrf_token", ""));
     }
 
@@ -144,9 +111,7 @@ public final class AuthRepository {
 
     public static final class User {
         public final int id;
-        public final String email;
-        public final String nickname;
-        public final String role;
+        public final String email, nickname, role;
 
         User(int id, String email, String nickname, String role) {
             this.id = id;

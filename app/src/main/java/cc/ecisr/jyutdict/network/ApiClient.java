@@ -123,13 +123,12 @@ public final class ApiClient {
             String rawBody = readBody(rawStream, connection.getContentEncoding());
             JSONObject json = rawBody.isEmpty() ? new JSONObject() : new JSONObject(rawBody);
             if (status >= 200 && status < 300) {
-                deliverSuccess(callback, new ApiResponse(status, json));
+                deliver(callback, json, null);
             } else {
-                String message = json.optString("error", "HTTP " + status);
-                deliverFailure(callback, new ApiFailure(status, message, null));
+                deliver(callback, null, json.optString("error", "HTTP " + status));
             }
         } catch (IOException | JSONException exception) {
-            deliverFailure(callback, new ApiFailure(0, exception.getMessage(), exception));
+            deliver(callback, null, exception.getMessage());
         } finally {
             if (connection != null) connection.disconnect();
         }
@@ -162,38 +161,13 @@ public final class ApiClient {
         return result.toString();
     }
 
-    private void deliverSuccess(Callback callback, ApiResponse response) {
-        mainHandler.post(() -> callback.onSuccess(response));
-    }
-
-    private void deliverFailure(Callback callback, ApiFailure failure) {
-        mainHandler.post(() -> callback.onFailure(failure));
+    private void deliver(Callback callback, JSONObject response, String error) {
+        String message = response == null && (error == null || error.isEmpty())
+                ? "Network request failed" : error;
+        mainHandler.post(() -> callback.onComplete(response, message));
     }
 
     public interface Callback {
-        void onSuccess(ApiResponse response);
-        void onFailure(ApiFailure failure);
-    }
-
-    public static final class ApiResponse {
-        public final int statusCode;
-        public final JSONObject body;
-
-        ApiResponse(int statusCode, JSONObject body) {
-            this.statusCode = statusCode;
-            this.body = body;
-        }
-    }
-
-    public static final class ApiFailure {
-        public final int statusCode;
-        public final String message;
-        public final Throwable cause;
-
-        ApiFailure(int statusCode, String message, Throwable cause) {
-            this.statusCode = statusCode;
-            this.message = message == null || message.isEmpty() ? "Network request failed" : message;
-            this.cause = cause;
-        }
+        void onComplete(JSONObject response, String errorMessage);
     }
 }
