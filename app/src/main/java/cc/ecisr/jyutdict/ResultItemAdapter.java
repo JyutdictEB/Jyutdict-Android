@@ -340,6 +340,27 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         }
 
         String printContent() {
+            if (currentItem != null) {
+                StringBuilder sb = new StringBuilder();
+                if (currentItem.chara != null && !currentItem.chara.isEmpty()) {
+                    sb.append(currentItem.chara).append("\n");
+                }
+                if (currentItem.leftMiddle != null && !currentItem.leftMiddle.isEmpty()) {
+                    sb.append(currentItem.leftMiddle).append("\n");
+                }
+                if (currentItem.leftBottom != null && !currentItem.leftBottom.isEmpty()) {
+                    sb.append(currentItem.leftBottom).append("\n");
+                }
+                if (currentItem.rightTop != null && !currentItem.rightTop.isEmpty()) {
+                    sb.append(currentItem.rightTop).append("\n");
+                }
+                boolean hasTop = sb.length() > 0;
+                if (currentItem.rightBottom != null && !currentItem.rightBottom.isEmpty()) {
+                    if (hasTop) sb.append("\n");
+                    sb.append(currentItem.rightBottom).append("\n");
+                }
+                return sb.toString();
+            }
             if (tvRightBottom != null && tvCharaHeader == null) {
                 return tvRightBottom.getSelectablePlainText();
             }

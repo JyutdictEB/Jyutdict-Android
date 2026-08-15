@@ -77,7 +77,8 @@ public class SelectableTextView extends AppCompatTextView {
     }
 
     public String getSelectablePlainText() {
-        return stripLayoutCharacters(getText());
+        CharSequence text = getText();
+        return formatSelectedTextForClipboard(text, 0, text.length());
     }
 
     public void setOnAnnotationClickListener(OnAnnotationClickListener listener) {
@@ -160,13 +161,36 @@ public class SelectableTextView extends AppCompatTextView {
                         getContext().getSystemService(Context.CLIPBOARD_SERVICE);
                 if (clipboard != null) {
                     clipboard.setPrimaryClip(ClipData.newPlainText(
-                            null, stripLayoutCharacters(text.subSequence(start, end))));
+                            null, formatSelectedTextForClipboard(text, start, end)));
                     clearSelection();
                     return true;
                 }
             }
         }
         return super.onTextContextMenuItem(id);
+    }
+
+    private static String formatSelectedTextForClipboard(CharSequence fullText, int start, int end) {
+        if (fullText == null || start >= end) return "";
+        CharSequence sub = fullText.subSequence(start, end);
+        if (fullText instanceof Spanned) {
+            Spanned spanned = (Spanned) fullText;
+            CharacterHeaderSpan[] headerSpans = spanned.getSpans(start, end, CharacterHeaderSpan.class);
+            if (headerSpans.length > 0) {
+                SpannableStringBuilder ssb = new SpannableStringBuilder(sub);
+                for (CharacterHeaderSpan headerSpan : headerSpans) {
+                    int spanEnd = spanned.getSpanEnd(headerSpan);
+                    int relEnd = spanEnd - start;
+                    if (relEnd > 0 && relEnd < ssb.length()) {
+                        if (ssb.charAt(relEnd) != '\n') {
+                            ssb.insert(relEnd, "\n");
+                        }
+                    }
+                }
+                return stripLayoutCharacters(ssb);
+            }
+        }
+        return stripLayoutCharacters(sub);
     }
 
     private static String stripLayoutCharacters(CharSequence text) {
