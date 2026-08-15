@@ -24,6 +24,7 @@ import cc.ecisr.jyutdict.widget.AnnotationClickSpan;
 import cc.ecisr.jyutdict.widget.DashedUnderlineSpan;
 import cc.ecisr.jyutdict.widget.GradientTextSpan;
 import cc.ecisr.jyutdict.widget.LocationClickSpan;
+import cc.ecisr.jyutdict.widget.NoBreakCandidateSpan;
 
 /** One sheet row and its five rendered result fields. */
 public class FjbCharacter {
@@ -96,13 +97,15 @@ public class FjbCharacter {
     public Spanned printLocations() {
         SpannableStringBuilder text = new SpannableStringBuilder();
         for (String key : FjbHeaderInfo.getCityListInShort()) appendCity(text, key);
-        if (text.length() >= 2) text.delete(text.length() - 2, text.length());
+        while (text.length() > 0 && text.charAt(text.length() - 1) == ' ') {
+            text.delete(text.length() - 1, text.length());
+        }
 
         boolean hasForeign = false;
         for (String key : FjbHeaderInfo.getForeignListInShort()) {
             String pronunciation = value(key);
             if (pronunciation.isEmpty()) continue;
-            if (hasForeign) text.append(" \t");
+            if (hasForeign) text.append("  ");
             else {
                 text.append("\n\n");
                 span(text, new RelativeSizeSpan(0.5f), text.length() - 1, text.length());
@@ -144,16 +147,17 @@ public class FjbCharacter {
         int pronunciationStart = text.length();
         appendCityPronunciation(text, pronunciation);
         int pronunciationEnd = text.length();
-        text.append(" \t");
+        text.append("  ");
         if ("_".equals(pronunciation)) {
             span(text, new ForegroundColorSpan(Color.parseColor("#BBBBBB")),
-                    styleStart, text.length());
+                    styleStart, pronunciationEnd);
         }
         if (pronunciation.contains("?")) {
-            span(text, new StyleSpan(Typeface.ITALIC), styleStart, text.length());
+            span(text, new StyleSpan(Typeface.ITALIC), styleStart, pronunciationEnd);
         }
         applyNote(text, key, pronunciation, pronunciationStart, pronunciationEnd,
                 FjbHeaderInfo.getCityColors(key));
+        span(text, new NoBreakCandidateSpan(0f), itemStart, pronunciationEnd);
     }
 
     private void appendForeign(SpannableStringBuilder text, String key, String pronunciation) {
@@ -174,6 +178,7 @@ public class FjbCharacter {
         }
         applyNote(text, key, pronunciation, pronunciationStart, pronunciationEnd,
                 FjbHeaderInfo.getForeignColors(key));
+        span(text, new NoBreakCandidateSpan(0f), itemStart, pronunciationEnd);
     }
 
     private void appendCityPronunciation(SpannableStringBuilder text, String pronunciation) {

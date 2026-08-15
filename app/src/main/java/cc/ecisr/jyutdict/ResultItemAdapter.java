@@ -73,6 +73,9 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         View.OnClickListener showMenu = view -> listener.onClick(holder);
         holder.itemView.setOnClickListener(showMenu);
         holder.setOnNonLinkClickListener(showMenu);
+        if (item.type == ResultInfo.TYPE_SHEET) {
+            holder.tvRightBottom.setOnNonLinkClickListener(null);
+        }
         holder.itemView.getLayoutParams().height = LinearLayout.LayoutParams.WRAP_CONTENT;
     }
 

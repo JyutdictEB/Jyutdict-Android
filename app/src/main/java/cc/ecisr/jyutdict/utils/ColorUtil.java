@@ -82,9 +82,27 @@ public class ColorUtil {
         }
     }
 
+    /**
+     * 解析十六進制顏色字符串為色值，解析失敗時返回默認的 fallbackColor。
+     */
+    public static int parseColor(String colorString, int fallbackColor) {
+        if (colorString == null) return fallbackColor;
+        String candidate = colorString.trim();
+        if (candidate.isEmpty()) return fallbackColor;
+        try {
+            return Color.parseColor(candidate);
+        } catch (IllegalArgumentException ignored) {
+            return fallbackColor;
+        }
+    }
+
+    /**
+     * 解析地點顏色字符串為色值，無效時回退為 DEFAULT_LOCATION_COLOR (#888888)。
+     */
     public static int parseColorOrDefault(String colorString) {
         String normalized = normalizeLocationColor(colorString);
-        return Color.parseColor(normalized != null ? normalized : DEFAULT_LOCATION_COLOR);
+        int fallback = Color.parseColor(DEFAULT_LOCATION_COLOR);
+        return normalized != null ? parseColor(normalized, fallback) : fallback;
     }
 
     /** 將一個地點的全部顏色轉為可直接繪製的色值，無有效值時回退為中性灰。 */
@@ -137,16 +155,93 @@ public class ColorUtil {
     }
 
     /**
-     * 獲取顏色亮度
+     * 獲取顏色相對明度 (0.0 ~ 1.0)
+     * @param color 整形色值 (ARGB/RGB)
+     * @return 範圍從 0.0 ~ 1.0 的明度
+     */
+    public static double getLightness(int color) {
+        return (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255.0;
+    }
+
+    /**
+     * 獲取顏色相對明度 (0.0 ~ 1.0)
      * @param colorString 表示RGB顏色的十六進制字符串，如"#FFFFFF"
-     * @return double 格式，表示顏色的亮度，範圍從 0~252.705
+     * @return 範圍從 0.0 ~ 1.0 的明度
      */
     public static double getLightness(String colorString) {
-        int color = parseColorOrDefault(colorString);
-        double r = Color.red(color);
-        double g = Color.green(color);
-        double b = Color.blue(color);
-        return r*0.299 + g*0.578 + b*0.114;
+        return getLightness(parseColorOrDefault(colorString));
+    }
+
+    /**
+     * 計算單個顏色的相對明度 (0.0 ~ 1.0)，為 {@link #getLightness(int)} 的別名。
+     */
+    public static double calculateLuminance(int color) {
+        return getLightness(color);
+    }
+
+    /**
+     * 計算一組顏色的平均相對明度 (0.0 ~ 1.0)。
+     */
+    public static double calculateAverageLuminance(int[] colors) {
+        if (colors == null || colors.length == 0) return 0.5;
+        double sum = 0;
+        for (int c : colors) {
+            sum += getLightness(c);
+        }
+        return sum / colors.length;
+    }
+
+    /**
+     * 計算一組顏色（如漸變色）的平均 RGB 顏色。
+     */
+    public static int getAverageColor(int[] colors) {
+        if (colors == null || colors.length == 0) return Color.GRAY;
+        int r = 0, g = 0, b = 0, a = 0;
+        for (int c : colors) {
+            a += Color.alpha(c);
+            r += Color.red(c);
+            g += Color.green(c);
+            b += Color.blue(c);
+        }
+        int len = colors.length;
+        return Color.argb(a / len, r / len, g / len, b / len);
+    }
+
+    /**
+     * 將顏色調暗（白天模式描邊或文字加深）。
+     *
+     * @param color 原色
+     * @param darkenRatio 明度係數 (0.0 ~ 1.0，越小越暗)
+     * @param saturationRatio 飽和度係數 (通常 >= 1.0 保持鮮明)
+     * @param alpha 不透明度 (0 ~ 255)
+     * @return 調暗後的顏色
+     */
+    public static int adjustColorForLightMode(int color, float darkenRatio, float saturationRatio, int alpha) {
+        float[] hsv = new float[3];
+        Color.colorToHSV(color, hsv);
+        hsv[1] = clamp(hsv[1] * saturationRatio, 0f, 1f);
+        hsv[2] = clamp(hsv[2] * darkenRatio, 0f, 1f);
+        int rgb = Color.HSVToColor(hsv);
+        return Color.argb(alpha, Color.red(rgb), Color.green(rgb), Color.blue(rgb));
+    }
+
+    /**
+     * 將顏色調淡/調亮（夜間模式描邊或文字提亮）。
+     *
+     * @param color 原色
+     * @param lightenRatio 明度提升係數 (>= 1.0)
+     * @param minValue 明度保底下限 (0.0 ~ 1.0)
+     * @param saturationRatio 飽和度係數 (通常 <= 1.0 偏向柔和)
+     * @param alpha 不透明度 (0 ~ 255)
+     * @return 調淡/調亮後的顏色
+     */
+    public static int adjustColorForDarkMode(int color, float lightenRatio, float minValue, float saturationRatio, int alpha) {
+        float[] hsv = new float[3];
+        Color.colorToHSV(color, hsv);
+        hsv[1] = clamp(hsv[1] * saturationRatio, 0f, 1f);
+        hsv[2] = clamp(Math.max(hsv[2] * lightenRatio, minValue), 0f, 1f);
+        int rgb = Color.HSVToColor(hsv);
+        return Color.argb(alpha, Color.red(rgb), Color.green(rgb), Color.blue(rgb));
     }
 
     /**
