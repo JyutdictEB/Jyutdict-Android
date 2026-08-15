@@ -222,7 +222,7 @@ public class MainActivity extends AppCompatActivity {
             }
             @Override
             public void afterTextChanged(Editable s) {
-                binding.btnClearInput.setVisibility(s.isEmpty() ? View.GONE : View.VISIBLE);
+                binding.btnClearInput.setVisibility(s.length() == 0 ? View.GONE : View.VISIBLE);
                 boolean isJpp = StringUtil.isJyutpingInput(s.toString());
 
                 int presentColor = isJpp ?

@@ -110,7 +110,7 @@ public class SelectableTextView extends AppCompatTextView {
             setText(mSourceText, TextView.BufferType.SPANNABLE);
             return;
         }
-        if (contentWidth == mRenderedContentWidth && !getText().isEmpty()) return;
+        if (contentWidth == mRenderedContentWidth && getText().length() > 0) return;
         mRenderedContentWidth = contentWidth;
 
         CharSequence rendered = applyConditionalNoBreaks(mSourceText, contentWidth);

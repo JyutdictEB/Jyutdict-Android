@@ -283,7 +283,7 @@ public final class PhonologyHtmlRenderer {
         for (int i = 0; i < examples.length(); i++) {
             JSONObject example = examples.optJSONObject(i);
             if (example == null) continue;
-            if (!result.isEmpty()) result.append(" ");
+            if (result.length() > 0) result.append(" ");
             String style = colourFinals ? exampleStyle(example, darkMode) : "";
             result.append("<span class=\"example")
                     .append(colourFinals ? " coloured" : "")
@@ -297,7 +297,7 @@ public final class PhonologyHtmlRenderer {
             }
             result.append("</span>");
         }
-        return result.isEmpty() ? "—" : result.toString();
+        return result.length() == 0 ? "—" : result.toString();
     }
 
     private static String exampleStyle(JSONObject example, boolean darkMode) {
