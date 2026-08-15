@@ -5,7 +5,6 @@ import static cc.ecisr.jyutdict.utils.EnumConst.*;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -21,7 +20,6 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -82,8 +80,6 @@ import cc.ecisr.jyutdict.widget.LocationSpinnerAdapter;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "`MainActivity";
     private static final String URL_API_ROOT = "https://jyutdict.org/api/v1.0/";
-    private static final int INITIALIZE_LOCATIONS_FAIL = 3288;
-    private static final int INITIALIZE_DETAIL_LOCATIONS_FAIL = 3289;
     private static final String SHEET_HEADER_CACHE_KEY = "main_sheet_header_v1";
     private static final String LOCATION_HEADER_CACHE_KEY = "main_location_header_v1";
     private static final long HEADER_CACHE_MAX_AGE = 24L * 60L * 60L * 1000L;
@@ -124,22 +120,16 @@ public class MainActivity extends AppCompatActivity {
 
     boolean headerLoadingInitialized = false;
     boolean headerRetriesEnabled = false;
-    boolean sheetHeaderNeedsRefresh = true;
-    boolean locationHeaderNeedsRefresh = true;
-    boolean sheetHeaderInFlight = false;
-    boolean locationHeaderInFlight = false;
-    boolean sheetHeaderRetryScheduled = false;
-    boolean locationHeaderRetryScheduled = false;
     boolean pendingSearch = false;
     int selectedLocationPosition = 0;
-    int sheetHeaderRetryAttempt = 0;
-    int locationHeaderRetryAttempt = 0;
+    Handler mainHandler;
+    HeaderLoader sheetHeader, locationHeader;
 
     // 下拉選擇框的 Adapter，存放的是可供查詢的查詢地名
     ArrayList<LocationSpinnerAdapter.Option> locationOptions = new ArrayList<>();
 
     final Runnable hideHeaderReadyStatus = () -> {
-        if (!sheetHeaderNeedsRefresh && !locationHeaderNeedsRefresh) {
+        if (!sheetHeader.needsRefresh && !locationHeader.needsRefresh) {
             MotionUtil.beginLayoutTransition(lyMain);
             headerLoadingStatus.setVisibility(View.GONE);
         }
@@ -147,23 +137,6 @@ public class MainActivity extends AppCompatActivity {
 
     // 用於獲取用戶的設置，與存儲各開關的狀態
     SharedPreferences sp;
-
-    // 用於網絡線程與主線程間的通信
-    MainHandler mainHandler;
-    // 用於向服務器發送請求，與接收回應
-    final HttpUtil headerQuery = new HttpUtil(HttpUtil.GET);
-    final HttpUtil locationQuery = new HttpUtil(HttpUtil.GET);
-
-    final Runnable sheetHeaderRetry = () -> {
-        sheetHeaderRetryScheduled = false;
-        startHeaderRequest(true, false);
-    };
-    final Runnable locationHeaderRetry = () -> {
-        locationHeaderRetryScheduled = false;
-        startHeaderRequest(false, false);
-    };
-    final Runnable sheetHeaderWatchdog = () -> handleHeaderWatchdog(true);
-    final Runnable locationHeaderWatchdog = () -> handleHeaderWatchdog(false);
 
     // 指示搜索模式，查通用表字/查通用表音/查泛粵表
     // 在按下查詢按鈕時更新
@@ -239,24 +212,7 @@ public class MainActivity extends AppCompatActivity {
         binding.getRoot().post(this::observeSearchState);
         initPermission();
 
-        mainHandler = new MainHandler(Looper.getMainLooper(), msg -> {
-            switch (msg.what) {
-                case INITIALIZE_LOCATIONS: // 初始化泛粵字表表頭
-                    finishHeaderRequest(true, msg.obj == null ? "" : msg.obj.toString());
-                    break;
-                case INITIALIZE_DETAIL_LOCATIONS: // 初始化通用字表地點列表
-                    finishHeaderRequest(false, msg.obj == null ? "" : msg.obj.toString());
-                    break;
-                case INITIALIZE_LOCATIONS_FAIL:
-                    handleHeaderFailure(true, msg.obj);
-                    break;
-                case INITIALIZE_DETAIL_LOCATIONS_FAIL:
-                    handleHeaderFailure(false, msg.obj);
-                    break;
-                default:
-                    break;
-            }
-        });
+        mainHandler = new Handler(Looper.getMainLooper());
 
         // 查詢按鈕
         btnQueryConfirm.setOnClickListener(v -> search());
@@ -756,39 +712,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initializeHeaderLoading() {
-        headerQuery.setUrl(ApiUrlBuilder.from(URL_API_ROOT, "sheet").build())
-                .setHandler(mainHandler, INITIALIZE_LOCATIONS, INITIALIZE_LOCATIONS_FAIL)
-                .setTimeouts(8_000, 12_000);
-        locationQuery.setUrl(ApiUrlBuilder.from(URL_API_ROOT, "detail")
-                        .add("chara", "")
-                        .build())
-                .setHandler(mainHandler,
-                        INITIALIZE_DETAIL_LOCATIONS,
-                        INITIALIZE_DETAIL_LOCATIONS_FAIL)
-                .setTimeouts(8_000, 12_000);
-
-        sheetHeaderNeedsRefresh = !restoreCachedHeader(true);
-        locationHeaderNeedsRefresh = !restoreCachedHeader(false);
+        sheetHeader = new HeaderLoader(true,
+                ApiUrlBuilder.from(URL_API_ROOT, "sheet").build(), SHEET_HEADER_CACHE_KEY);
+        locationHeader = new HeaderLoader(false,
+                ApiUrlBuilder.from(URL_API_ROOT, "detail").add("chara", "").build(),
+                LOCATION_HEADER_CACHE_KEY);
+        sheetHeader.needsRefresh = !sheetHeader.restoreCache();
+        locationHeader.needsRefresh = !locationHeader.restoreCache();
         headerLoadingInitialized = true;
         headerLoadingStatus.setOnClickListener(view -> retryHeadersNow());
-        boolean usingFreshCache = !sheetHeaderNeedsRefresh && !locationHeaderNeedsRefresh;
+        boolean usingFreshCache = !sheetHeader.needsRefresh && !locationHeader.needsRefresh;
         updateHeaderLoadingStatus(usingFreshCache, usingFreshCache);
-    }
-
-    /**
-     * 優先讀取一天內的快取；舊快取仍可立即恢復查詢，但會在背景更新。
-     * 返回值表示快取是否仍然新鮮，而不是是否成功恢復了資料。
-     */
-    private boolean restoreCachedHeader(boolean sheet) {
-        String key = sheet ? SHEET_HEADER_CACHE_KEY : LOCATION_HEADER_CACHE_KEY;
-        String cached = DiskTextCache.readFresh(this, key, HEADER_CACHE_MAX_AGE);
-        boolean fresh = cached != null;
-        if (cached == null) cached = DiskTextCache.readAny(this, key);
-        if (cached != null && !applyHeader(sheet, cached, false)) {
-            Log.w(TAG, "Ignoring invalid cached " + (sheet ? "sheet" : "location") + " header");
-            fresh = false;
-        }
-        return fresh;
     }
 
     private boolean applyHeader(boolean sheet, String raw, boolean cacheResponse) {
@@ -916,80 +850,121 @@ public class MainActivity extends AppCompatActivity {
         updateFilterButtonLabels();
     }
 
-    private void finishHeaderRequest(boolean sheet, String raw) {
-        clearHeaderWatchdog(sheet);
-        setHeaderInFlight(sheet, false);
-        if (!applyHeader(sheet, raw, true)) {
-            handleHeaderFailure(sheet, null);
-            return;
+    /** One independent cached header request, including retry and watchdog state. */
+    private final class HeaderLoader {
+        final boolean sheet;
+        final String url, cacheKey;
+        final HttpUtil request = new HttpUtil(HttpUtil.GET).setTimeouts(8_000, 12_000);
+        boolean needsRefresh = true, inFlight, retryScheduled;
+        int retryAttempt;
+        final Runnable retry = () -> {
+            retryScheduled = false;
+            start(false);
+        };
+        final Runnable watchdog = () -> {
+            if (!inFlight) return;
+            request.cancel();
+            fail("timeout");
+        };
+
+        HeaderLoader(boolean sheet, String url, String cacheKey) {
+            this.sheet = sheet;
+            this.url = url;
+            this.cacheKey = cacheKey;
         }
 
-        setHeaderNeedsRefresh(sheet, false);
-        setHeaderRetryAttempt(sheet, 0);
-        clearHeaderRetry(sheet);
-        updateHeaderLoadingStatus(true);
-        maybeRunPendingSearch();
-    }
-
-    private void handleHeaderFailure(boolean sheet, Object error) {
-        clearHeaderWatchdog(sheet);
-        setHeaderInFlight(sheet, false);
-        setHeaderNeedsRefresh(sheet, true);
-        if (error != null) {
-            Log.w(TAG, (sheet ? "Sheet" : "Location") + " header request failed: " + error);
+        boolean restoreCache() {
+            String cached = DiskTextCache.readFresh(
+                    MainActivity.this, cacheKey, HEADER_CACHE_MAX_AGE);
+            boolean fresh = cached != null;
+            if (cached == null) cached = DiskTextCache.readAny(MainActivity.this, cacheKey);
+            if (cached != null && !applyHeader(sheet, cached, false)) {
+                Log.w(TAG, "Ignoring invalid cached "
+                        + (sheet ? "sheet" : "location") + " header");
+                fresh = false;
+            }
+            return fresh;
         }
-        scheduleHeaderRetry(sheet);
-        updateHeaderLoadingStatus();
-    }
 
-    private void handleHeaderWatchdog(boolean sheet) {
-        if (!isHeaderInFlight(sheet)) return;
-        if (sheet) headerQuery.cancel(); else locationQuery.cancel();
-        handleHeaderFailure(sheet, "timeout");
-    }
+        void start(boolean resetBackoff) {
+            if (!headerLoadingInitialized || !headerRetriesEnabled
+                    || !needsRefresh || inFlight) return;
+            clearRetry();
+            if (resetBackoff) retryAttempt = 0;
+            inFlight = true;
+            updateHeaderLoadingStatus();
+            request.enqueue(url, new HttpUtil.Callback() {
+                @Override
+                public void onSuccess(String body) {
+                    finish(body);
+                }
 
-    private void startHeaderRequest(boolean sheet, boolean resetBackoff) {
-        if (!headerLoadingInitialized || !headerRetriesEnabled
-                || !headerNeedsRefresh(sheet) || isHeaderInFlight(sheet)) {
-            return;
+                @Override
+                public void onFailure(HttpUtil.RequestError error) {
+                    fail(error);
+                }
+            });
+            mainHandler.postDelayed(watchdog, HEADER_REQUEST_WATCHDOG);
         }
-        clearHeaderRetry(sheet);
-        if (resetBackoff) setHeaderRetryAttempt(sheet, 0);
-        setHeaderInFlight(sheet, true);
-        updateHeaderLoadingStatus();
-        if (sheet) {
-            headerQuery.start();
-            mainHandler.postDelayed(sheetHeaderWatchdog, HEADER_REQUEST_WATCHDOG);
-        } else {
-            locationQuery.start();
-            mainHandler.postDelayed(locationHeaderWatchdog, HEADER_REQUEST_WATCHDOG);
-        }
-    }
 
-    private void scheduleHeaderRetry(boolean sheet) {
-        if (!headerRetriesEnabled || !headerNeedsRefresh(sheet)) return;
-        clearHeaderRetry(sheet);
-        int attempt = headerRetryAttempt(sheet);
-        long multiplier = 1L << Math.min(attempt, 4);
-        long delay = Math.min(HEADER_RETRY_MAX_DELAY, HEADER_RETRY_BASE_DELAY * multiplier);
-        setHeaderRetryAttempt(sheet, attempt + 1);
-        if (sheet) {
-            sheetHeaderRetryScheduled = true;
-            mainHandler.postDelayed(sheetHeaderRetry, delay);
-        } else {
-            locationHeaderRetryScheduled = true;
-            mainHandler.postDelayed(locationHeaderRetry, delay);
+        void finish(String raw) {
+            clearWatchdog();
+            inFlight = false;
+            if (!applyHeader(sheet, raw, true)) {
+                fail(null);
+                return;
+            }
+            needsRefresh = false;
+            retryAttempt = 0;
+            clearRetry();
+            updateHeaderLoadingStatus(true);
+            maybeRunPendingSearch();
+        }
+
+        void fail(Object error) {
+            clearWatchdog();
+            inFlight = false;
+            needsRefresh = true;
+            if (error != null) Log.w(TAG, (sheet ? "Sheet" : "Location")
+                    + " header request failed: " + error);
+            scheduleRetry();
+            updateHeaderLoadingStatus();
+        }
+
+        void scheduleRetry() {
+            if (!headerRetriesEnabled || !needsRefresh) return;
+            clearRetry();
+            long multiplier = 1L << Math.min(retryAttempt++, 4);
+            retryScheduled = true;
+            mainHandler.postDelayed(retry, Math.min(HEADER_RETRY_MAX_DELAY,
+                    HEADER_RETRY_BASE_DELAY * multiplier));
+        }
+
+        void clearRetry() {
+            mainHandler.removeCallbacks(retry);
+            retryScheduled = false;
+        }
+
+        void clearWatchdog() {
+            mainHandler.removeCallbacks(watchdog);
+        }
+
+        void stop() {
+            clearRetry();
+            clearWatchdog();
+            if (inFlight) request.cancel();
+            inFlight = false;
         }
     }
 
     private void retryHeadersNow() {
-        startHeaderRequest(true, true);
-        startHeaderRequest(false, true);
+        sheetHeader.start(true);
+        locationHeader.start(true);
     }
 
     private void requestNeededHeaders() {
-        startHeaderRequest(true, false);
-        startHeaderRequest(false, false);
+        sheetHeader.start(false);
+        locationHeader.start(false);
     }
 
     private void updateHeaderLoadingStatus() {
@@ -1008,7 +983,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         mainHandler.removeCallbacks(hideHeaderReadyStatus);
-        if (!sheetHeaderNeedsRefresh && !locationHeaderNeedsRefresh) {
+        if (!sheetHeader.needsRefresh && !locationHeader.needsRefresh) {
             headerLoadingSpinner.setVisibility(View.GONE);
             MotionUtil.setText(headerLoadingText, getString(usingFreshCache
                     ? R.string.header_sync_cached
@@ -1022,8 +997,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         int readyCount = (FjbHeaderInfo.isLoaded ? 1 : 0) + (LocationInfo.isLoaded ? 1 : 0);
-        boolean loading = sheetHeaderInFlight || locationHeaderInFlight;
-        boolean waitingToRetry = sheetHeaderRetryScheduled || locationHeaderRetryScheduled;
+        boolean loading = sheetHeader.inFlight || locationHeader.inFlight;
+        boolean waitingToRetry = sheetHeader.retryScheduled || locationHeader.retryScheduled;
         headerLoadingText.setAlpha(1f);
         headerLoadingSpinner.setVisibility(loading || !waitingToRetry
                 ? View.VISIBLE : View.INVISIBLE);
@@ -1050,54 +1025,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void requestRequiredHeaderNow() {
-        if (isSheetMode()) {
-            sheetHeaderNeedsRefresh = true;
-            startHeaderRequest(true, true);
-        } else {
-            locationHeaderNeedsRefresh = true;
-            startHeaderRequest(false, true);
-        }
+        HeaderLoader required = isSheetMode() ? sheetHeader : locationHeader;
+        required.needsRefresh = true;
+        required.start(true);
         updateHeaderLoadingStatus();
-    }
-
-    private boolean headerNeedsRefresh(boolean sheet) {
-        return sheet ? sheetHeaderNeedsRefresh : locationHeaderNeedsRefresh;
-    }
-
-    private void setHeaderNeedsRefresh(boolean sheet, boolean value) {
-        if (sheet) sheetHeaderNeedsRefresh = value; else locationHeaderNeedsRefresh = value;
-    }
-
-    private boolean isHeaderInFlight(boolean sheet) {
-        return sheet ? sheetHeaderInFlight : locationHeaderInFlight;
-    }
-
-    private void setHeaderInFlight(boolean sheet, boolean value) {
-        if (sheet) sheetHeaderInFlight = value; else locationHeaderInFlight = value;
-    }
-
-    private int headerRetryAttempt(boolean sheet) {
-        return sheet ? sheetHeaderRetryAttempt : locationHeaderRetryAttempt;
-    }
-
-    private void setHeaderRetryAttempt(boolean sheet, int value) {
-        if (sheet) sheetHeaderRetryAttempt = value; else locationHeaderRetryAttempt = value;
-    }
-
-    private void clearHeaderRetry(boolean sheet) {
-        if (mainHandler == null) return;
-        if (sheet) {
-            mainHandler.removeCallbacks(sheetHeaderRetry);
-            sheetHeaderRetryScheduled = false;
-        } else {
-            mainHandler.removeCallbacks(locationHeaderRetry);
-            locationHeaderRetryScheduled = false;
-        }
-    }
-
-    private void clearHeaderWatchdog(boolean sheet) {
-        if (mainHandler == null) return;
-        mainHandler.removeCallbacks(sheet ? sheetHeaderWatchdog : locationHeaderWatchdog);
     }
 
     private ArrayList<LocationSpinnerAdapter.Option> buildLocationOptions(boolean includeCities) {
@@ -1483,25 +1414,6 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
-    static class MainHandler extends Handler{
-        //WeakReference<MainActivity> mActivity;
-        IHandleMessageProcessor iHandleMessageProcessor;
-
-        public MainHandler(@NonNull Looper looper, IHandleMessageProcessor processor) {
-            super(looper);
-            iHandleMessageProcessor = processor;
-        }
-
-        @Override
-        public void handleMessage(@Nullable Message msg) {
-            iHandleMessageProcessor.handleMessage(msg);
-        }
-
-        public interface IHandleMessageProcessor {
-            void handleMessage(Message msg);
-        }
-    }
-
     @Override
     protected void onStart() {
         super.onStart();
@@ -1512,29 +1424,17 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         headerRetriesEnabled = false;
-        clearHeaderRetry(true);
-        clearHeaderRetry(false);
-        clearHeaderWatchdog(true);
-        clearHeaderWatchdog(false);
-        if (sheetHeaderInFlight) {
-            headerQuery.cancel();
-            sheetHeaderInFlight = false;
-        }
-        if (locationHeaderInFlight) {
-            locationQuery.cancel();
-            locationHeaderInFlight = false;
-        }
+        sheetHeader.stop();
+        locationHeader.stop();
         updateHeaderLoadingStatus();
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
-        headerQuery.cancel();
-        locationQuery.cancel();
-        if (mainHandler != null) {
-            mainHandler.removeCallbacksAndMessages(null);
-        }
+        if (sheetHeader != null) sheetHeader.request.cancel();
+        if (locationHeader != null) locationHeader.request.cancel();
+        if (mainHandler != null) mainHandler.removeCallbacksAndMessages(null);
         super.onDestroy();
     }
 
