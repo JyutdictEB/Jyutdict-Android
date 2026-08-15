@@ -1,7 +1,5 @@
 package cc.ecisr.jyutdict.struct;
 
-import android.util.Log;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -11,25 +9,22 @@ import java.util.HashMap;
 import cc.ecisr.jyutdict.utils.JyutpingUtil;
 
 public class GeneralCharacter {
-    private static final String TAG = "`GeneralCharacter";
-
-    public String head;
-    public ArrayList<SingleLoc> areas = new ArrayList<>();
-    public HashMap<String, Integer> city2index = new HashMap<>();
-    public Books books = new Books();
+    public final String head;
+    public final ArrayList<SingleLoc> areas = new ArrayList<>();
+    public final HashMap<String, Integer> city2index = new HashMap<>();
+    public final Books books = new Books();
 
     public static class SingleLoc {
         public int id = -1;
-        public String division = "";
         public String city = "";
 
-        public ArrayList<String> colors = new ArrayList<>();
-        public ArrayList<ArrayList<SinglePron>> prons = new ArrayList<>();
-        public ArrayList<String> notes = new ArrayList<>();
+        public final ArrayList<String> colors = new ArrayList<>();
+        public final ArrayList<ArrayList<SinglePron>> prons = new ArrayList<>();
+        public final ArrayList<String> notes = new ArrayList<>();
 
         public static class SinglePron {
-            public String[] jpp;
-            public String ipa;
+            public final String[] jpp;
+            public final String ipa;
             public int coloring = 0;
             public SinglePron(String[] jpp, String ipa) { this.jpp=jpp; this.ipa=ipa; }
             public String syllable() { return jpp[0] + jpp[1] + jpp[2]; }
@@ -39,9 +34,9 @@ public class GeneralCharacter {
         }
     }
     public static class Books {
-        public ArrayList<String> kwangun = new ArrayList<>(1);
-        public ArrayList<String> fanwan = new ArrayList<>(1);
-        public ArrayList<String> jingwaa = new ArrayList<>(1);
+        public final ArrayList<String> kwangun = new ArrayList<>(1);
+        public final ArrayList<String> fanwan = new ArrayList<>(1);
+        public final ArrayList<String> jingwaa = new ArrayList<>(1);
     }
 
     public GeneralCharacter(JSONObject charaJson) {
@@ -60,11 +55,9 @@ public class GeneralCharacter {
                 SingleLoc loc = new SingleLoc();
                 loc.id = locId;
                 if (locInfo != null) {
-                    loc.division = locInfo.first;
                     loc.city = locInfo.displayName();
                     loc.colors.addAll(locInfo.colors);
                 } else {
-                    loc.division = "";
                     loc.city = "id=" + locId;
                     loc.colors.add("#888888");
                 }
@@ -99,12 +92,10 @@ public class GeneralCharacter {
 
                     if (isAltGroup) {
                         int groupId = altGroupArray.optInt(j);
-                        if (groupIndexMap.containsKey(groupId)) {
-                            // 已有此組，追加讀音
-                            int existingIndex = groupIndexMap.get(groupId);
+                        Integer existingIndex = groupIndexMap.get(groupId);
+                        if (existingIndex != null) {
                             loc.prons.get(existingIndex).add(pron);
                         } else {
-                            // 新的又音組
                             ArrayList<SingleLoc.SinglePron> group = new ArrayList<>();
                             group.add(pron);
                             groupIndexMap.put(groupId, loc.prons.size());
@@ -112,7 +103,6 @@ public class GeneralCharacter {
                             loc.notes.add(note);
                         }
                     } else {
-                        // 非又音組：每個讀音獨立成一組
                         ArrayList<SingleLoc.SinglePron> group = new ArrayList<>();
                         group.add(pron);
                         loc.prons.add(group);
@@ -166,8 +156,7 @@ public class GeneralCharacter {
     }
 
     public SingleLoc area(String name) {
-        if (!city2index.containsKey(name)) return new SingleLoc();
         Integer index = city2index.get(name);
-        return areas.get(index==null ? 0 : index);
+        return index == null ? new SingleLoc() : areas.get(index);
     }
 }

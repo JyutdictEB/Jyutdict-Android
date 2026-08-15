@@ -18,11 +18,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.TreeMap;
 
 import cc.ecisr.jyutdict.utils.ColorUtil;
 import cc.ecisr.jyutdict.widget.FixedWidthSpan;
@@ -34,10 +31,8 @@ import cc.ecisr.jyutdict.widget.NoBreakCandidateSpan;
 public class GeneralCharacterManager {
     public static final String FILTER_BOOK_FANWAN = "韻書 · 分韻";
     public static final String FILTER_BOOK_JINGWAA = "韻書 · 英華";
-    public enum ColoringMode { NoColoring, InnerColoring, InterColoring}
     ArrayList<GeneralCharacter> charas = new ArrayList<>();
-    ArrayList<String> charaHead = new ArrayList<>();
-    HashMap<String, ArrayList<String>> div2city = new HashMap<>();
+    HashSet<String> characterHeads = new HashSet<>();
     public static ArrayList<String> cityList = new ArrayList<>();
     public static HashSet<String> cityFilter = new HashSet<>(); // static 是因為 MainActivity 要調用
     EntrySetting settings;
@@ -47,104 +42,70 @@ public class GeneralCharacterManager {
         JSONArray charasJSON = new JSONArray(raw);
         for (int i=0; i<charasJSON.length(); i++) {
             JSONObject chara = charasJSON.optJSONObject(i);
-            if (charaHead.contains(chara.optString("字"))) { continue; }
+            if (!characterHeads.add(chara.optString("字"))) continue;
             charas.add(new GeneralCharacter(chara));
-            charaHead.add(chara.optString("字"));
         }
         this.settings = settings;
     }
 
     public void retrieveInfo() {
-        for (int index=0; index<charas.size(); index++) {
-            GeneralCharacter chara = charas.get(index);
-            for (GeneralCharacter.SingleLoc i: chara.areas) {
-                if (!cityList.contains(i.city)) {
-                    cityList.add(i.city);
-                }
-
-                ArrayList<String> cities = div2city.get(i.division);
-                if (cities == null) {
-                    div2city.put(i.division, new ArrayList<>(Collections.singletonList(i.city)));
-                } else if (!cities.contains(i.city)) {
-                    cities.add(i.city);
-                }
+        for (GeneralCharacter character : charas) {
+            for (GeneralCharacter.SingleLoc location : character.areas) {
+                if (!cityList.contains(location.city)) cityList.add(location.city);
             }
         }
     }
 
     public void coloring(int displayMode) {
-        ColoringMode coloringMode;
         boolean ini = (displayMode & DISPLAY_CHECKING_INI) != 0;
         boolean fin = (displayMode & DISPLAY_CHECKING_FIN) != 0;
         boolean ton = (displayMode & DISPLAY_CHECKING_TON) != 0;
-        if (!ini && !fin && !ton) {
-            coloringMode = ColoringMode.NoColoring;
-        } else {
-            coloringMode = (displayMode & DISPLAY_CHECKING_IS_INNER)!=0 ? ColoringMode.InnerColoring : ColoringMode.InterColoring;
-        }
         colorCount = 0;
-        int presentColorAssigning;
-        HashMap<String, Integer> coloringMarker;
-        ArrayList<ArrayList<GeneralCharacter.SingleLoc.SinglePron>> prons, prons_;
-        switch (coloringMode) {
-            case InterColoring: // 不知到怎麼合併
-                for (String city: cityList) {
-                    if (cityFilter.contains(city)) { continue; }
-                    presentColorAssigning = 0;
-                    coloringMarker = new HashMap<>();
-                    for (int i=0; i<charas.size()-1; i++) {
-                        prons = charas.get(i).area(city).prons;
-                        for (ArrayList<GeneralCharacter.SingleLoc.SinglePron> ii: prons) for (GeneralCharacter.SingleLoc.SinglePron ij: ii) {
-                            String ijPron = ij.jpp(ini, fin, ton);
-                            for (int j=i+1; j<charas.size(); j++) {
-                                prons_ = charas.get(j).area(city).prons;
-                                for (ArrayList<GeneralCharacter.SingleLoc.SinglePron> ji: prons_) for (GeneralCharacter.SingleLoc.SinglePron jj: ji) {
-                                    if (ijPron.equals(jj.jpp(ini, fin, ton))) {
-                                        if (!coloringMarker.containsKey(ijPron)) {
-                                            presentColorAssigning ++;
-                                            coloringMarker.put(ijPron, presentColorAssigning);
-                                        }
-                                        ij.coloring = jj.coloring = coloringMarker.get(ijPron);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (presentColorAssigning>colorCount) colorCount = presentColorAssigning;
+        if (!ini && !fin && !ton) return;
+        boolean inner = (displayMode & DISPLAY_CHECKING_IS_INNER) != 0;
+        if (inner) {
+            for (GeneralCharacter character : charas) {
+                ArrayList<ArrayList<ArrayList<GeneralCharacter.SingleLoc.SinglePron>>> groups =
+                        new ArrayList<>();
+                for (GeneralCharacter.SingleLoc location : character.areas) {
+                    if (!cityFilter.contains(location.city)) groups.add(location.prons);
                 }
-                break;
-            case InnerColoring:
-                for (GeneralCharacter chara: charas) {
-                    presentColorAssigning = 0;
-                    coloringMarker = new HashMap<>();
-                    for (int i=0; i<chara.areas.size()-1; i++) {
-                        prons = chara.areas.get(i).prons;
-                        if (cityFilter.contains(chara.areas.get(i).city)) { continue; }
-                        for (ArrayList<GeneralCharacter.SingleLoc.SinglePron> ii: prons) for (GeneralCharacter.SingleLoc.SinglePron ij: ii) {
-                            String ijPron = ij.jpp(ini, fin, ton);
-                            //if (coloringMarker.containsKey(ijPron)) { ij.coloring = coloringMarker.get(ijPron);continue; }
-                            for (int j=i+1; j<chara.areas.size(); j++) {
-                                prons_ = chara.areas.get(j).prons;
-                                if (cityFilter.contains(chara.areas.get(j).city)) { continue; }
-                                for (ArrayList<GeneralCharacter.SingleLoc.SinglePron> ji: prons_) for (GeneralCharacter.SingleLoc.SinglePron jj: ji) {
-                                    if (ijPron.equals(jj.jpp(ini, fin, ton))) {
-                                        if (!coloringMarker.containsKey(ijPron)) {
-                                            presentColorAssigning ++;
-                                            coloringMarker.put(ijPron, presentColorAssigning);
-                                        }
-                                        ij.coloring = jj.coloring = coloringMarker.get(ijPron);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (presentColorAssigning>colorCount) colorCount = presentColorAssigning;
-                }
-                break;
-            case NoColoring:
-            default:
-                break;
+                colorCount = Math.max(colorCount, colorMatches(groups, ini, fin, ton));
+            }
+        } else {
+            for (String city : cityList) {
+                if (cityFilter.contains(city)) continue;
+                ArrayList<ArrayList<ArrayList<GeneralCharacter.SingleLoc.SinglePron>>> groups =
+                        new ArrayList<>();
+                for (GeneralCharacter character : charas) groups.add(character.area(city).prons);
+                colorCount = Math.max(colorCount, colorMatches(groups, ini, fin, ton));
+            }
         }
+    }
+
+    private int colorMatches(
+            ArrayList<ArrayList<ArrayList<GeneralCharacter.SingleLoc.SinglePron>>> groups,
+            boolean initial, boolean fin, boolean tone) {
+        int nextColor = 0;
+        HashMap<String, Integer> colors = new HashMap<>();
+        for (int left = 0; left < groups.size() - 1; left++) {
+            for (ArrayList<GeneralCharacter.SingleLoc.SinglePron> alternatives : groups.get(left)) {
+                for (GeneralCharacter.SingleLoc.SinglePron pronunciation : alternatives) {
+                    String key = pronunciation.jpp(initial, fin, tone);
+                    for (int right = left + 1; right < groups.size(); right++) {
+                        for (ArrayList<GeneralCharacter.SingleLoc.SinglePron> rightAlternatives
+                                : groups.get(right)) {
+                            for (GeneralCharacter.SingleLoc.SinglePron candidate : rightAlternatives) {
+                                if (!key.equals(candidate.jpp(initial, fin, tone))) continue;
+                                if (!colors.containsKey(key)) colors.put(key, ++nextColor);
+                                pronunciation.coloring = candidate.coloring = colors.get(key);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return nextColor;
     }
 
 

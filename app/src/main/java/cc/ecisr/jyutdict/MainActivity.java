@@ -7,7 +7,6 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
@@ -34,7 +33,6 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
@@ -101,20 +99,11 @@ public class MainActivity extends AppCompatActivity {
 
     AppCompatEditText inputEditText;
     private ActivityMainBinding binding;
-    Button btnQueryConfirm, btnFilterArea, btnFilterAreaPron, btnColoringJppPartial;
+    Button btnFilterArea, btnFilterAreaPron, btnColoringJppPartial;
     MaterialButton switchQueryOptsRev, switchQueryOptsRegex;
     RadioGroup sheetModeGroup;
     ResultFragment resultFragment;
-    ProgressBar loadingProgressBar, headerLoadingSpinner;
-    View headerLoadingStatus, locationPicker, locationPickerSwatch, sheetQueryOptions;
-    TextView btnClearInput, headerLoadingText, locationPickerText;
-    Toolbar toolbar;
-    LinearLayout lyMain, lyAdvancedSearch;
-    AuthRepository authRepository;
     private SearchViewModel searchViewModel;
-
-    // 在輸入框輸入的字符串，在按下查詢按鈕時更新
-    String inputString;
 
     // 查詢按鈕字體的顏色，僅用於功能測試
     int previousColor;
@@ -131,8 +120,8 @@ public class MainActivity extends AppCompatActivity {
 
     final Runnable hideHeaderReadyStatus = () -> {
         if (!sheetHeader.needsRefresh && !locationHeader.needsRefresh) {
-            MotionUtil.beginLayoutTransition(lyMain);
-            headerLoadingStatus.setVisibility(View.GONE);
+            MotionUtil.beginLayoutTransition(binding.wholeMainLayout);
+            binding.headerLoadingStatus.setVisibility(View.GONE);
         }
     };
 
@@ -142,7 +131,6 @@ public class MainActivity extends AppCompatActivity {
     // 指示搜索模式，查通用表字/查通用表音/查泛粵表
     // 在按下查詢按鈕時更新
     // 並根據這個狀態來解析JSON
-    int queryingMode = QUERYING_CHARA;
     int queryingModeConfig = 0;
     private boolean inputEnterKeyDown = false;
 
@@ -165,34 +153,20 @@ public class MainActivity extends AppCompatActivity {
      * 初始化界面，獲取界面上各物件的視圖
      */
     void getView() {
-        lyMain = binding.wholeMainLayout;
         inputEditText = binding.editTextInput;
-        btnClearInput = binding.btnClearInput;
-        btnQueryConfirm = binding.btnQuery;
         btnFilterArea = binding.btnFilterArea;
         btnFilterAreaPron = binding.btnFilterAreaPron;
         btnColoringJppPartial = binding.btnColoringJppPartial;
-        locationPicker = binding.locatePicker;
-        sheetQueryOptions = binding.sheetQueryOptions;
-        locationPickerText = binding.locatePickerText;
-        locationPickerSwatch = binding.locatePickerSwatch;
-        lyAdvancedSearch = binding.inputAdvancedSwitch;
         sheetModeGroup = binding.sheetModeGroup;
         switchQueryOptsRev = binding.switchReverseSearch;
         switchQueryOptsRegex = binding.switchUseRegex;
-        loadingProgressBar = binding.loadingProgress;
-        headerLoadingStatus = binding.headerLoadingStatus;
-        headerLoadingSpinner = binding.headerLoadingSpinner;
-        headerLoadingText = binding.headerLoadingText;
-        toolbar = binding.toolBar;
-
-        setSupportActionBar(toolbar);
+        setSupportActionBar(binding.toolBar);
         locationOptions = buildLocationOptions(false);
         selectedLocationPosition = Math.max(0, Math.min(
                 getInitialLocationPosition(),
                 Math.max(0, locationOptions.size() - 1)));
         updateLocationPickerPresentation();
-        locationPicker.setOnClickListener(view -> showLocationPickerDialog());
+        binding.locatePicker.setOnClickListener(view -> showLocationPickerDialog());
     }
 
 
@@ -212,9 +186,8 @@ public class MainActivity extends AppCompatActivity {
         }
         ImmersiveBarUtil.setImmersiveBar(this, false, !ThemeUtil.isNightMode(this));
         getView();
-        ImmersiveBarUtil.applyToolbarInsets(toolbar);
-        authRepository = AuthRepository.getInstance(this);
-        authRepository.initialize((success, errorMessage) -> {});
+        ImmersiveBarUtil.applyToolbarInsets(binding.toolBar);
+        AuthRepository.getInstance(this).initialize((success, errorMessage) -> {});
         if (savedInstanceState == null) {
             resultFragment = new ResultFragment();
             getSupportFragmentManager().beginTransaction().add(R.id.result_fragment, resultFragment).commit();
@@ -228,8 +201,8 @@ public class MainActivity extends AppCompatActivity {
         mainHandler = new Handler(Looper.getMainLooper());
 
         // 查詢按鈕
-        btnQueryConfirm.setOnClickListener(v -> search());
-        btnClearInput.setOnClickListener(v -> {
+        binding.btnQuery.setOnClickListener(v -> search());
+        binding.btnClearInput.setOnClickListener(v -> {
             inputEditText.setText("");
             inputEditText.requestFocus();
         });
@@ -257,7 +230,7 @@ public class MainActivity extends AppCompatActivity {
             }
             @Override
             public void afterTextChanged(Editable s) {
-                btnClearInput.setVisibility(s.length() == 0 ? View.GONE : View.VISIBLE);
+                binding.btnClearInput.setVisibility(s.length() == 0 ? View.GONE : View.VISIBLE);
                 boolean isJpp = StringUtil.isJyutpingInput(s.toString());
 
                 int presentColor = isJpp ?
@@ -265,7 +238,7 @@ public class MainActivity extends AppCompatActivity {
                         ContextCompat.getColor(MainActivity.this, R.color.colorPrimary);
                 if (previousColor == presentColor) return;
                 MotionUtil.animateTextColor(
-                        (TextView) btnQueryConfirm, previousColor, presentColor);
+                        binding.btnQuery, previousColor, presentColor);
                 previousColor = presentColor;
                 if (!isSheetMode()) {
                     MotionUtil.beginLayoutTransition(binding.queryLayout);
@@ -275,13 +248,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         previousColor = ContextCompat.getColor(this, R.color.colorPrimary);
-        btnClearInput.setVisibility(inputEditText.length() == 0 ? View.GONE : View.VISIBLE);
+        binding.btnClearInput.setVisibility(inputEditText.length() == 0 ? View.GONE : View.VISIBLE);
 
         // 讀取幾個開關之前的狀態
         setSheetMode(sp.getBoolean("switch_1_is_checked", false));
         switchQueryOptsRev.setChecked(sp.getBoolean("switch_2_is_checked", false));
         switchQueryOptsRegex.setChecked(sp.getBoolean("switch_3_is_checked", false));
-        lyAdvancedSearch.setVisibility(sp.getBoolean("advanced_search", false) ? View.VISIBLE : View.GONE);
+        binding.inputAdvancedSwitch.setVisibility(
+                sp.getBoolean("advanced_search", false) ? View.VISIBLE : View.GONE);
         sheetModeGroup.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == -1) return;
             setInputEditTextHint();
@@ -670,17 +644,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void finishSearchUi() {
-        loadingProgressBar.setVisibility(View.GONE);
+        binding.loadingProgress.setVisibility(View.GONE);
         btnColoringJppPartial.setEnabled(true);
-        btnQueryConfirm.setEnabled(true);
+        binding.btnQuery.setEnabled(true);
         if (resultFragment != null) resultFragment.finishLoading();
     }
 
     private void beginSearchUi() {
-        loadingProgressBar.setVisibility(View.VISIBLE);
+        binding.loadingProgress.setVisibility(View.VISIBLE);
         if (resultFragment != null) resultFragment.beginLoading();
         btnColoringJppPartial.setEnabled(false);
-        btnQueryConfirm.setEnabled(false);
+        binding.btnQuery.setEnabled(false);
     }
 
     private void observeSearchState() {
@@ -733,7 +707,7 @@ public class MainActivity extends AppCompatActivity {
         sheetHeader.needsRefresh = !sheetHeader.restoreCache();
         locationHeader.needsRefresh = !locationHeader.restoreCache();
         headerLoadingInitialized = true;
-        headerLoadingStatus.setOnClickListener(view -> retryHeadersNow());
+        binding.headerLoadingStatus.setOnClickListener(view -> retryHeadersNow());
         boolean usingFreshCache = !sheetHeader.needsRefresh && !locationHeader.needsRefresh;
         updateHeaderLoadingStatus(usingFreshCache, usingFreshCache);
     }
@@ -842,14 +816,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateLocationPickerPresentation() {
-        if (locationPickerText == null || locationPickerSwatch == null
-                || locationOptions.isEmpty()) return;
+        if (locationOptions.isEmpty()) return;
         selectedLocationPosition = Math.max(0, Math.min(
                 selectedLocationPosition, locationOptions.size() - 1));
         LocationOption option = locationOptions.get(selectedLocationPosition);
-        MotionUtil.setText(locationPickerText, option.label);
-        locationPickerSwatch.setBackground(ColorUtil.locationColorDrawable(option.colors));
-        locationPicker.setContentDescription(
+        MotionUtil.setText(binding.locatePickerText, option.label);
+        binding.locatePickerSwatch.setBackground(ColorUtil.locationColorDrawable(option.colors));
+        binding.locatePicker.setContentDescription(
                 getString(R.string.search_choose_location) + "：" + option.label);
     }
 
@@ -989,20 +962,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateHeaderLoadingStatus(boolean announceReady, boolean usingFreshCache) {
-        MotionUtil.beginLayoutTransition(lyMain);
+        MotionUtil.beginLayoutTransition(binding.wholeMainLayout);
         if (!headerLoadingInitialized) {
-            headerLoadingStatus.setVisibility(View.GONE);
+            binding.headerLoadingStatus.setVisibility(View.GONE);
             return;
         }
 
         mainHandler.removeCallbacks(hideHeaderReadyStatus);
         if (!sheetHeader.needsRefresh && !locationHeader.needsRefresh) {
-            headerLoadingSpinner.setVisibility(View.GONE);
-            MotionUtil.setText(headerLoadingText, getString(usingFreshCache
+            binding.headerLoadingSpinner.setVisibility(View.GONE);
+            MotionUtil.setText(binding.headerLoadingText, getString(usingFreshCache
                     ? R.string.header_sync_cached
                     : R.string.header_sync_ready));
-            headerLoadingText.setAlpha(usingFreshCache ? 0.52f : 1f);
-            headerLoadingStatus.setVisibility(announceReady ? View.VISIBLE : View.GONE);
+            binding.headerLoadingText.setAlpha(usingFreshCache ? 0.52f : 1f);
+            binding.headerLoadingStatus.setVisibility(announceReady ? View.VISIBLE : View.GONE);
             if (announceReady) {
                 mainHandler.postDelayed(hideHeaderReadyStatus, HEADER_READY_STATUS_DURATION);
             }
@@ -1012,19 +985,19 @@ public class MainActivity extends AppCompatActivity {
         int readyCount = (FjbHeaderInfo.isLoaded ? 1 : 0) + (LocationInfo.isLoaded ? 1 : 0);
         boolean loading = sheetHeader.inFlight || locationHeader.inFlight;
         boolean waitingToRetry = sheetHeader.retryScheduled || locationHeader.retryScheduled;
-        headerLoadingText.setAlpha(1f);
-        headerLoadingSpinner.setVisibility(loading || !waitingToRetry
+        binding.headerLoadingText.setAlpha(1f);
+        binding.headerLoadingSpinner.setVisibility(loading || !waitingToRetry
                 ? View.VISIBLE : View.INVISIBLE);
         if (loading || !waitingToRetry) {
-            MotionUtil.setText(headerLoadingText, readyCount == 2
+            MotionUtil.setText(binding.headerLoadingText, readyCount == 2
                     ? getString(R.string.header_sync_updating)
                     : getString(R.string.header_sync_preparing, readyCount));
         } else {
-            MotionUtil.setText(headerLoadingText, readyCount == 2
+            MotionUtil.setText(binding.headerLoadingText, readyCount == 2
                     ? getString(R.string.header_sync_stale)
                     : getString(R.string.header_sync_retrying));
         }
-        headerLoadingStatus.setVisibility(View.VISIBLE);
+        binding.headerLoadingStatus.setVisibility(View.VISIBLE);
     }
 
     private void maybeRunPendingSearch() {
@@ -1128,19 +1101,19 @@ public class MainActivity extends AppCompatActivity {
         MotionUtil.beginLayoutTransition(binding.queryLayout);
         boolean is1Checked = isSheetMode();
         boolean is2Checked = switchQueryOptsRev.isChecked();
-        boolean advancedSearchVisible = lyAdvancedSearch.getVisibility() == View.VISIBLE;
+        boolean advancedSearchVisible = binding.inputAdvancedSwitch.getVisibility() == View.VISIBLE;
         if (is1Checked) {
             switchQueryOptsRev.setVisibility(View.VISIBLE);
-            locationPicker.setVisibility(is2Checked ? View.GONE : View.VISIBLE);
-            sheetQueryOptions.setVisibility(!is2Checked || advancedSearchVisible
+            binding.locatePicker.setVisibility(is2Checked ? View.GONE : View.VISIBLE);
+            binding.sheetQueryOptions.setVisibility(!is2Checked || advancedSearchVisible
                     ? View.VISIBLE : View.GONE);
             btnFilterArea.setVisibility(View.GONE);
             btnFilterAreaPron.setVisibility(View.GONE);
             btnColoringJppPartial.setVisibility(View.GONE);
         } else {
             switchQueryOptsRev.setVisibility(View.GONE);
-            locationPicker.setVisibility(View.GONE);
-            sheetQueryOptions.setVisibility(View.GONE);
+            binding.locatePicker.setVisibility(View.GONE);
+            binding.sheetQueryOptions.setVisibility(View.GONE);
             boolean isJpp = inputEditText.getText() != null && StringUtil.isJyutpingInput(inputEditText.getText().toString());
             btnFilterArea.setVisibility(isJpp ? View.GONE : View.VISIBLE);
             btnFilterAreaPron.setVisibility(isJpp ? View.VISIBLE : View.GONE);
@@ -1210,16 +1183,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     /**
-     * 更新輸入框中的字符串到 {@code this.inputString} 中
-     * 在將發起查詢時調用
-     *
-     * @param string 輸入框中的字符串
-     */
-    private void setInputString(String string) {
-        inputString = string;
-    }
-
-    /**
      * 用指定字符串以指定模式發起查詢
      * 該方法是對其它類開放的，可以在其它地方調用
      * 將會改動主界面的開關
@@ -1258,8 +1221,8 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         pendingSearch = false;
-        setInputString(inputEditText.getText().toString()); // 必须放在最前面
-        if ("".equals(inputString) && !(isSheetMode() && !switchQueryOptsRev.isChecked())) {
+        String input = inputEditText.getText().toString();
+        if (input.isEmpty() && !(isSheetMode() && !switchQueryOptsRev.isChecked())) {
             return;
         } // 搜索欄爲空時不檢索
 
@@ -1268,11 +1231,11 @@ public class MainActivity extends AppCompatActivity {
         if (isSheetMode()) { // 檢索泛粵字表
             modeSnapshot = QUERYING_SHEET;
             url = ApiUrlBuilder.from(URL_API_ROOT, "sheet");
-            if (inputString.isEmpty() && !switchQueryOptsRev.isChecked()) {
+            if (input.isEmpty() && !switchQueryOptsRev.isChecked()) {
                 url.add("random", 10);
             } else {
-                url.add("q", inputString);
-                boolean pronunciationInput = StringUtil.isSheetPronunciationInput(inputString)
+                url.add("q", input);
+                boolean pronunciationInput = StringUtil.isSheetPronunciationInput(input)
                         && !switchQueryOptsRev.isChecked();
                 String sheetMode;
                 if (pronunciationInput) {
@@ -1300,8 +1263,8 @@ public class MainActivity extends AppCompatActivity {
             }
         } else { // 檢索通用字表
             url = ApiUrlBuilder.from(URL_API_ROOT, "detail");
-            if (StringUtil.isJyutpingInput(inputString)) { // 音（允許空格作模糊佔位）
-                String[] parts = JyutpingUtil.parseJyutpingQuery(inputString);
+            if (StringUtil.isJyutpingInput(input)) { // 音（允許空格作模糊佔位）
+                String[] parts = JyutpingUtil.parseJyutpingQuery(input);
                 if (parts != null) {
                     modeSnapshot = QUERYING_PRON;
                     url.add("in", parts[0])
@@ -1314,14 +1277,13 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     // 解析失敗，回退為查字模式
                     modeSnapshot = QUERYING_CHARA;
-                    url.add("chara", inputString);
+                    url.add("chara", input);
                 }
             } else { // 字
                 modeSnapshot = QUERYING_CHARA;
-                url.add("chara", inputString);
+                url.add("chara", input);
             }
         }
-        queryingMode = modeSnapshot;
         int responseMode = modeSnapshot | queryingModeConfig;
         searchViewModel.search(new Request(url.build(), responseMode));
         saveLayoutStatus();
@@ -1345,7 +1307,8 @@ public class MainActivity extends AppCompatActivity {
                 int resultCode = result.getResultCode();
                 boolean isEnableAdvancedSearch = (resultCode&0b1) != 0;
                 MotionUtil.beginLayoutTransition(binding.queryLayout);
-                lyAdvancedSearch.setVisibility(isEnableAdvancedSearch ? View.VISIBLE : View.GONE);
+                binding.inputAdvancedSwitch.setVisibility(
+                        isEnableAdvancedSearch ? View.VISIBLE : View.GONE);
                 if (!isEnableAdvancedSearch) switchQueryOptsRegex.setChecked(false);
                 setSearchView();
 
