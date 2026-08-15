@@ -72,6 +72,14 @@
 
         <SwitchPreferenceCompat
             android:layout="@layout/preference_compact"
+            app:key="long_press_location_card"
+            app:title="@string/display_title_long_press_location_card"
+            app:summary="@string/display_summary_long_press_location_card"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false" />
+
+        <SwitchPreferenceCompat
+            android:layout="@layout/preference_compact"
             app:key="phrase_meaning_domain"
             app:title="@string/display_title_phrase_meaning_domain"
             app:defaultValue="false"

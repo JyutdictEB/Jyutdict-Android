@@ -217,15 +217,32 @@ public class SelectableTextView extends AppCompatTextView {
         }
     }
 
+    private boolean isLongPressLocationCard() {
+        Context context = getContext();
+        if (context == null) return true;
+        return context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+                .getBoolean("long_press_location_card", true);
+    }
+
     @Override
     public boolean performLongClick() {
         mHasPerformedLongPress = true;
+        if (mPressedSpan instanceof LocationClickSpan && isLongPressLocationCard()) {
+            mPressedSpan.onClick(this);
+            clearSelection();
+            return true;
+        }
         return super.performLongClick();
     }
 
     @Override
     public boolean performLongClick(float x, float y) {
         mHasPerformedLongPress = true;
+        if (mPressedSpan instanceof LocationClickSpan && isLongPressLocationCard()) {
+            mPressedSpan.onClick(this);
+            clearSelection();
+            return true;
+        }
         return super.performLongClick(x, y);
     }
 
@@ -237,11 +254,7 @@ public class SelectableTextView extends AppCompatTextView {
             case MotionEvent.ACTION_DOWN:
                 mHasPerformedLongPress = false;
                 mPressedSpan = getSpanAtPosition(event);
-                if (mPressedSpan != null) {
-                    mIsPressedOnLink = true;
-                } else {
-                    mIsPressedOnLink = false;
-                }
+                mIsPressedOnLink = (mPressedSpan != null);
                 break;
 
             case MotionEvent.ACTION_MOVE:
@@ -249,26 +262,47 @@ public class SelectableTextView extends AppCompatTextView {
                 break;
 
             case MotionEvent.ACTION_UP:
-                boolean wasPressedOnLink = mIsPressedOnLink;
-                if (mIsPressedOnLink) {
-                    if (!mHasPerformedLongPress && mPressedSpan != null) {
-                        mPressedSpan.onClick(this);
-                        mIsPressedOnLink = false;
-                        mPressedSpan = null;
-                        
-                        // Cancel the event for super to avoid default behavior
+                if (mHasPerformedLongPress) {
+                    mIsPressedOnLink = false;
+                    mPressedSpan = null;
+                    break;
+                }
+
+                ClickableSpan clickedSpan = mPressedSpan;
+                mIsPressedOnLink = false;
+                mPressedSpan = null;
+
+                if (clickedSpan instanceof AnnotationClickSpan) {
+                    clickedSpan.onClick(this);
+                    MotionEvent cancelEvent = MotionEvent.obtain(event);
+                    cancelEvent.setAction(MotionEvent.ACTION_CANCEL);
+                    super.onTouchEvent(cancelEvent);
+                    cancelEvent.recycle();
+                    return true;
+                } else if (clickedSpan instanceof LocationClickSpan) {
+                    if (!isLongPressLocationCard()) {
+                        clickedSpan.onClick(this);
                         MotionEvent cancelEvent = MotionEvent.obtain(event);
                         cancelEvent.setAction(MotionEvent.ACTION_CANCEL);
                         super.onTouchEvent(cancelEvent);
                         cancelEvent.recycle();
                         return true;
+                    } else {
+                        if (mOnNonLinkClickListener != null) {
+                            mOnNonLinkClickListener.onClick(this);
+                        }
                     }
-                    mIsPressedOnLink = false;
-                    mPressedSpan = null;
-                }
-                if (!wasPressedOnLink && !mHasPerformedLongPress
-                        && mOnNonLinkClickListener != null) {
-                    mOnNonLinkClickListener.onClick(this);
+                } else if (clickedSpan != null) {
+                    clickedSpan.onClick(this);
+                    MotionEvent cancelEvent = MotionEvent.obtain(event);
+                    cancelEvent.setAction(MotionEvent.ACTION_CANCEL);
+                    super.onTouchEvent(cancelEvent);
+                    cancelEvent.recycle();
+                    return true;
+                } else {
+                    if (mOnNonLinkClickListener != null) {
+                        mOnNonLinkClickListener.onClick(this);
+                    }
                 }
                 break;
 

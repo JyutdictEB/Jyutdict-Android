@@ -267,6 +267,7 @@ public class SettingsActivity extends AppCompatActivity {
         SwitchPreferenceCompat switchAreaColoring;
         SwitchPreferenceCompat switchPhraseMeaningDomain;
         EditTextPreference editAreaColoringDarkenRatio;
+        SwitchPreferenceCompat switchLongPressLocationCard;
         ListPreference listThemeMode;
         SwitchPreferenceCompat switchIpaPresent;
         Preference clearCache;
@@ -278,6 +279,7 @@ public class SettingsActivity extends AppCompatActivity {
             switchAdvancedSearch = findPreference("advanced_search");
             switchAreaColoring = findPreference("area_coloring");
             switchPhraseMeaningDomain = findPreference("phrase_meaning_domain");
+            switchLongPressLocationCard = findPreference("long_press_location_card");
             editAreaColoringDarkenRatio = findPreference("area_coloring_darken_ratio");
             listThemeMode = findPreference("theme_mode");
             switchIpaPresent = findPreference("ipa_presence");
@@ -354,6 +356,7 @@ public class SettingsActivity extends AppCompatActivity {
             editor.putBoolean("advanced_search", switchAdvancedSearch.isChecked());
             editor.putBoolean("area_coloring", switchAreaColoring.isChecked());
             editor.putBoolean("phrase_meaning_domain", switchPhraseMeaningDomain.isChecked());
+            editor.putBoolean("long_press_location_card", switchLongPressLocationCard == null || switchLongPressLocationCard.isChecked());
             editor.putString("theme_mode", newThemeMode);
             editor.putBoolean("ipa_presence", switchIpaPresent.isChecked());
             float darkenRatio = 0.92f;
