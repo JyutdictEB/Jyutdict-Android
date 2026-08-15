@@ -184,6 +184,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="36dp"
                     android:layout_marginTop="6dp"
+                    android:baselineAligned="false"
                     android:gravity="end|center_vertical"
                     android:orientation="horizontal">
 
@@ -216,7 +217,8 @@
                             android:gravity="center_vertical"
                             android:maxLines="1"
                             android:textColor="?attr/clockTextColor"
-                            android:textSize="13sp" />
+                            android:textSize="13sp"
+                            tools:ignore="NestedWeights" />
 
                         <ImageView
                             android:layout_width="20dp"

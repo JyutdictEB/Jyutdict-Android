@@ -6,12 +6,9 @@
     <color name="colorAccent">#721121</color>
     <color name="colorSecondary">#721121</color>
     <color name="colorSecondaryVariant">#530C18</color>
-    <color name="colorOnPrimary">#FFFFFF</color>
-    <color name="colorOnSecondary">#FFFFFF</color>
 
     <!-- 亮色主題中性色（徹底摒棄偏綠色相，使用純淨高級的中性灰） -->
     <color name="colorBackground">#FAFAFA</color>
-    <color name="colorSurface">#FFFFFF</color>
     <color name="colorHover">#ECEBF0</color>
     <color name="colorUnavailable">#D0CFD8</color>
     <color name="colorUnavailableText">#9594A0</color>
@@ -21,9 +18,7 @@
 
     <!-- 暗色主題中性色 -->
     <color name="colorBackgroundDark">#1E1E22</color>
-    <color name="colorSurfaceDark">#26262C</color>
     <color name="colorHoverDark">#2F2F37</color>
     <color name="colorUnavailableDark">#44434D</color>
-    <color name="colorUnavailableTextDark">#72717D</color>
     <color name="colorGrayDark">#9E9CA8</color>
 </resources>

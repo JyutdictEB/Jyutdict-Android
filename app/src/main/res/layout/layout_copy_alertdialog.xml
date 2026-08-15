@@ -3,7 +3,6 @@
     android:id="@+id/dialog_box_main"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?attr/clockBackground"
     android:fillViewport="true">
 
     <TextView

@@ -1,5 +1,6 @@
 package cc.ecisr.jyutdict.widget;
 
+import android.annotation.SuppressLint;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -254,6 +255,8 @@ public class SelectableTextView extends AppCompatTextView {
         return true;
     }
 
+    // View.onTouchEvent dispatches non-span ACTION_UP events through performClick().
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         int action = event.getAction();

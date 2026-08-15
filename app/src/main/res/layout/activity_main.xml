@@ -202,7 +202,8 @@
                     android:gravity="center_vertical"
                     android:maxLines="1"
                     android:textColor="?attr/clockTextColor"
-                    android:textSize="13sp" />
+                    android:textSize="13sp"
+                    tools:ignore="NestedWeights" />
 
                 <ImageView
                     android:layout_width="20dp"
