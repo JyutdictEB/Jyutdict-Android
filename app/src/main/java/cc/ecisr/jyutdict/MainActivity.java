@@ -58,9 +58,8 @@ import cc.ecisr.jyutdict.databinding.ActivityMainBinding;
 import cc.ecisr.jyutdict.databinding.DialogFilterPronBinding;
 import cc.ecisr.jyutdict.databinding.DialogLocationPickerBinding;
 import cc.ecisr.jyutdict.databinding.LocationPickerItemBinding;
-import cc.ecisr.jyutdict.search.SearchRequest;
-import cc.ecisr.jyutdict.search.SearchUiState;
 import cc.ecisr.jyutdict.search.SearchViewModel;
+import cc.ecisr.jyutdict.search.SearchViewModel.Request;
 import cc.ecisr.jyutdict.struct.FjbHeaderInfo;
 import cc.ecisr.jyutdict.struct.GeneralCharacterManager;
 import cc.ecisr.jyutdict.struct.LocationInfo;
@@ -1380,7 +1379,7 @@ public class MainActivity extends AppCompatActivity {
         }
         queryingMode = modeSnapshot;
         int responseMode = modeSnapshot | queryingModeConfig;
-        searchViewModel.search(new SearchRequest(url.build(), responseMode));
+        searchViewModel.search(new Request(url.build(), responseMode));
         saveLayoutStatus();
     }
 

@@ -18,49 +18,51 @@ public class SearchViewModelTest {
 
     @Test
     public void searchPublishesLoadingThenSuccess() {
-        FakeSearchDataSource dataSource = new FakeSearchDataSource();
+        FakeClient dataSource = new FakeClient();
         SearchViewModel viewModel = new SearchViewModel(dataSource);
-        SearchRequest request = new SearchRequest("https://example.test/search", 17);
+        SearchViewModel.Request request =
+                new SearchViewModel.Request("https://example.test/search", 17);
 
         viewModel.search(request);
 
-        SearchUiState loading = viewModel.getUiState().getValue();
+        SearchViewModel.State loading = viewModel.getUiState().getValue();
         assertNotNull(loading);
-        assertEquals(SearchUiState.Status.LOADING, loading.status);
+        assertEquals(SearchViewModel.Status.LOADING, loading.status);
         assertSame(request, loading.request);
 
         dataSource.succeed("[]");
 
-        SearchUiState success = viewModel.getUiState().getValue();
+        SearchViewModel.State success = viewModel.getUiState().getValue();
         assertNotNull(success);
-        assertEquals(SearchUiState.Status.SUCCESS, success.status);
+        assertEquals(SearchViewModel.Status.SUCCESS, success.status);
         assertSame(request, success.request);
         assertEquals("[]", success.responseBody);
     }
 
     @Test
     public void failureIsRepresentedInUiState() {
-        FakeSearchDataSource dataSource = new FakeSearchDataSource();
+        FakeClient dataSource = new FakeClient();
         SearchViewModel viewModel = new SearchViewModel(dataSource);
-        SearchRequest request = new SearchRequest("https://example.test/search", 23);
+        SearchViewModel.Request request =
+                new SearchViewModel.Request("https://example.test/search", 23);
 
         viewModel.search(request);
         HttpUtil.RequestError error = new HttpUtil.RequestError(
                 HttpUtil.ErrorKind.TIMEOUT, 0, "timeout");
         dataSource.fail(error);
 
-        SearchUiState failure = viewModel.getUiState().getValue();
+        SearchViewModel.State failure = viewModel.getUiState().getValue();
         assertNotNull(failure);
-        assertEquals(SearchUiState.Status.ERROR, failure.status);
+        assertEquals(SearchViewModel.Status.ERROR, failure.status);
         assertSame(request, failure.request);
         assertSame(error, failure.error);
     }
 
-    private static final class FakeSearchDataSource implements SearchDataSource {
-        private Callback callback;
+    private static final class FakeClient implements SearchViewModel.Client {
+        private HttpUtil.Callback callback;
 
         @Override
-        public void search(SearchRequest request, Callback callback) {
+        public void search(String url, HttpUtil.Callback callback) {
             this.callback = callback;
         }
 
