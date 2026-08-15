@@ -187,7 +187,7 @@ public class FjbCharacter {
 
             String[] fullName = FjbHeaderInfo.getFullName(key);
             sb.delete(0, sb.length());
-            sb.append(fullName[0]).append(fullName[1]).append("\u2003: ");
+            sb.append(fullName[0]).append(fullName[1]).append(": ");
             presentStringBeginPosition = ssb.length();
             ssb.append(sb);
             int locationNameEnd = presentStringBeginPosition
@@ -293,7 +293,7 @@ public class FjbCharacter {
                 }
 
                 sb.delete(0, sb.length());
-                sb.append(key).append("\u2003: ");
+                sb.append(key).append(": ");
                 presentStringBeginPosition = ssb.length();
                 ssb.append(sb);
                 int locationNameEnd = presentStringBeginPosition + key.length();
@@ -391,8 +391,8 @@ public class FjbCharacter {
             replacedChara = "□";
         else
             replacedChara = chara.replaceAll("[?/!！？ ]", "");
-        if (replacedChara != "見") replacedChara.replace("見", "");
-        if (replacedChara != "歸") replacedChara.replace("歸", "");
+        if (!replacedChara.equals("見")) replacedChara = replacedChara.replace("見", "");
+        if (!replacedChara.equals("歸")) replacedChara = replacedChara.replace("歸", "");
         ssb.append(replacedChara);
 
         // 錔字未確認，著灰色

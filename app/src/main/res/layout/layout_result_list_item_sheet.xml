@@ -91,7 +91,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:includeFontPadding="false"
-                android:lineSpacingExtra="6dp"
+                android:lineSpacingExtra="1dp"
                 android:text="@string/result_list_bottom"
                 android:textColor="?attr/clockTextColor"
                 android:textSize="13sp" />
