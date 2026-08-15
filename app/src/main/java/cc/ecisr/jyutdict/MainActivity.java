@@ -7,15 +7,12 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -37,7 +34,6 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import androidx.appcompat.widget.AppCompatCheckBox;
-import androidx.core.content.ContextCompat;
 import com.google.android.material.button.MaterialButton;
 
 import org.json.JSONArray;
@@ -196,8 +192,6 @@ public class MainActivity extends AppCompatActivity {
         }
         searchViewModel = new ViewModelProvider(this).get(SearchViewModel.class);
         binding.getRoot().post(this::observeSearchState);
-        initPermission();
-
         mainHandler = new Handler(Looper.getMainLooper());
 
         // 查詢按鈕
@@ -1357,37 +1351,6 @@ public class MainActivity extends AppCompatActivity {
                         })
                 .setCancelable(false)
                 .show();
-    }
-
-    /**
-     * 申請網絡等權限
-     * 在初始化 app 時調用
-     */
-    private void initPermission() {
-        String[] permissions = {
-                Manifest.permission.INTERNET,
-        };
-        ArrayList<String> toApplyList = new ArrayList<>();
-
-        for (String perm : permissions) {
-            ContextCompat.checkSelfPermission(this, perm);
-            if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(this, perm)) {
-                toApplyList.add(perm);
-            }
-        }
-        String[] tmpList = new String[toApplyList.size()];
-        if (!toApplyList.isEmpty()) {
-            ActivityCompat.requestPermissions(this, toApplyList.toArray(tmpList), 123);
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (grantResults.length == 0 || grantResults[0]!=PackageManager.PERMISSION_GRANTED) {
-            ToastUtil.msg(this, getString(R.string.permission_requesting));
-            initPermission();
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     @Override

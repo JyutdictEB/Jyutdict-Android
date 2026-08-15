@@ -27,14 +27,4 @@ public class ArticlePagerAdapter extends FragmentStateAdapter {
         return articleIds.length;
     }
 
-    @Override
-    public long getItemId(int position) {
-        return articleIds[position].hashCode();
-    }
-
-    @Override
-    public boolean containsItem(long itemId) {
-        for (String id : articleIds) if (id.hashCode() == itemId) return true;
-        return false;
-    }
 }

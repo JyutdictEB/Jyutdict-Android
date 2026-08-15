@@ -130,18 +130,4 @@ public class LocationInfo {
         return locationList;
     }
 
-    /** 返回所有地點的顯示名稱列表（用於篩選對話框） */
-    public static ArrayList<String> getDisplayNames() {
-        ArrayList<String> names = new ArrayList<>();
-        for (Location loc : locationList) {
-            names.add(loc.displayName());
-        }
-        return names;
-    }
-
-    public static void reset() {
-        isLoaded = false;
-        locationMap.clear();
-        locationList.clear();
-    }
 }
