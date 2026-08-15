@@ -107,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
 
     boolean headerLoadingInitialized = false;
     boolean headerRetriesEnabled = false;
+    boolean authInitialized = false;
     boolean pendingSearch = false;
     int selectedLocationPosition = 0;
     Handler mainHandler;
@@ -184,7 +185,9 @@ public class MainActivity extends AppCompatActivity {
         ImmersiveBarUtil.setImmersiveBar(this, false, !ThemeUtil.isNightMode(this));
         getView();
         ImmersiveBarUtil.applyToolbarInsets(binding.toolBar);
-        AuthRepository.getInstance(this).initialize((success, errorMessage) -> {});
+        if (hasCheckedInfoActivity()) {
+            ensureAuthInitialized();
+        }
         if (savedInstanceState == null) {
             resultFragment = new ResultFragment();
             getSupportFragmentManager().beginTransaction().add(R.id.result_fragment, resultFragment).commit();
@@ -374,8 +377,7 @@ public class MainActivity extends AppCompatActivity {
 
         initializeHeaderLoading();
 
-        boolean hadCheckedInfoActivity = sp.getBoolean("had_checked_info_activity_2", false);
-        if (!hadCheckedInfoActivity) {
+        if (!hasCheckedInfoActivity()) {
             displayTipsMessageBox();
         }
     }
@@ -707,6 +709,17 @@ public class MainActivity extends AppCompatActivity {
         ToastUtil.msg(this, getString(R.string.error_tips_network, errorCode));
     }
 
+    private boolean hasCheckedInfoActivity() {
+        return sp != null && sp.getBoolean("had_checked_info_activity_2", false);
+    }
+
+    private void ensureAuthInitialized() {
+        if (!authInitialized && hasCheckedInfoActivity()) {
+            authInitialized = true;
+            AuthRepository.getInstance(this).initialize((success, errorMessage) -> {});
+        }
+    }
+
     private void initializeHeaderLoading() {
         sheetHeader = new HeaderLoader(true,
                 ApiUrlBuilder.from(URL_API_ROOT, "sheet").build(), SHEET_HEADER_CACHE_KEY);
@@ -882,8 +895,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         void start(boolean resetBackoff) {
-            if (!headerLoadingInitialized || !headerRetriesEnabled
-                    || !needsRefresh || inFlight) return;
+            if (!hasCheckedInfoActivity() || !headerLoadingInitialized
+                    || !headerRetriesEnabled || !needsRefresh || inFlight) return;
             clearRetry();
             if (resetBackoff) retryAttempt = 0;
             inFlight = true;
@@ -972,7 +985,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateHeaderLoadingStatus(boolean announceReady, boolean usingFreshCache) {
         MotionUtil.beginLayoutTransition(binding.wholeMainLayout);
-        if (!headerLoadingInitialized) {
+        if (!hasCheckedInfoActivity() || !headerLoadingInitialized) {
             binding.headerLoadingStatus.setVisibility(View.GONE);
             return;
         }
@@ -1222,7 +1235,7 @@ public class MainActivity extends AppCompatActivity {
      *
      */
     private void search() {
-        if (inputEditText.getText() == null) { return; }
+        if (inputEditText.getText() == null || !hasCheckedInfoActivity()) { return; }
         if (!isRequiredHeaderReady()) {
             pendingSearch = true;
             requestRequiredHeaderNow();
@@ -1361,8 +1374,8 @@ public class MainActivity extends AppCompatActivity {
                 .setMessage("在使用之前，請務必閱覽本應用之說明。\n\n起碼把紅字看完！\n\n註意：內含隱私聲明，返回此界面則代表同意該聲明。")
                 .setPositiveButton("打開「幫助」頁面",
                         (dialogInterface, i) -> {
-                            startActivity(new Intent(MainActivity.this, InfoActivity.class));
                             sp.edit().putBoolean("had_checked_info_activity_2", true).apply();
+                            startActivity(new Intent(MainActivity.this, InfoActivity.class));
                         })
                 .setCancelable(false)
                 .show();
@@ -1371,8 +1384,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        headerRetriesEnabled = true;
-        requestNeededHeaders();
+        if (hasCheckedInfoActivity()) {
+            ensureAuthInitialized();
+            headerRetriesEnabled = true;
+            requestNeededHeaders();
+        }
     }
 
     @Override
