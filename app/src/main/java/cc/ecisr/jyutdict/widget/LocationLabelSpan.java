@@ -70,7 +70,11 @@ public final class LocationLabelSpan extends ReplacementSpan {
         float originalTextSize = paint.getTextSize();
         float originalScaleX = paint.getTextScaleX();
         int originalColor = paint.getColor();
+        int originalAlpha = paint.getAlpha();
         Paint.Style originalStyle = paint.getStyle();
+        float originalStrokeWidth = paint.getStrokeWidth();
+        Paint.Join originalStrokeJoin = paint.getStrokeJoin();
+        Paint.Cap originalStrokeCap = paint.getStrokeCap();
         Shader originalShader = paint.getShader();
 
         float nameX = x;
@@ -80,16 +84,28 @@ public final class LocationLabelSpan extends ReplacementSpan {
             float badgeTop = y - originalTextSize * 0.92f;
             RectF badge = new RectF(x, badgeTop, x + badgeWidth, badgeTop + badgeHeight);
             int badgeColor = yearColor(colors, originalColor);
+            int badgeStrokeColor = LocationStrokeHelper.getStrokeColor(new int[]{badgeColor}, originalColor);
 
             paint.setShader(null);
             paint.setStyle(Paint.Style.FILL);
             paint.setColor(badgeColor);
+            paint.setAlpha(Color.alpha(badgeColor));
             canvas.drawRect(badge, paint);
 
+            if (badgeStrokeColor != Color.TRANSPARENT) {
+                paint.setStyle(Paint.Style.STROKE);
+                paint.setStrokeWidth(LocationStrokeHelper.getStrokeWidth(originalTextSize) * 0.75f);
+                paint.setColor(badgeStrokeColor);
+                paint.setAlpha(Color.alpha(badgeStrokeColor));
+                canvas.drawRect(badge, paint);
+            }
+
+            paint.setStyle(Paint.Style.FILL);
             paint.setTextSize(originalTextSize * BADGE_TEXT_SCALE);
             paint.setTextScaleX(1f);
             paint.setShader(null);
             paint.setColor(readableForeground(badgeColor));
+            paint.setAlpha(255);
             float yearWidth = paint.measureText(year);
             Paint.FontMetrics badgeMetrics = paint.getFontMetrics();
             float yearBaseline = badge.centerY()
@@ -100,9 +116,44 @@ public final class LocationLabelSpan extends ReplacementSpan {
         }
 
         paint.setTextSize(originalTextSize);
-        paint.setStyle(Paint.Style.FILL);
         float nameWidth = originalTextSize * NAME_EM;
         int[] nameColors = nameColors(colors, !year.isEmpty(), originalColor);
+
+        paint.setTextScaleX(1f);
+        float measured = paint.measureText(placeName);
+        float scale = measured > nameWidth && measured > 0f ? nameWidth / measured : 1f;
+
+        // 1. 若地名需要描邊，且啟用了實線描邊模式，先繪製一層描邊 (STROKE)
+        int strokeColor = LocationStrokeHelper.getStrokeColor(nameColors, originalColor);
+        if (strokeColor != Color.TRANSPARENT &&
+                (LocationStrokeHelper.STROKE_MODE == LocationStrokeHelper.MODE_STROKE ||
+                 LocationStrokeHelper.STROKE_MODE == LocationStrokeHelper.MODE_BOTH)) {
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(LocationStrokeHelper.getStrokeWidth(originalTextSize));
+            paint.setStrokeJoin(Paint.Join.ROUND);
+            paint.setStrokeCap(Paint.Cap.ROUND);
+            paint.setColor(strokeColor);
+            paint.setAlpha(Color.alpha(strokeColor));
+            paint.setShader(null);
+
+            if (scale < 1f) {
+                paint.setTextScaleX(scale);
+                canvas.drawText(placeName, nameX, y, paint);
+            } else {
+                paint.setTextScaleX(1f);
+                drawDistributed(canvas, placeName, nameX, nameWidth, y, paint);
+            }
+        }
+
+        // 2. 繪製文字填充 (FILL)，若啟用外發光模式則附帶 ShadowLayer
+        paint.setStyle(Paint.Style.FILL);
+        if (strokeColor != Color.TRANSPARENT &&
+                (LocationStrokeHelper.STROKE_MODE == LocationStrokeHelper.MODE_GLOW ||
+                 LocationStrokeHelper.STROKE_MODE == LocationStrokeHelper.MODE_BOTH)) {
+            paint.setShadowLayer(LocationStrokeHelper.GLOW_RADIUS_PX, 0f, 0f, strokeColor);
+        } else {
+            paint.clearShadowLayer();
+        }
 
         if (nameColors.length > 1) {
             paint.setShader(new LinearGradient(
@@ -115,25 +166,31 @@ public final class LocationLabelSpan extends ReplacementSpan {
                     Shader.TileMode.CLAMP
             ));
             paint.setColor(Color.WHITE);
+            paint.setAlpha(255);
         } else {
             paint.setShader(null);
             paint.setColor(nameColors[0]);
+            paint.setAlpha(Color.alpha(nameColors[0]));
         }
 
-        paint.setTextScaleX(1f);
-        float measured = paint.measureText(placeName);
-        float scale = measured > nameWidth && measured > 0f ? nameWidth / measured : 1f;
         if (scale < 1f) {
             paint.setTextScaleX(scale);
             canvas.drawText(placeName, nameX, y, paint);
         } else {
+            paint.setTextScaleX(1f);
             drawDistributed(canvas, placeName, nameX, nameWidth, y, paint);
         }
 
+        // 3. 還原 Paint 狀態
+        paint.clearShadowLayer();
         paint.setTextSize(originalTextSize);
         paint.setTextScaleX(originalScaleX);
         paint.setColor(originalColor);
+        paint.setAlpha(originalAlpha);
         paint.setStyle(originalStyle);
+        paint.setStrokeWidth(originalStrokeWidth);
+        paint.setStrokeJoin(originalStrokeJoin);
+        paint.setStrokeCap(originalStrokeCap);
         paint.setShader(originalShader);
     }
 

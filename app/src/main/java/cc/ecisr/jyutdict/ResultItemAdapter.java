@@ -191,7 +191,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
                     appendWanshyuParagraphs(builder, wanshyu, headerStart, totalHeaderWidth, false);
                 }
             } else if (hasWanshyu) {
-                // 沒有廣韻時（如“氈”）：第一段韻書緊接字頭右側排版，後續韻書各段均縮進 totalHeaderWidth
+                // 沒有廣韻時（如“毡”）：第一段韻書緊接字頭右側排版，後續韻書各段均縮進 totalHeaderWidth
                 appendWanshyuParagraphs(builder, wanshyu, headerStart, totalHeaderWidth, true);
             }
         } else if (hasExtra || hasWanshyu) {
