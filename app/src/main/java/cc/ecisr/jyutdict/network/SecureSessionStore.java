@@ -53,7 +53,7 @@ public final class SecureSessionStore {
 
     private String read(String key) {
         String stored = preferences.getString(key, "");
-        if (stored == null || stored.isEmpty()) return "";
+        if (stored.isEmpty()) return "";
         try {
             String[] parts = stored.split("\\.", 2);
             if (parts.length != 2) throw new IllegalArgumentException("Invalid ciphertext");

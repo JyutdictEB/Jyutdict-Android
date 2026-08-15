@@ -40,8 +40,7 @@ public class ColorUtil {
     private static void appendLocationColors(ArrayList<String> colors, Object rawValue) {
         if (rawValue == null || rawValue == JSONObject.NULL) return;
 
-        if (rawValue instanceof JSONArray) {
-            JSONArray array = (JSONArray) rawValue;
+        if (rawValue instanceof JSONArray array) {
             for (int i = 0; i < array.length(); i++) {
                 appendLocationColors(colors, array.opt(i));
             }

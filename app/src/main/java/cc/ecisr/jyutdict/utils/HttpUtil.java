@@ -4,6 +4,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,24 +28,21 @@ public final class HttpUtil {
         void onFailure(RequestError error);
     }
 
-    public static final class RequestError {
-        public final ErrorKind kind;
-        public final int statusCode;
-        public final String detail;
+    public record RequestError(ErrorKind kind, int statusCode, String detail) {
+            public RequestError(ErrorKind kind, int statusCode, String detail) {
+                this.kind = kind;
+                this.statusCode = statusCode;
+                this.detail = detail == null ? "" : detail;
+            }
 
-        public RequestError(ErrorKind kind, int statusCode, String detail) {
-            this.kind = kind;
-            this.statusCode = statusCode;
-            this.detail = detail == null ? "" : detail;
+            @NonNull
+            @Override
+            public String toString() {
+                return kind == ErrorKind.HTTP && statusCode > 0
+                        ? String.valueOf(statusCode)
+                        : kind.name().toLowerCase(Locale.ROOT);
+            }
         }
-
-        @Override
-        public String toString() {
-            return kind == ErrorKind.HTTP && statusCode > 0
-                    ? String.valueOf(statusCode)
-                    : kind.name().toLowerCase(Locale.ROOT);
-        }
-    }
 
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private int connectTimeoutMillis = 5000, readTimeoutMillis = 5000;

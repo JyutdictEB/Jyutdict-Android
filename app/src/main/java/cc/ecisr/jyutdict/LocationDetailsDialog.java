@@ -62,7 +62,7 @@ public final class LocationDetailsDialog {
 
         LocationArticleRepository.lookup(context, requestedName, result -> {
             Runnable update = () -> {
-                MotionUtil.beginLayoutTransition((ViewGroup) binding.getRoot());
+                MotionUtil.beginLayoutTransition(binding.getRoot());
                 binding.locationArticleChecking.setVisibility(View.INVISIBLE);
                 LocationInfo.Location resolvedLocation = result.location != null
                         ? result.location
@@ -132,7 +132,7 @@ public final class LocationDetailsDialog {
                     GradientDrawable.Orientation.TOP_BOTTOM
             ));
             phonology.setEnabled(false);
-            MotionUtil.setText((TextView) phonology,
+            MotionUtil.setText(phonology,
                     context.getString(R.string.location_phonology_unavailable));
             phonology.setTag(null);
             return;
@@ -146,7 +146,7 @@ public final class LocationDetailsDialog {
                 ? context.getString(R.string.location_no_metadata)
                 : location.sheetInfo);
         phonology.setEnabled(location.hasPhonology);
-        MotionUtil.setText((TextView) phonology, context.getString(location.hasPhonology
+        MotionUtil.setText(phonology, context.getString(location.hasPhonology
                 ? R.string.location_phonology
                 : R.string.location_phonology_unavailable));
         phonology.setTag(location);

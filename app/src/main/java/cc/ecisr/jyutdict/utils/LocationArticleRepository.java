@@ -182,13 +182,6 @@ public final class LocationArticleRepository {
         }
     }
 
-    private static final class Pending {
-        final String requestedName;
-        final Callback callback;
-
-        Pending(String requestedName, Callback callback) {
-            this.requestedName = requestedName;
-            this.callback = callback;
-        }
+    private record Pending(String requestedName, Callback callback) {
     }
 }

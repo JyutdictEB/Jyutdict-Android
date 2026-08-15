@@ -29,7 +29,7 @@ public class GeneralCharacter {
             public SinglePron(String[] jpp, String ipa) { this.jpp=jpp; this.ipa=ipa; }
             public String syllable() { return jpp[0] + jpp[1] + jpp[2]; }
             public String jpp(boolean ini, boolean fin, boolean ton) {
-                return "" + (ini?jpp[0]:"") + (fin?jpp[1]:"") + (ton?jpp[2]:"");
+                return (ini?jpp[0]:"") + (fin?jpp[1]:"") + (ton?jpp[2]:"");
             }
         }
     }

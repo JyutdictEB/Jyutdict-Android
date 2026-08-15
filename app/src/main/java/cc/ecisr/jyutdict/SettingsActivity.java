@@ -22,6 +22,7 @@ import androidx.preference.SwitchPreferenceCompat;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -204,9 +205,9 @@ public class SettingsActivity extends AppCompatActivity {
         Matcher matcher = SEMANTIC_VERSION_PATTERN.matcher(versionName);
         if (!matcher.matches()) return new int[]{0, 0, 0};
         return new int[]{
-                Integer.parseInt(matcher.group(1)),
-                Integer.parseInt(matcher.group(2)),
-                Integer.parseInt(matcher.group(3))
+                Integer.parseInt(Objects.requireNonNull(matcher.group(1))),
+                Integer.parseInt(Objects.requireNonNull(matcher.group(2))),
+                Integer.parseInt(Objects.requireNonNull(matcher.group(3)))
         };
     }
 

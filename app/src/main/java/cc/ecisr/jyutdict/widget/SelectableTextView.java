@@ -110,7 +110,7 @@ public class SelectableTextView extends AppCompatTextView {
             setText(mSourceText, TextView.BufferType.SPANNABLE);
             return;
         }
-        if (contentWidth == mRenderedContentWidth && getText().length() > 0) return;
+        if (contentWidth == mRenderedContentWidth && !getText().isEmpty()) return;
         mRenderedContentWidth = contentWidth;
 
         CharSequence rendered = applyConditionalNoBreaks(mSourceText, contentWidth);
@@ -119,8 +119,7 @@ public class SelectableTextView extends AppCompatTextView {
     }
 
     private CharSequence applyConditionalNoBreaks(CharSequence source, int contentWidth) {
-        if (!(source instanceof Spanned)) return source;
-        Spanned spanned = (Spanned) source;
+        if (!(source instanceof Spanned spanned)) return source;
         NoBreakCandidateSpan[] candidates = spanned.getSpans(
                 0, spanned.length(), NoBreakCandidateSpan.class);
         if (candidates.length == 0) return source;
@@ -174,8 +173,7 @@ public class SelectableTextView extends AppCompatTextView {
     private static String formatSelectedTextForClipboard(CharSequence fullText, int start, int end) {
         if (fullText == null || start >= end) return "";
         CharSequence sub = fullText.subSequence(start, end);
-        if (fullText instanceof Spanned) {
-            Spanned spanned = (Spanned) fullText;
+        if (fullText instanceof Spanned spanned) {
             CharacterHeaderSpan[] headerSpans = spanned.getSpans(start, end, CharacterHeaderSpan.class);
             if (headerSpans.length > 0) {
                 SpannableStringBuilder ssb = new SpannableStringBuilder(sub);
@@ -320,11 +318,9 @@ public class SelectableTextView extends AppCompatTextView {
 
     private ClickableSpan getSpanAtPosition(MotionEvent event) {
         CharSequence text = getText();
-        if (!(text instanceof Spannable)) {
+        if (!(text instanceof Spannable buffer)) {
             return null;
         }
-
-        Spannable buffer = (Spannable) text;
 
         int x = (int) event.getX();
         int y = (int) event.getY();

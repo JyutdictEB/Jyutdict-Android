@@ -23,7 +23,6 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
@@ -45,7 +44,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 
 import cc.ecisr.jyutdict.auth.AuthRepository;
 import cc.ecisr.jyutdict.databinding.ActivityMainBinding;
@@ -224,7 +222,7 @@ public class MainActivity extends AppCompatActivity {
             }
             @Override
             public void afterTextChanged(Editable s) {
-                binding.btnClearInput.setVisibility(s.length() == 0 ? View.GONE : View.VISIBLE);
+                binding.btnClearInput.setVisibility(s.isEmpty() ? View.GONE : View.VISIBLE);
                 boolean isJpp = StringUtil.isJyutpingInput(s.toString());
 
                 int presentColor = isJpp ?
@@ -529,15 +527,14 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (recentOption != null) {
-            LocationOption standaloneRecent = recentOption;
-            dialogBinding.locationPickerRecentText.setText(standaloneRecent.label);
+            dialogBinding.locationPickerRecentText.setText(recentOption.label);
             dialogBinding.locationPickerRecentSwatch.setBackground(
-                    ColorUtil.locationColorDrawable(standaloneRecent.colors));
+                    ColorUtil.locationColorDrawable(recentOption.colors));
             int recentBackground = ContextCompat.getColor(this,
                     ThemeUtil.isNightMode(this) ? R.color.colorHoverDark : R.color.colorHover);
             dialogBinding.locationPickerRecent.setBackgroundColor(recentBackground);
             dialogBinding.locationPickerRecent.setOnClickListener(view ->
-                    selectLocationOption(standaloneRecent, dialog));
+                    selectLocationOption(recentOption, dialog));
         } else {
             dialogBinding.locationPickerRecent.setVisibility(View.GONE);
         }
@@ -684,7 +681,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showRequestError(Object errorObject) {
         if (errorObject instanceof HttpUtil.RequestError
-                && ((HttpUtil.RequestError) errorObject).kind == HttpUtil.ErrorKind.TIMEOUT) {
+                && ((HttpUtil.RequestError) errorObject).kind() == HttpUtil.ErrorKind.TIMEOUT) {
             ToastUtil.msg(this, getString(R.string.error_tips_network_out_of_time));
             return;
         }
@@ -1315,7 +1312,7 @@ public class MainActivity extends AppCompatActivity {
                                     ? R.color.colorBackgroundDark
                                     : R.color.colorBackground);
                     MotionUtil.fadeThroughColor(
-                            (ViewGroup) findViewById(android.R.id.content),
+                            findViewById(android.R.id.content),
                             surface,
                             this::recreate);
                 } else {

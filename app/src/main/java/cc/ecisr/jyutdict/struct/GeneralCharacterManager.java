@@ -119,7 +119,7 @@ public class GeneralCharacterManager {
             if (i!=0) contentCharaInfo.append(" · ");
             contentCharaInfo.append(chara.books.kwangun.get(i));
         }
-        if (contentCharaInfo.length() > 0) {
+        if (!contentCharaInfo.isEmpty()) {
             contentCharaInfo.setSpan(new RelativeSizeSpan(0.8f),
                     0, contentCharaInfo.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
@@ -129,7 +129,7 @@ public class GeneralCharacterManager {
             appendBook(contentWanshyu, "分韻", chara.books.fanwan);
         }
         if (!isBookFiltered(FILTER_BOOK_JINGWAA) && !chara.books.jingwaa.isEmpty()) {
-            if (contentWanshyu.length() > 0) contentWanshyu.append("\n");
+            if (!contentWanshyu.isEmpty()) contentWanshyu.append("\n");
             appendBook(contentWanshyu, "英華", chara.books.jingwaa);
         }
 
@@ -143,7 +143,7 @@ public class GeneralCharacterManager {
                 settings.areaColoringDarkenRatio;  // 將顏色調暗;
         for (GeneralCharacter.SingleLoc loc: chara.areas) {
             if (cityFilter.contains(loc.city)) continue;
-            if (contentLoc.length() > 0) contentLoc.append("\n");
+            if (!contentLoc.isEmpty()) contentLoc.append("\n");
 
             String displayName = loc.city.replace("'", "");
             int paragraphStart = contentLoc.length();

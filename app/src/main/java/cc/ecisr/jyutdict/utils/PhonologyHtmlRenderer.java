@@ -204,7 +204,7 @@ public final class PhonologyHtmlRenderer {
         StringBuilder key = new StringBuilder(row.rule.optString("base", ""));
         JSONArray conditions = row.rule.optJSONArray("conditions");
         for (int index = 0; index < column; index++) {
-            key.append('\u241f');
+            key.append('␟');
             JSONArray condition = conditions == null ? null : conditions.optJSONArray(index);
             key.append(condition == null ? "null" : condition.toString());
         }
@@ -283,7 +283,7 @@ public final class PhonologyHtmlRenderer {
         for (int i = 0; i < examples.length(); i++) {
             JSONObject example = examples.optJSONObject(i);
             if (example == null) continue;
-            if (result.length() > 0) result.append(" ");
+            if (!result.isEmpty()) result.append(" ");
             String style = colourFinals ? exampleStyle(example, darkMode) : "";
             result.append("<span class=\"example")
                     .append(colourFinals ? " coloured" : "")
@@ -297,7 +297,7 @@ public final class PhonologyHtmlRenderer {
             }
             result.append("</span>");
         }
-        return result.length() == 0 ? "—" : result.toString();
+        return result.isEmpty() ? "—" : result.toString();
     }
 
     private static String exampleStyle(JSONObject example, boolean darkMode) {

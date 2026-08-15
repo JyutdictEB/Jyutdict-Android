@@ -143,7 +143,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
                         context, R.color.colorPrimary)), start, result.length());
             }
             if (hasWanshyu) {
-                if (result.length() > 0) result.append("\n");
+                if (!result.isEmpty()) result.append("\n");
                 result.append(wanshyu);
             }
         }
@@ -188,7 +188,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
     }
 
     private static boolean empty(CharSequence text) {
-        return text.length() == 0;
+        return text.isEmpty();
     }
 
     public static class LinearViewHolder extends RecyclerView.ViewHolder {
@@ -273,14 +273,14 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
             appendLine(result, currentItem.leftBottom);
             appendLine(result, currentItem.rightTop);
             if (!empty(currentItem.rightBottom)) {
-                if (result.length() > 0) result.append("\n");
+                if (!result.isEmpty()) result.append("\n");
                 appendLine(result, currentItem.rightBottom);
             }
             return result.toString();
         }
 
         private static void appendLine(StringBuilder output, CharSequence text) {
-            if (text != null && text.length() > 0) output.append(text).append("\n");
+            if (text != null && !text.isEmpty()) output.append(text).append("\n");
         }
     }
 

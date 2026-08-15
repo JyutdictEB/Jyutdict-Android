@@ -226,17 +226,7 @@ public class ArticleFragment extends Fragment {
             while ((line = reader.readLine()) != null) {
                 markdown.append(line).append('\n');
             }
-            String content = markdown.toString()
-                    .replace("](img/", "](_IMG_BASE_/")
-                    .replace("](./img/", "](_IMG_BASE_/")
-                    .replace("src=\"img/", "src=\"_IMG_BASE_/")
-                    .replace("src=\"./img/", "src=\"_IMG_BASE_/");
-            String imagesBase = "https://jyutdict.org/img/";
-
-            JSONObject fallback = new JSONObject();
-            fallback.put("content", content);
-            fallback.put("images_base", imagesBase);
-            fallback.put("bundled_fallback", true);
+            JSONObject fallback = getFallbackParsingFromMarkdown(markdown);
             if (getContext() != null) {
                 DiskTextCache.write(getContext(), cacheKey, fallback.toString());
             }
@@ -244,6 +234,22 @@ public class ArticleFragment extends Fragment {
         } catch (IOException | JSONException | RuntimeException e) {
             return false;
         }
+    }
+
+    @NonNull
+    private static JSONObject getFallbackParsingFromMarkdown(StringBuilder markdown) throws JSONException {
+        String content = markdown.toString()
+                .replace("](img/", "](_IMG_BASE_/")
+                .replace("](./img/", "](_IMG_BASE_/")
+                .replace("src=\"img/", "src=\"_IMG_BASE_/")
+                .replace("src=\"./img/", "src=\"_IMG_BASE_/");
+        String imagesBase = "https://jyutdict.org/img/";
+
+        JSONObject fallback = new JSONObject();
+        fallback.put("content", content);
+        fallback.put("images_base", imagesBase);
+        fallback.put("bundled_fallback", true);
+        return fallback;
     }
 
     private boolean applyResponse(String raw) {

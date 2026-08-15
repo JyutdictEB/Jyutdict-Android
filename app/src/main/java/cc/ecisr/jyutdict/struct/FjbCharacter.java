@@ -254,7 +254,7 @@ public class FjbCharacter {
         }
         String conventional = value(FjbHeaderInfo.COLUMN_NAME_CONVENTIONAL);
         if (!conventional.isEmpty()) {
-            if (text.length() > 0) text.append("\n");
+            if (!text.isEmpty()) text.append("\n");
             text.append("(").append(conventional).append(")");
         }
         return text;
