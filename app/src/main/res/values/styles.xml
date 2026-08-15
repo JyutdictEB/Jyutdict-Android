@@ -82,7 +82,6 @@
         <item name="colorAccent">@color/colorPrimary</item>
         <item name="colorSurface">@color/colorBackground</item>
         <item name="colorOnSurface">@color/colorBlack</item>
-        <item name="android:background">@color/colorBackground</item>
         <item name="android:windowBackground">@color/colorBackground</item>
         <item name="clockBackground">@color/colorBackground</item>
         <item name="clockHover">@color/colorHover</item>
@@ -96,13 +95,12 @@
         <item name="buttonBarNeutralButtonStyle">@style/Widget.Jyutdict.ButtonBar.Button</item>
     </style>
 
-    <style name="Theme.Jyutdict.Dark.Dialog.Alert" parent="Theme.MaterialComponents.Dialog.Alert">
+    <style name="Theme.Jyutdict.Dark.Dialog.Alert" parent="Theme.MaterialComponents.Dialog.Alert.Bridge">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorSecondary">@color/colorPrimary</item>
         <item name="colorAccent">@color/colorPrimary</item>
         <item name="colorSurface">@color/colorBackgroundDark</item>
         <item name="colorOnSurface">@color/colorHover</item>
-        <item name="android:background">@color/colorBackgroundDark</item>
         <item name="android:windowBackground">@color/colorBackgroundDark</item>
         <item name="android:textColorPrimary">@color/colorHover</item>
         <item name="android:textColorSecondary">@color/colorGrayDark</item>
