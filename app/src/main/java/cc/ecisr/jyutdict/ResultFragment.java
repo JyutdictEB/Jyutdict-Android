@@ -246,7 +246,7 @@ public class ResultFragment extends Fragment {
 
         SharedPreferences sp = getActivity().getSharedPreferences("settings", Context.MODE_PRIVATE);
         ArrayList<ResultItemAdapter.ResultInfo> parsedItems = new ArrayList<>();
-        EntrySetting entrySettings = new EntrySetting(QUERYING_SHEET)
+        EntrySetting entrySettings = new EntrySetting()
                 .setAreaColoringInfo(
                         sp.getBoolean("area_coloring", true),
                         sp.getFloat("area_coloring_darken_ratio", 0.92f))

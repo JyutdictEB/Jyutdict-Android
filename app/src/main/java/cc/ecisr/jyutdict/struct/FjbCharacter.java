@@ -13,6 +13,7 @@ import android.text.style.StyleSpan;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -20,464 +21,251 @@ import java.util.Map;
 import cc.ecisr.jyutdict.utils.ColorUtil;
 import cc.ecisr.jyutdict.utils.StringUtil;
 import cc.ecisr.jyutdict.widget.AnnotationClickSpan;
+import cc.ecisr.jyutdict.widget.DashedUnderlineSpan;
 import cc.ecisr.jyutdict.widget.GradientTextSpan;
 import cc.ecisr.jyutdict.widget.LocationClickSpan;
 
-/**
- * FjbCharacter 類，用於儲存一條字頭項，與輸出顯示內容
- */
+/** One sheet row and its five rendered result fields. */
 public class FjbCharacter {
     private static final String ENTER = "<br>";
-
-    // 一項字所有信息，包含地區音等，以 HashMap 鍵值對保存
-    // 如泛粵字表的一項有格式：
-    // { "繁"=>"一", "綜"=>"jat1", "穗"=>"jat", ..., "釋義"=>"…", ... }
-    // 目前（v0.2.5/200719）僅用在泛粵字表上，怎麼應用到通語字表上還需要再考慮一下
-    private final MapHelper key2val;
-
-    // 每行所有單元格的附註，以 json 形式保存
+    private final Map<String, String> values = new HashMap<>();
+    private final EntrySetting settings;
     private JSONObject cellNotes;
 
-    // 輸出到屏幕上時的設置
-    // 包含如“是否對地方名著色”等顯示設置
-    private final EntrySetting settings;
-
-    /**
-     * 構造函數
-     *
-     * @param charaEntry 一個 JSONObject 類對象，以初始化 {@code this.key2val}
-     *                   其原始字符串爲：{"繁":"一","綜":"jat1",...,"釋義":"…",...}
-     *
-     * @param settings 一個 EntrySettings 類對象，以初始化 this.settings
-     */
-    public FjbCharacter(JSONObject charaEntry, final EntrySetting settings) {
+    public FjbCharacter(JSONObject entry, EntrySetting settings) {
         this.settings = settings;
-        key2val = new MapHelper(FjbHeaderInfo.getInfoLength());
-        Iterator<String> keysIterator = charaEntry.keys(); // 獲取地名鍵
+        Iterator<String> keys = entry.keys();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            values.put(key, entry.optString(key, ""));
+        }
         try {
-            while (keysIterator.hasNext()) {
-                String key = keysIterator.next();
-                key2val.put(key, charaEntry.optString(key, ""));
-            }
-            cellNotes = new JSONObject(key2val.get(FjbHeaderInfo.COLUMN_NAME_CELL_NOTE));
+            cellNotes = new JSONObject(value(FjbHeaderInfo.COLUMN_NAME_CELL_NOTE));
         } catch (JSONException ignored) {}
     }
 
-    /**
-     * 向屏幕打印釋義
-     * 對應字項 Layout 右上部分
-     * 僅於查詢泛粵字表時調用
-     *
-     * @return spanned 格式的富文本，可直接調用 setText() 顯示
-     */
     public Spanned printMeanings() {
-        StringBuilder sb = new StringBuilder();
-
-        // 字書上的錔字
-        String booksChara = key2val.get(FjbHeaderInfo.COLUMN_NAME_BOOKS_CHARA);
-        String booksPron = key2val.get(FjbHeaderInfo.COLUMN_NAME_BOOKS_PRON);
-        String booksMeaning = key2val.get(FjbHeaderInfo.COLUMN_NAME_BOOKS_MEANING);
+        StringBuilder html = new StringBuilder();
+        String booksChara = value(FjbHeaderInfo.COLUMN_NAME_BOOKS_CHARA);
+        String booksPron = value(FjbHeaderInfo.COLUMN_NAME_BOOKS_PRON);
+        String booksMeaning = value(FjbHeaderInfo.COLUMN_NAME_BOOKS_MEANING);
         if (!booksChara.isEmpty() || !booksPron.isEmpty() || !booksMeaning.isEmpty()) {
-            sb.append("—— <i>");
+            html.append("—— <i>");
             if (!booksChara.isEmpty()) {
-                sb.append(booksChara);
-                if (!booksPron.isEmpty() || !booksMeaning.isEmpty()) {
-                    sb.append(": ").append(booksPron);
-                    if (!booksPron.isEmpty() && !booksMeaning.isEmpty()) {
-                        sb.append(" | ");
-                    }
-                    if (!booksMeaning.isEmpty()) {
-                        sb.append("「").append(booksMeaning).append("」");
-                    }
-                }
-            } else {
-                sb.append(booksPron);
-                if (!booksPron.isEmpty() && !booksMeaning.isEmpty()) {
-                    sb.append(" | ");
-                }
-                if (!booksMeaning.isEmpty()) {
-                    sb.append("「").append(booksMeaning).append("」");
-                }
+                html.append(booksChara);
+                if (!booksPron.isEmpty() || !booksMeaning.isEmpty()) html.append(": ");
             }
-            sb.append("</i>").append(ENTER);
+            html.append(booksPron);
+            if (!booksPron.isEmpty() && !booksMeaning.isEmpty()) html.append(" | ");
+            if (!booksMeaning.isEmpty()) html.append("「").append(booksMeaning).append("」");
+            html.append("</i>").append(ENTER);
         }
 
-        // 釋義
-        // 默认不会发生空指针异常，因为服务器返回的json必定存在键COLUMN_NAME_MEANING
-        String oriString = key2val.get(FjbHeaderInfo.COLUMN_NAME_MEANING)
-                .replaceAll("<", "&lt;")
+        String original = value(FjbHeaderInfo.COLUMN_NAME_MEANING)
+                .replace("<", "&lt;")
                 .replaceAll("(?<=[^}\"“])&lt;", "；&lt;");
-
-        // 釋義以「[粵]{1}」开头则换行，变为「[粵]<br>{1}」
-        if (oriString.startsWith("[粵]") && oriString.contains("{1}")) {
-            oriString = oriString.replaceFirst("\\[粵]", "[粵]；");
+        if (original.startsWith("[粵]") && original.contains("{1}")) {
+            original = original.replaceFirst("\\[粵]", "[粵]；");
         }
-
-        oriString = oriString.replace("}", "} ");
-
-        // 根据分号换行：在「；[{..}]」條件下
-        String[] meanings = oriString.split("[；。？！] *?((?=&lt;)|(?=[{]))");
-
-        String[] grammarMarker = key2val.get(FjbHeaderInfo.COLUMN_NAME_GRAMMAR_MARKER).split("[;；] ?");
-        boolean grammarMarkerPresent = grammarMarker.length == oriString.split("；").length;
-
-        int grammarMarkerOrder = 0;
-        for (String meaning: meanings) {
-            if ("".equals(meaning)) continue;
-
-            if (grammarMarkerPresent && !"".equals(grammarMarker[grammarMarkerOrder])) {
-                if (meanings.length==1) {
-                    sb.append("‹")
-                            .append(grammarMarker[grammarMarkerOrder]
-                                    .replace("？","?"))
-                            .append("›");
-                } else {
-                    meaning = meaning.replaceFirst("(?<=[}])","‹"+grammarMarker[grammarMarkerOrder].replace("？","?")+"›");
-                    grammarMarkerOrder++;
+        original = original.replace("}", "} ");
+        String[] meanings = original.split("[；。？！] *?((?=&lt;)|(?=[{]))");
+        String[] markers = value(FjbHeaderInfo.COLUMN_NAME_GRAMMAR_MARKER).split("[;；] ?");
+        boolean hasMarkers = markers.length == original.split("；").length;
+        int markerIndex = 0;
+        for (String meaning : meanings) {
+            if (meaning.isEmpty()) continue;
+            if (hasMarkers && !markers[markerIndex].isEmpty()) {
+                String marker = markers[markerIndex].replace("？", "?");
+                if (meanings.length == 1) html.append("‹").append(marker).append("›");
+                else {
+                    meaning = meaning.replaceFirst("(?<=[}])", "‹" + marker + "›");
+                    markerIndex++;
                 }
             }
-
-            if (meaning.contains("[粵]") && meanings.length>1) {
-                sb.append("<b>").append(meaning).append("</b>");
+            if (meaning.contains("[粵]") && meanings.length > 1) {
+                html.append("<b>").append(meaning).append("</b>");
             } else {
-                sb.append(meaning);
+                html.append(meaning);
             }
-            sb.append(ENTER);
+            html.append(ENTER);
         }
-
-        if (!oriString.isEmpty()) sb.delete(sb.length()-ENTER.length(), sb.length());
-
-        return Html.fromHtml(sb.toString());
+        if (!original.isEmpty()) html.delete(html.length() - ENTER.length(), html.length());
+        return Html.fromHtml(html.toString());
     }
 
-    /**
-     * 向屏幕打印地方音、註、詞場
-     * 對應字項 Layout 右下部分
-     * 僅於查詢泛粵字表時調用
-     *
-     * @return Spanned 格式的富文本，可直接調用 setText() 顯示
-     */
     public Spanned printLocations() {
-        SpannableStringBuilder ssb = new SpannableStringBuilder();
+        SpannableStringBuilder text = new SpannableStringBuilder();
+        for (String key : FjbHeaderInfo.getCityListInShort()) appendCity(text, key);
+        if (text.length() >= 2) text.delete(text.length() - 2, text.length());
 
-        // ssb拼接某地的String前后的位置，用于指定某地的Span
-        // 如初始狀態 ssb.length() == 5
-        // presentStringBeginPosition = 5
-        // ssb.append("1")
-        // presentStringEndPosition = 6
-        int presentStringBeginPosition, presentStringEndPosition;
-
-        // 獲取簡稱作爲鍵，從而在 key2val 獲取值
-        // 如   [ ..., "港", "穗", "澳", ... ]
-        // 和   [ ..., "官", "客", "吳", ... ]
-        String[] cityList = FjbHeaderInfo.getCityListInShort();
-        String[] foreignList = FjbHeaderInfo.getForeignListInShort();
-
-        // 記錄鍵對應的值
-        String value;
-
-        // 記錄各市自身部分
-        // 如 "廣州: jat1"
-        // 在下方循環體內生成並合併進 ssb
-        StringBuilder sb = new StringBuilder();
-
-        for (String key: cityList) {
-            value = key2val.get(key);
-            if (value.trim().isEmpty() || !FjbHeaderInfo.isNameACity(key)) continue; // isNameACity(key)有甚麼用？我忘了
-
-            String[] fullName = FjbHeaderInfo.getFullName(key);
-            sb.delete(0, sb.length());
-            sb.append(fullName[0]).append(fullName[1]).append(": ");
-            presentStringBeginPosition = ssb.length();
-            ssb.append(sb);
-            int locationNameEnd = presentStringBeginPosition
-                    + fullName[0].length() + fullName[1].length();
-            int locationButtonEnd = ssb.length();
-            ssb.setSpan(
-                    new LocationClickSpan(fullName[0] + fullName[1]),
-                    presentStringBeginPosition,
-                    locationButtonEnd,
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-            );
-
-            // 對地區名著色
-            if (settings.isAreaColoring) {
-                int[] textColors = ColorUtil.locationColorInts(
-                        FjbHeaderInfo.getCityColors(key),
-                        settings.isUsingNightMode
-                                ? 2 - settings.areaColoringDarkenRatio
-                                : settings.areaColoringDarkenRatio
-                );
-                ssb.setSpan(new GradientTextSpan(textColors),
-                        presentStringBeginPosition, locationNameEnd,
-                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                presentStringBeginPosition = ssb.length();
+        boolean hasForeign = false;
+        for (String key : FjbHeaderInfo.getForeignListInShort()) {
+            String pronunciation = value(key);
+            if (pronunciation.isEmpty()) continue;
+            if (hasForeign) text.append(" \t");
+            else {
+                text.append("\n\n");
+                span(text, new RelativeSizeSpan(0.5f), text.length() - 1, text.length());
+                hasForeign = true;
             }
-
-            int pronStartPos = ssb.length();
-
-            // 加上刪除線
-            if (!value.contains("^")) {
-                ssb.append(value);
-            } else {
-                String[] splitPron = value.split("\\^");
-                for (String subStr: splitPron) {
-                    if (subStr.charAt(0) <= 'z') {
-                        ssb.append(subStr);
-                    } else {
-                        ssb.append(subStr);
-                        ssb.setSpan(new StrikethroughSpan(),
-                                ssb.length()-subStr.length(), ssb.length()-subStr.length()+1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    }
-                }
-            }
-
-            int pronEndPos = ssb.length();
-
-            ssb.append(" \t");
-            presentStringEndPosition = ssb.length();
-
-            // 若爲「_」，字體著淺灰色
-            if ("_".equals(value)) {
-                ssb.setSpan(new ForegroundColorSpan(Color.parseColor("#BBBBBB")),
-                        presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            }
-
-            // 若讀音存在「?」，使用斜體標註
-            if (value.contains("?")) {
-                ssb.setSpan(new StyleSpan(Typeface.ITALIC),
-                        presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            }
-
-            // 構建備註按鈕的消息框
-            if (cellNotes!=null && !cellNotes.optString(key).isEmpty()) {
-                sb.delete(0, sb.length());
-                sb.append(">「").append(key2val.get(FjbHeaderInfo.COLUMN_NAME_CHARACTER));
-                sb.append("」(").append(key2val.get(FjbHeaderInfo.COLUMN_NAME_PRONUNCIATION)).append(")   [");
-                sb.append(key).append("] ").append(value).append(", \n");
-                sb.append(cellNotes.optString(key).replaceAll("\n\t-.+", "\t\t- by Anonymous").replaceAll("\n-{10,}", ""));
-                final String s = sb.toString();
-                ssb.setSpan(new AnnotationClickSpan(s),
-                        pronStartPos, pronEndPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                
-                int[] underlineColors = new int[]{Color.parseColor("#999999")};
-                if (settings.isAreaColoring) {
-                    underlineColors = ColorUtil.locationColorInts(
-                            FjbHeaderInfo.getCityColors(key),
-                            settings.isUsingNightMode
-                                    ? 2 - settings.areaColoringDarkenRatio
-                                    : settings.areaColoringDarkenRatio
-                    );
-                }
-                ssb.setSpan(new cc.ecisr.jyutdict.widget.DashedUnderlineSpan(underlineColors),
-                        pronStartPos, pronEndPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            }
-        }
-        if (ssb.length() >= " \t".length()) {
-            ssb.delete(ssb.length()-" \t".length(), ssb.length());
+            appendForeign(text, key, pronunciation);
         }
 
-        if (settings.isDisplayEcdemic) {
-            boolean isForeignPronEnterExist = false;
-
-            for (String key: foreignList) {
-                value = key2val.get(key);
-                if (value.isEmpty()) continue;
-
-                if (isForeignPronEnterExist) {
-                    ssb.append(" \t");
-                } else {
-                    ssb.append("\n\n");
-                    ssb.setSpan(new RelativeSizeSpan(0.5f), ssb.length()-1, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    isForeignPronEnterExist = true;
-                }
-
-                sb.delete(0, sb.length());
-                sb.append(key).append(": ");
-                presentStringBeginPosition = ssb.length();
-                ssb.append(sb);
-                int locationNameEnd = presentStringBeginPosition + key.length();
-
-                // 對地區名著色
-                if (settings.isAreaColoring) {
-                    int[] textColors = ColorUtil.locationColorInts(
-                            FjbHeaderInfo.getForeignColors(key),
-                            settings.isUsingNightMode
-                                    ? 2 - settings.areaColoringDarkenRatio
-                                    : settings.areaColoringDarkenRatio
-                    );
-                    ssb.setSpan(new GradientTextSpan(textColors),
-                            presentStringBeginPosition, locationNameEnd,
-                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    presentStringBeginPosition = ssb.length();
-                }
-
-                int pronStartPos = ssb.length();
-                ssb.append(value.replace('\n', ','));
-                int pronEndPos = ssb.length();
-                presentStringEndPosition = ssb.length();
-
-                // 若讀音存在「?」，使用斜體標註
-                if (value.contains("?")) {
-                    ssb.setSpan(new StyleSpan(Typeface.ITALIC),
-                            presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                }
-
-                if (cellNotes!=null && !cellNotes.optString(key).isEmpty()) {
-                    sb.delete(0, sb.length());
-                    sb.append(">「").append(key2val.get(FjbHeaderInfo.COLUMN_NAME_CHARACTER));
-                    sb.append("」(").append(key2val.get(FjbHeaderInfo.COLUMN_NAME_PRONUNCIATION)).append(")   [");
-                    sb.append(key).append("] ").append(value).append(", \n");
-                    sb.append(cellNotes.optString(key).replaceAll("\n\t-.+", "\t\t- by Anonymous").replaceAll("\n-{10,}", ""));
-                    final String s = sb.toString();
-                    ssb.setSpan(new AnnotationClickSpan(s),
-                            pronStartPos, pronEndPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                            
-                    int[] underlineColors = new int[]{Color.parseColor("#999999")};
-                    if (settings.isAreaColoring) {
-                        underlineColors = ColorUtil.locationColorInts(
-                                FjbHeaderInfo.getForeignColors(key),
-                                settings.isUsingNightMode
-                                        ? 2 - settings.areaColoringDarkenRatio
-                                        : settings.areaColoringDarkenRatio
-                        );
-                    }
-                    ssb.setSpan(new cc.ecisr.jyutdict.widget.DashedUnderlineSpan(underlineColors),
-                            pronStartPos, pronEndPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                }
-            }
+        String major = value(FjbHeaderInfo.COLUMN_NAME_CLASS_MAJOR);
+        if (!major.isEmpty() && settings.isMeaningDomainPresence) {
+            StringBuilder classes = new StringBuilder(major);
+            String secondary = value(FjbHeaderInfo.COLUMN_NAME_CLASS_SECONDARY);
+            String minor = value(FjbHeaderInfo.COLUMN_NAME_CLASS_MINOR);
+            if (!secondary.isEmpty()) classes.append("\n").append(secondary);
+            if (!minor.isEmpty()) classes.append("\n").append(minor);
+            int start = text.length();
+            text.append("\n\n").append(classes);
+            span(text, new ForegroundColorSpan(Color.parseColor("#BBBBBB")),
+                    start + 2, text.length());
         }
-
-
-        // classified 爲「大類」一列的值
-        String classified = key2val.get(FjbHeaderInfo.COLUMN_NAME_CLASS_MAJOR);
-        if (!classified.isEmpty() && settings.isMeaningDomainPresence) {
-            ssb.append("\n");
-
-            // 打印詞場
-            // "大類"列
-            ssb.append("\n");
-            sb.delete(0, sb.length()).append(classified);
-            String class_secondary = key2val.get(FjbHeaderInfo.COLUMN_NAME_CLASS_SECONDARY);
-            String class_minor = key2val.get(FjbHeaderInfo.COLUMN_NAME_CLASS_MINOR);
-            if (!class_secondary.isEmpty()) sb.append("\n").append(class_secondary);
-            if (!class_minor.isEmpty()) sb.append("\n").append(class_minor);
-            presentStringBeginPosition = ssb.length();
-            ssb.append(sb);
-            presentStringEndPosition = ssb.length();
-
-            ssb.setSpan(new ForegroundColorSpan(Color.parseColor("#BBBBBB")),
-                    presentStringBeginPosition, presentStringEndPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
-        return ssb;
+        return text;
     }
 
-    /**
-     * 向屏幕打印字頭
-     * 對應字項 Layout 左上部分
-     * 原字頭存在各種標記，因此預處理需要刪除這些標記
-     *
-     * @return Spanned 格式的富文本，可直接調用 setText() 顯示
-     */
+    private void appendCity(SpannableStringBuilder text, String key) {
+        String pronunciation = value(key);
+        if (pronunciation.isEmpty()) return;
+        String[] fullName = FjbHeaderInfo.getFullName(key);
+        String displayName = fullName[0] + fullName[1];
+        int itemStart = text.length();
+        text.append(displayName).append(": ");
+        int nameEnd = itemStart + displayName.length();
+        span(text, new LocationClickSpan(displayName), itemStart, text.length());
+        int styleStart = itemStart;
+        if (settings.isAreaColoring) {
+            span(text, new GradientTextSpan(tinted(FjbHeaderInfo.getCityColors(key))),
+                    itemStart, nameEnd);
+            styleStart = text.length();
+        }
+        int pronunciationStart = text.length();
+        appendCityPronunciation(text, pronunciation);
+        int pronunciationEnd = text.length();
+        text.append(" \t");
+        if ("_".equals(pronunciation)) {
+            span(text, new ForegroundColorSpan(Color.parseColor("#BBBBBB")),
+                    styleStart, text.length());
+        }
+        if (pronunciation.contains("?")) {
+            span(text, new StyleSpan(Typeface.ITALIC), styleStart, text.length());
+        }
+        applyNote(text, key, pronunciation, pronunciationStart, pronunciationEnd,
+                FjbHeaderInfo.getCityColors(key));
+    }
+
+    private void appendForeign(SpannableStringBuilder text, String key, String pronunciation) {
+        int itemStart = text.length();
+        text.append(key).append(": ");
+        int nameEnd = itemStart + key.length();
+        int styleStart = itemStart;
+        if (settings.isAreaColoring) {
+            span(text, new GradientTextSpan(tinted(FjbHeaderInfo.getForeignColors(key))),
+                    itemStart, nameEnd);
+            styleStart = text.length();
+        }
+        int pronunciationStart = text.length();
+        text.append(pronunciation.replace('\n', ','));
+        int pronunciationEnd = text.length();
+        if (pronunciation.contains("?")) {
+            span(text, new StyleSpan(Typeface.ITALIC), styleStart, pronunciationEnd);
+        }
+        applyNote(text, key, pronunciation, pronunciationStart, pronunciationEnd,
+                FjbHeaderInfo.getForeignColors(key));
+    }
+
+    private void appendCityPronunciation(SpannableStringBuilder text, String pronunciation) {
+        if (!pronunciation.contains("^")) {
+            text.append(pronunciation);
+            return;
+        }
+        for (String part : pronunciation.split("\\^")) {
+            text.append(part);
+            if (part.charAt(0) > 'z') {
+                span(text, new StrikethroughSpan(),
+                        text.length() - part.length(), text.length() - part.length() + 1);
+            }
+        }
+    }
+
+    private void applyNote(SpannableStringBuilder text, String key, String pronunciation,
+                           int start, int end, ArrayList<String> colors) {
+        String note = cellNotes == null ? "" : cellNotes.optString(key);
+        if (note.isEmpty()) return;
+        String message = ">「" + value(FjbHeaderInfo.COLUMN_NAME_CHARACTER) + "」("
+                + value(FjbHeaderInfo.COLUMN_NAME_PRONUNCIATION) + ")   [" + key + "] "
+                + pronunciation + ", \n" + note.replaceAll("\n\t-.+", "\t\t- by Anonymous")
+                .replaceAll("\n-{10,}", "");
+        span(text, new AnnotationClickSpan(message), start, end);
+        int[] underline = settings.isAreaColoring
+                ? tinted(colors) : new int[]{Color.parseColor("#999999")};
+        span(text, new DashedUnderlineSpan(underline), start, end);
+    }
+
+    private int[] tinted(ArrayList<String> colors) {
+        double ratio = settings.isUsingNightMode
+                ? 2 - settings.areaColoringDarkenRatio : settings.areaColoringDarkenRatio;
+        return ColorUtil.locationColorInts(colors, ratio);
+    }
+
     public Spanned printCharacter() {
-        SpannableStringBuilder ssb = new SpannableStringBuilder();
-
-        // chara 爲「繁」一列的值，即錔字
-        String chara = key2val.get(FjbHeaderInfo.COLUMN_NAME_CHARACTER);
-
-        String replacedChara;
-        // 沒有錔字的一列以「□」作顯示，使用問號會導致字頭排版不居中
-        if (chara.isEmpty() || "？".equals(chara))
-            replacedChara = "□";
-        else
-            replacedChara = chara.replaceAll("[?/!！？ ]", "");
-        if (!replacedChara.equals("見")) replacedChara = replacedChara.replace("見", "");
-        if (!replacedChara.equals("歸")) replacedChara = replacedChara.replace("歸", "");
-        ssb.append(replacedChara);
-
-        // 錔字未確認，著灰色
-        if (chara.contains("？") || chara.contains("?")) { // 該狀態下 大多以全角問號標記
-            ssb.setSpan(new ForegroundColorSpan(Color.parseColor("#B9BAA3")),
-                    0, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        String character = value(FjbHeaderInfo.COLUMN_NAME_CHARACTER);
+        String display = character.isEmpty() || "？".equals(character)
+                ? "□" : character.replaceAll("[?/!！？ ]", "");
+        if (!display.equals("見")) display = display.replace("見", "");
+        if (!display.equals("歸")) display = display.replace("歸", "");
+        SpannableStringBuilder text = new SpannableStringBuilder(display);
+        if (character.contains("？") || character.contains("?")) {
+            span(text, new ForegroundColorSpan(Color.parseColor("#B9BAA3")), 0, text.length());
         }
-
-        // 錔字被併到其它字，著灰色
-        if (chara.contains("見 ") || chara.contains("歸")) {
-            ssb.setSpan(new ForegroundColorSpan(Color.parseColor("#3D3B4F")),
-                    0, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if (character.contains("見 ") || character.contains("歸")) {
+            span(text, new ForegroundColorSpan(Color.parseColor("#3D3B4F")), 0, text.length());
         }
-
-        return ssb;
+        return text;
     }
 
-    /**
-     * 向屏幕打印統一碼、俗字
-     * 對應字項 Layout 左中部分
-     *
-     * @return Spanned 格式的富文本，可直接調用 setText() 顯示
-     */
     public Spanned printUnicode() {
-        String chara = key2val.get(FjbHeaderInfo.COLUMN_NAME_CHARACTER)
+        String character = value(FjbHeaderInfo.COLUMN_NAME_CHARACTER)
                 .replaceAll("[?/!？！見歸 ]", "");
-        SpannableStringBuilder ssb = new SpannableStringBuilder();
-        String unicode = "";
-        if (StringUtil.countCharaLength(chara) < 2) {
-            unicode = StringUtil.charaToUnicode(chara);
-            ssb.append(unicode);
-        }
-
-        // 顯示IDS
-        String ids = key2val.get(FjbHeaderInfo.COLUMN_NAME_IDS);
+        SpannableStringBuilder text = new SpannableStringBuilder();
+        String unicode = StringUtil.countCharaLength(character) < 2
+                ? StringUtil.charaToUnicode(character) : "";
+        text.append(unicode);
+        String ids = value(FjbHeaderInfo.COLUMN_NAME_IDS);
         if (!ids.isEmpty()) {
-            if (!unicode.isEmpty()) ssb.append("\n");
-            ssb.append("[").append(ids).append("]");
+            if (!unicode.isEmpty()) text.append("\n");
+            text.append("[").append(ids).append("]");
         }
-
-        return ssb;
+        return text;
     }
 
-    /**
-     * 向屏幕打印讀音（綜合音）
-     * 對應字項 Layout 左下部分
-     * 俗字的顯示位置可能需要調整
-     *
-     * @return Spanned 格式的富文本，可直接調用 setText() 顯示
-     */
     public Spanned printPronunciation() {
-        String[] prons = key2val.get(FjbHeaderInfo.COLUMN_NAME_PRONUNCIATION).replaceAll("[!！]", "").split("/");
-        StringBuilder pronSb = new StringBuilder();
-        for (int i=0; i<prons.length; i++) {
-            if (i>0) { pronSb.append((i%2==0) ? "/\n" : "/"); }
-            pronSb.append(prons[i]);
+        String[] pronunciations = value(FjbHeaderInfo.COLUMN_NAME_PRONUNCIATION)
+                .replaceAll("[!！]", "").split("/");
+        SpannableStringBuilder text = new SpannableStringBuilder();
+        for (int index = 0; index < pronunciations.length; index++) {
+            if (index > 0) text.append(index % 2 == 0 ? "/\n" : "/");
+            text.append(pronunciations[index]);
         }
-        String pron = pronSb.toString();
-        SpannableStringBuilder ssb = new SpannableStringBuilder(pron);
-        if (pron.contains("?")) {
-            ssb.setSpan(new StyleSpan(Typeface.ITALIC),
-                    0, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if (text.toString().contains("?")) {
+            span(text, new StyleSpan(Typeface.ITALIC), 0, text.length());
         }
-
-        // 顯示俗字
-        String adaptedChara = key2val.get(FjbHeaderInfo.COLUMN_NAME_CONVENTIONAL);
-        if (!adaptedChara.isEmpty()) {
-            if (!pron.isEmpty()) ssb.append("\n");
-            ssb.append("(").append(adaptedChara).append(")");
+        String conventional = value(FjbHeaderInfo.COLUMN_NAME_CONVENTIONAL);
+        if (!conventional.isEmpty()) {
+            if (text.length() > 0) text.append("\n");
+            text.append("(").append(conventional).append(")");
         }
-
-        return ssb;
+        return text;
     }
 
-    private static class MapHelper {
-        Map<String, String> map;
-        public MapHelper(int length) {
-            map = new HashMap<>(length);
-        }
-        public void put(String key, String value) {
-            map.put(key, value);
-        }
-        public String get(String key) {
-            String result = map.get(key);
-            return result==null ? "" : result.trim();
-        }
+    private String value(String key) {
+        String result = values.get(key);
+        return result == null ? "" : result.trim();
+    }
+
+    private static void span(SpannableStringBuilder text, Object span, int start, int end) {
+        text.setSpan(span, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 }
