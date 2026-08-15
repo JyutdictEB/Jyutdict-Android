@@ -7,18 +7,14 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.tabs.TabLayoutMediator;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import cc.ecisr.jyutdict.adapter.ArticlePagerAdapter;
 import cc.ecisr.jyutdict.databinding.ActivityInfoBinding;
-import cc.ecisr.jyutdict.struct.ArticleInfo;
 import cc.ecisr.jyutdict.utils.ImmersiveBarUtil;
 import cc.ecisr.jyutdict.utils.ThemeUtil;
 
 /** 伺服器三篇說明文章的只讀分頁；正文由 ArticleFragment 半持久化快取。 */
 public class InfoActivity extends AppCompatActivity {
-    private final List<ArticleInfo> articleList = new ArrayList<>();
+    private String[] articleTitles;
     private TabLayoutMediator tabMediator;
 
     @Override
@@ -35,15 +31,10 @@ public class InfoActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        articleList.add(article(
-                ArticleFragment.BUNDLED_INFO_ID,
-                getString(R.string.info_bundled_title)
-        ));
-        articleList.add(article("intro", "泛粵典"));
-        articleList.add(article("jpp", "擴展粵拼"));
-        articleList.add(article("tone", "聲調總表"));
-
-        ArticlePagerAdapter pagerAdapter = new ArticlePagerAdapter(this, articleList);
+        articleTitles = new String[]{getString(R.string.info_bundled_title),
+                "泛粵典", "擴展粵拼", "聲調總表"};
+        ArticlePagerAdapter pagerAdapter = new ArticlePagerAdapter(this,
+                new String[]{ArticleFragment.BUNDLED_INFO_ID, "intro", "jpp", "tone"});
         binding.viewPager.setAdapter(pagerAdapter);
         binding.viewPager.setUserInputEnabled(true);
         binding.progressBar.setVisibility(View.GONE);
@@ -54,16 +45,9 @@ public class InfoActivity extends AppCompatActivity {
         tabMediator = new TabLayoutMediator(
                 binding.tabLayout,
                 binding.viewPager,
-                (tab, position) -> tab.setText(articleList.get(position).title)
+                (tab, position) -> tab.setText(articleTitles[position])
         );
         tabMediator.attach();
-    }
-
-    private static ArticleInfo article(String id, String title) {
-        ArticleInfo info = new ArticleInfo();
-        info.id = id;
-        info.title = title;
-        return info;
     }
 
     @Override

@@ -5,47 +5,36 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
-import java.util.List;
-
 import cc.ecisr.jyutdict.ArticleFragment;
-import cc.ecisr.jyutdict.struct.ArticleInfo;
 
-/**
- * ViewPager2 适配器
- * 使用文章 ID 作为 Fragment 标识
- */
+/** Stable-ID pager for the fixed information article list. */
 public class ArticlePagerAdapter extends FragmentStateAdapter {
-    private List<ArticleInfo> articleList;
+    private final String[] articleIds;
 
-    public ArticlePagerAdapter(@NonNull FragmentActivity activity, List<ArticleInfo> articleList) {
+    public ArticlePagerAdapter(@NonNull FragmentActivity activity, String[] articleIds) {
         super(activity);
-        this.articleList = articleList;
+        this.articleIds = articleIds.clone();
     }
 
     @NonNull
     @Override
     public Fragment createFragment(int position) {
-        String articleId = articleList.get(position).id;
-        return ArticleFragment.newInstance(articleId);
+        return ArticleFragment.newInstance(articleIds[position]);
     }
 
     @Override
     public int getItemCount() {
-        return articleList != null ? articleList.size() : 0;
+        return articleIds.length;
     }
 
     @Override
     public long getItemId(int position) {
-        return articleList.get(position).id.hashCode();
+        return articleIds[position].hashCode();
     }
 
     @Override
     public boolean containsItem(long itemId) {
-        for (ArticleInfo info : articleList) {
-            if (info.id.hashCode() == itemId) {
-                return true;
-            }
-        }
+        for (String id : articleIds) if (id.hashCode() == itemId) return true;
         return false;
     }
 }
