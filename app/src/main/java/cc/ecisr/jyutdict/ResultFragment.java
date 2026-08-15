@@ -133,7 +133,7 @@ public class ResultFragment extends Fragment {
             }
         });
         mRvMain.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
-        MotionUtil.configureItemAnimator(mRvMain);
+        mRvMain.setItemAnimator(null);
         mRvMain.setAdapter(resultAdapter);
         if (savedInstanceState!= null) {
             rawReceivedData = savedInstanceState.getString("received_data");

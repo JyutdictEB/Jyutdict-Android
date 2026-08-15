@@ -300,7 +300,7 @@ public class MainActivity extends AppCompatActivity {
                         (TextView) btnQueryConfirm, previousColor, presentColor);
                 previousColor = presentColor;
                 if (!isSheetMode()) {
-                    MotionUtil.beginLayoutTransition(lyMain);
+                    MotionUtil.beginLayoutTransition(binding.queryLayout);
                     btnFilterArea.setVisibility(isJpp ? View.GONE : View.VISIBLE);
                     btnFilterAreaPron.setVisibility(isJpp ? View.VISIBLE : View.GONE);
                 }
@@ -702,7 +702,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void finishSearchUi() {
-        MotionUtil.beginLayoutTransition(lyMain);
         loadingProgressBar.setVisibility(View.GONE);
         btnColoringJppPartial.setEnabled(true);
         btnQueryConfirm.setEnabled(true);
@@ -710,7 +709,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void beginSearchUi() {
-        MotionUtil.beginLayoutTransition(lyMain);
         loadingProgressBar.setVisibility(View.VISIBLE);
         if (resultFragment != null) resultFragment.beginLoading();
         btnColoringJppPartial.setEnabled(false);
@@ -1184,7 +1182,7 @@ public class MainActivity extends AppCompatActivity {
      * 設置幾個開關的顯示與隱藏
      */
     private void setSearchView() {
-        MotionUtil.beginLayoutTransition(lyMain);
+        MotionUtil.beginLayoutTransition(binding.queryLayout);
         boolean is1Checked = isSheetMode();
         boolean is2Checked = switchQueryOptsRev.isChecked();
         boolean advancedSearchVisible = lyAdvancedSearch.getVisibility() == View.VISIBLE;
@@ -1403,7 +1401,7 @@ public class MainActivity extends AppCompatActivity {
             result -> {
                 int resultCode = result.getResultCode();
                 boolean isEnableAdvancedSearch = (resultCode&0b1) != 0;
-                MotionUtil.beginLayoutTransition(lyMain);
+                MotionUtil.beginLayoutTransition(binding.queryLayout);
                 lyAdvancedSearch.setVisibility(isEnableAdvancedSearch ? View.VISIBLE : View.GONE);
                 if (!isEnableAdvancedSearch) switchQueryOptsRegex.setChecked(false);
                 setSearchView();

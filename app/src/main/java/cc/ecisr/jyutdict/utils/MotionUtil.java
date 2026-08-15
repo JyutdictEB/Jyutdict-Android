@@ -27,13 +27,14 @@ public final class MotionUtil {
     public static void beginLayoutTransition(ViewGroup root) {
         if (root == null || !root.isLaidOut() || root.getWindowToken() == null) return;
 
-        TransitionSet transition = new TransitionSet()
-                .setOrdering(TransitionSet.ORDERING_TOGETHER)
-                .addTransition(new Fade(Fade.IN | Fade.OUT))
-                .addTransition(new ChangeBounds())
-                .setDuration(DURATION_MEDIUM)
-                .setInterpolator(AnimationUtils.loadInterpolator(
-                        root.getContext(), android.R.interpolator.fast_out_slow_in));
+        TransitionSet transition = new TransitionSet();
+        transition.setOrdering(TransitionSet.ORDERING_TOGETHER);
+        transition.addTransition(new Fade(Fade.IN | Fade.OUT));
+        transition.addTransition(new ChangeBounds());
+        transition.setDuration(DURATION_MEDIUM);
+        transition.setInterpolator(AnimationUtils.loadInterpolator(
+                root.getContext(), android.R.interpolator.fast_out_slow_in));
+        transition.excludeTarget(RecyclerView.class, true);
         TransitionManager.beginDelayedTransition(root, transition);
     }
 
