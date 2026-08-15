@@ -471,7 +471,7 @@ public class ResultFragment extends Fragment {
 
     private void addPronunciationItem(ArrayList<ResultItemAdapter.ResultInfo> items,
                                       Spanned label, Spanned pronunciations) {
-        if (pronunciations.isEmpty()) return;
+        if (pronunciations.length() == 0) return;
         addItem(items, new SpannableStringBuilder(), new SpannableStringBuilder(),
                 new SpannableStringBuilder(), label, pronunciations,
                 ResultItemAdapter.ResultInfo.TYPE_GENERAL);

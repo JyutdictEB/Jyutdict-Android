@@ -54,18 +54,18 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
             holder.tvRightTop.setSelectableText(item.rightTop);
             holder.tvRightTop.setVisibility(View.GONE);
             holder.tvRightBottom.setSelectableText(joinTextSections(item.rightTop, item.rightBottom));
-            holder.tvRightBottom.setVisibility(item.rightTop.isEmpty() && item.rightBottom.isEmpty()
+            holder.tvRightBottom.setVisibility(empty(item.rightTop) && empty(item.rightBottom)
                     ? View.GONE : View.VISIBLE);
-            holder.lyChara.setVisibility(!item.chara.isEmpty() || !item.leftMiddle.isEmpty()
+            holder.lyChara.setVisibility(!empty(item.chara) || !empty(item.leftMiddle)
                     ? View.VISIBLE : View.GONE);
-            holder.tvCharaInfo.setVisibility(item.leftMiddle.isEmpty() ? View.GONE : View.VISIBLE);
-            holder.tvCharaExtra.setVisibility(item.leftBottom.isEmpty() ? View.GONE : View.VISIBLE);
+            holder.tvCharaInfo.setVisibility(empty(item.leftMiddle) ? View.GONE : View.VISIBLE);
+            holder.tvCharaExtra.setVisibility(empty(item.leftBottom) ? View.GONE : View.VISIBLE);
             holder.contentDivider.setVisibility(View.GONE);
         } else {
             holder.tvRightBottom.setSelectableText(formatGeneralEntry(holder.itemView.getContext(),
                     item.chara, item.leftBottom, item.rightTop, item.rightBottom));
-            holder.tvRightBottom.setVisibility(item.chara.isEmpty() && item.leftBottom.isEmpty()
-                    && item.rightTop.isEmpty() && item.rightBottom.isEmpty()
+            holder.tvRightBottom.setVisibility(empty(item.chara) && empty(item.leftBottom)
+                    && empty(item.rightTop) && empty(item.rightBottom)
                     ? View.GONE : View.VISIBLE);
         }
         holder.tvRightBottom.setOnAnnotationClickListener(holder::toggleAnnotation);
@@ -97,17 +97,17 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 
     private static Spanned joinTextSections(Spanned first, Spanned second) {
         SpannableStringBuilder result = new SpannableStringBuilder();
-        if (!first.isEmpty()) result.append(first);
-        if (!first.isEmpty() && !second.isEmpty()) result.append("\n\n");
-        if (!second.isEmpty()) result.append(second);
+        if (!empty(first)) result.append(first);
+        if (!empty(first) && !empty(second)) result.append("\n\n");
+        if (!empty(second)) result.append(second);
         return result;
     }
 
     private static Spanned formatGeneralEntry(Context context, Spanned header, Spanned extra,
                                               Spanned wanshyu, Spanned location) {
         SpannableStringBuilder result = new SpannableStringBuilder();
-        boolean hasHeader = !header.isEmpty(), hasExtra = !extra.isEmpty();
-        boolean hasWanshyu = !wanshyu.isEmpty(), hasLocation = !location.isEmpty();
+        boolean hasHeader = !empty(header), hasExtra = !empty(extra);
+        boolean hasWanshyu = !empty(wanshyu), hasLocation = !empty(location);
         boolean hasTop = hasHeader || hasExtra || hasWanshyu;
 
         if (hasHeader) {
@@ -143,7 +143,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
                         context, R.color.colorPrimary)), start, result.length());
             }
             if (hasWanshyu) {
-                if (!result.isEmpty()) result.append("\n");
+                if (result.length() > 0) result.append("\n");
                 result.append(wanshyu);
             }
         }
@@ -185,6 +185,10 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
 
     private static void span(SpannableStringBuilder text, Object span, int start, int end) {
         text.setSpan(span, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+    }
+
+    private static boolean empty(CharSequence text) {
+        return text.length() == 0;
     }
 
     public static class LinearViewHolder extends RecyclerView.ViewHolder {
@@ -259,7 +263,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
         }
 
         String getChara() {
-            return currentItem.chara.isEmpty() ? "" : currentItem.chara.toString();
+            return empty(currentItem.chara) ? "" : currentItem.chara.toString();
         }
 
         String printContent() {
@@ -268,7 +272,7 @@ public class ResultItemAdapter extends RecyclerView.Adapter<ResultItemAdapter.Li
             appendLine(result, currentItem.leftMiddle);
             appendLine(result, currentItem.leftBottom);
             appendLine(result, currentItem.rightTop);
-            if (!currentItem.rightBottom.isEmpty()) {
+            if (!empty(currentItem.rightBottom)) {
                 if (result.length() > 0) result.append("\n");
                 appendLine(result, currentItem.rightBottom);
             }
