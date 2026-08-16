@@ -129,6 +129,7 @@
     <string name="display_title_area_coloring">啟用地區著色</string>
     <string name="display_title_area_coloring_ratio">著色明度係數 (默認 0.92)</string>
     <string name="display_title_phrase_meaning_domain">[粵表] 顯示詞場</string>
+    <string name="display_title_reverse_search_concise">[粵表] 反查忽略例句</string>
     <string name="display_title_long_press_location_card">長按開啟地點卡片</string>
     <string name="display_summary_long_press_location_card">長觸地點名稱開啓地點卡片；關閉後爲短觸開啟</string>
     <string name="display_title_theme_mode">主題模式</string>

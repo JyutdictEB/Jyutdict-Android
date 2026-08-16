@@ -1263,7 +1263,8 @@ public class MainActivity extends AppCompatActivity {
                 if (pronunciationInput) {
                     sheetMode = "trim";
                 } else if (switchQueryOptsRev.isChecked()) {
-                    sheetMode = "meaning";
+                    sheetMode = sp.getBoolean("reverse_search_concise", true)
+                            ? "concise" : "meaning";
                 } else {
                     sheetMode = "fuzzy";
                 }

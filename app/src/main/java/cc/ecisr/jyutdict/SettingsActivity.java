@@ -248,6 +248,7 @@ public class SettingsActivity extends AppCompatActivity {
         SwitchPreferenceCompat switchAdvancedSearch;
         SwitchPreferenceCompat switchAreaColoring;
         SwitchPreferenceCompat switchPhraseMeaningDomain;
+        SwitchPreferenceCompat switchReverseSearchConcise;
         EditTextPreference editAreaColoringDarkenRatio;
         SwitchPreferenceCompat switchLongPressLocationCard;
         ListPreference listThemeMode;
@@ -261,6 +262,7 @@ public class SettingsActivity extends AppCompatActivity {
             switchAdvancedSearch = findPreference("advanced_search");
             switchAreaColoring = findPreference("area_coloring");
             switchPhraseMeaningDomain = findPreference("phrase_meaning_domain");
+            switchReverseSearchConcise = findPreference("reverse_search_concise");
             switchLongPressLocationCard = findPreference("long_press_location_card");
             editAreaColoringDarkenRatio = findPreference("area_coloring_darken_ratio");
             listThemeMode = findPreference("theme_mode");
@@ -338,6 +340,7 @@ public class SettingsActivity extends AppCompatActivity {
             editor.putBoolean("advanced_search", switchAdvancedSearch.isChecked());
             editor.putBoolean("area_coloring", switchAreaColoring.isChecked());
             editor.putBoolean("phrase_meaning_domain", switchPhraseMeaningDomain.isChecked());
+            editor.putBoolean("reverse_search_concise", switchReverseSearchConcise.isChecked());
             editor.putBoolean("long_press_location_card", switchLongPressLocationCard == null || switchLongPressLocationCard.isChecked());
             editor.putString("theme_mode", newThemeMode);
             editor.putBoolean("ipa_presence", switchIpaPresent.isChecked());

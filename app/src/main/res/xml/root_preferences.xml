@@ -41,6 +41,13 @@
             app:defaultValue="false"
             app:iconSpaceReserved="false" />
 
+        <SwitchPreferenceCompat
+            android:layout="@layout/preference_compact"
+            app:key="reverse_search_concise"
+            app:title="@string/display_title_reverse_search_concise"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false" />
+
     </PreferenceCategory>
 
     <PreferenceCategory
