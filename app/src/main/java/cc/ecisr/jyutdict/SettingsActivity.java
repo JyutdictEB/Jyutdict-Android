@@ -72,6 +72,7 @@ public class SettingsActivity extends AppCompatActivity {
         ImmersiveBarUtil.setImmersiveBar(this, false, !ThemeUtil.isNightMode(this));
         setSupportActionBar(binding.toolbar);
         ImmersiveBarUtil.applyToolbarInsets(binding.toolbar);
+        ImmersiveBarUtil.applyBottomInsets(binding.getRoot());
         authRepository = AuthRepository.getInstance(this);
         googleSignIn = new GoogleSignInCoordinator(this);
         androidx.fragment.app.Fragment restoredFragment = getSupportFragmentManager()

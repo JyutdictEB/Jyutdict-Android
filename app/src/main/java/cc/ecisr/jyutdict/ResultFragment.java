@@ -44,6 +44,7 @@ import cc.ecisr.jyutdict.struct.FjbHeaderInfo;
 import cc.ecisr.jyutdict.struct.EntrySetting;
 import cc.ecisr.jyutdict.struct.GeneralCharacterManager;
 import cc.ecisr.jyutdict.utils.ColorUtil;
+import cc.ecisr.jyutdict.utils.ImmersiveBarUtil;
 import cc.ecisr.jyutdict.utils.MotionUtil;
 import cc.ecisr.jyutdict.utils.ThemeUtil;
 import cc.ecisr.jyutdict.utils.ToastUtil;
@@ -73,6 +74,7 @@ public class ResultFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         binding = FragmentResultBinding.inflate(inflater, container, false);
         mRvMain = binding.resultList;
+        ImmersiveBarUtil.applyBottomInsets(mRvMain);
         commentRepository = new CommentRepository(requireContext());
         resultAdapter = new ResultItemAdapter(this::showItemMenu);
         mRvMain.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));

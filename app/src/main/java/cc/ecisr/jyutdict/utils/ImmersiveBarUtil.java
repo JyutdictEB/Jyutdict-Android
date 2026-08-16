@@ -55,13 +55,51 @@ public class ImmersiveBarUtil {
      */
     public static void applyToolbarInsets(@NonNull View toolbar) {
         final int originalPaddingLeft = toolbar.getPaddingLeft();
+        final int originalPaddingTop = toolbar.getPaddingTop();
         final int originalPaddingRight = toolbar.getPaddingRight();
         final int originalPaddingBottom = toolbar.getPaddingBottom();
 
         ViewCompat.setOnApplyWindowInsetsListener(toolbar, (v, insets) -> {
             Insets barInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(originalPaddingLeft, barInsets.top, originalPaddingRight, originalPaddingBottom);
+            v.setPadding(originalPaddingLeft, originalPaddingTop + barInsets.top,
+                    originalPaddingRight, originalPaddingBottom);
             return insets;
         });
+        requestApplyInsetsWhenAttached(toolbar);
+    }
+
+    /**
+     * 為底部 View（如滾動列表、底部按鈕欄或頁面根佈局）應用導航欄高度 Padding
+     */
+    public static void applyBottomInsets(@NonNull View view) {
+        final int originalPaddingLeft = view.getPaddingLeft();
+        final int originalPaddingTop = view.getPaddingTop();
+        final int originalPaddingRight = view.getPaddingRight();
+        final int originalPaddingBottom = view.getPaddingBottom();
+
+        ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
+            Insets barInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(originalPaddingLeft, originalPaddingTop, originalPaddingRight,
+                    originalPaddingBottom + barInsets.bottom);
+            return insets;
+        });
+        requestApplyInsetsWhenAttached(view);
+    }
+
+    private static void requestApplyInsetsWhenAttached(@NonNull View view) {
+        if (ViewCompat.isAttachedToWindow(view)) {
+            ViewCompat.requestApplyInsets(view);
+        } else {
+            view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+                @Override
+                public void onViewAttachedToWindow(View v) {
+                    v.removeOnAttachStateChangeListener(this);
+                    ViewCompat.requestApplyInsets(v);
+                }
+
+                @Override
+                public void onViewDetachedFromWindow(View v) {}
+            });
+        }
     }
 }

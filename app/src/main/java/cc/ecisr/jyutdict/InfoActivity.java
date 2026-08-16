@@ -25,6 +25,7 @@ public class InfoActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         ImmersiveBarUtil.setImmersiveBar(this, false, !ThemeUtil.isNightMode(this));
         ImmersiveBarUtil.applyToolbarInsets(binding.toolbar);
+        ImmersiveBarUtil.applyBottomInsets(binding.getRoot());
 
         setSupportActionBar(binding.toolbar);
         if (getSupportActionBar() != null) {

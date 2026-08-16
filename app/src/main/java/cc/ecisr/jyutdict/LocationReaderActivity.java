@@ -66,6 +66,7 @@ public class LocationReaderActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         ImmersiveBarUtil.setImmersiveBar(this, false, !ThemeUtil.isNightMode(this));
         ImmersiveBarUtil.applyToolbarInsets(binding.toolbar);
+        ImmersiveBarUtil.applyBottomInsets(binding.getRoot());
 
         mode = getIntent().getStringExtra(EXTRA_MODE);
         locationName = getIntent().getStringExtra(EXTRA_LOCATION_NAME);
