@@ -4,4 +4,9 @@
     <attr name="clockHover" format="color"/>
     <attr name="clockTextColor" format="color"/>
     <attr name="clockTextColorDim" format="color"/>
+    <attr name="btnSolidAccentBorder" format="color"/>
+    <attr name="btnSolidAccentPressedBorder" format="color"/>
+    <attr name="btnSolidSecondaryBorder" format="color"/>
+    <attr name="btnSolidSecondaryPressedBorder" format="color"/>
+    <attr name="btnSolidUnavailableBorder" format="color"/>
 </resources>

@@ -21,4 +21,19 @@
     <color name="colorHoverDark">#2F2F37</color>
     <color name="colorUnavailableDark">#44434D</color>
     <color name="colorGrayDark">#9E9CA8</color>
+
+    <!-- 按鈕底邊顏色 -->
+    <!-- 亮色主題：淺色底邊 -->
+    <color name="btnSolidAccentBorderLight">#F06270</color>
+    <color name="btnSolidAccentPressedBorderLight">#E04B55</color>
+    <color name="btnSolidSecondaryBorderLight">#A02E40</color>
+    <color name="btnSolidSecondaryPressedBorderLight">#82192A</color>
+    <color name="btnSolidUnavailableBorderLight">#E6E5ED</color>
+
+    <!-- 暗色主題：保持深色底邊 -->
+    <color name="btnSolidAccentBorderDark">#721121</color>
+    <color name="btnSolidAccentPressedBorderDark">#530C18</color>
+    <color name="btnSolidSecondaryBorderDark">#530C18</color>
+    <color name="btnSolidSecondaryPressedBorderDark">#33070E</color>
+    <color name="btnSolidUnavailableBorderDark">#44434D</color>
 </resources>

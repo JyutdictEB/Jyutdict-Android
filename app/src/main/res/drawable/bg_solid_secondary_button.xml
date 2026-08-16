@@ -12,7 +12,7 @@
                 android:left="-4dp"
                 android:right="-4dp">
                 <shape android:shape="rectangle">
-                    <stroke android:width="3dp" android:color="@color/colorUnavailableDark" />
+                    <stroke android:width="3dp" android:color="?attr/btnSolidUnavailableBorder" />
                     <solid android:color="@android:color/transparent" />
                 </shape>
             </item>
@@ -30,7 +30,7 @@
                 android:left="-4dp"
                 android:right="-4dp">
                 <shape android:shape="rectangle">
-                    <stroke android:width="3dp" android:color="#33070E" />
+                    <stroke android:width="3dp" android:color="?attr/btnSolidSecondaryPressedBorder" />
                     <solid android:color="@android:color/transparent" />
                 </shape>
             </item>
@@ -48,7 +48,7 @@
                 android:left="-4dp"
                 android:right="-4dp">
                 <shape android:shape="rectangle">
-                    <stroke android:width="3dp" android:color="@color/colorSecondaryVariant" />
+                    <stroke android:width="3dp" android:color="?attr/btnSolidSecondaryBorder" />
                     <solid android:color="@android:color/transparent" />
                 </shape>
             </item>
